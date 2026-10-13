@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ring with barcode bars, inside the 66dp safe zone. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,26a28,28 0,1 0,0.01 0zM54,31a23,23 0,1 1,-0.01 0z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40,42h3v24h-3zM45,42h1.5v24h-1.5zM48.5,42h4v24h-4zM54.5,42h1.5v24h-1.5zM58,42h3v24h-3zM63,42h1.5v24h-1.5zM66,42h2v24h-2z" />
+</vector>
