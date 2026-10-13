@@ -1,105 +1,104 @@
 <p align="center">
-  <img src="docs/images/hero.png" alt="EnterpriseBrowser – Der Kiosk-Browser für Zebra &amp; Honeywell" width="100%">
+  <img src="docs/images/hero.png" alt="EnterpriseBrowser – the kiosk browser for Zebra &amp; Honeywell" width="100%">
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 8.0+">
-  <img src="https://img.shields.io/badge/Version-0.3.0-0D47A1" alt="Version 0.3.0">
+  <img src="https://img.shields.io/badge/Version-0.3.1-0D47A1" alt="Version 0.3.1">
   <img src="https://img.shields.io/badge/Zebra-DataWedge-000000" alt="Zebra DataWedge">
   <img src="https://img.shields.io/badge/Honeywell-Intent%20API-E4002B" alt="Honeywell">
-  <img src="https://img.shields.io/badge/MDM-Managed%20Config-00796B" alt="Managed Configuration">
+  <img src="https://img.shields.io/badge/MDM-Managed%20Config-00796B" alt="Managed configuration">
   <img src="https://img.shields.io/badge/Kotlin-WebView-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin">
 </p>
 
 <p align="center">
-  <b>Webanwendungen auf robusten Android-Geräten – mit Barcode-Scanner, Kiosk-Modus und zentraler Konfiguration.</b><br>
-  Funktional angelehnt an den Web-Teil von Ivanti Velocity, als schlanke Neuimplementierung in Kotlin.
+  <b>Web apps on rugged Android devices – with barcode scanning, kiosk mode and central configuration.</b><br>
+  A lean, modern kiosk browser written in Kotlin.
 </p>
 
 <p align="center">
-  <a href="#-in-5-minuten-startklar">Schnellstart</a> ·
-  <a href="docs/configuration.md">Konfiguration</a> ·
-  <a href="docs/deployment.md">Verteilung (SOTI, Intune, StageNow)</a> ·
-  <a href="docs/web-integration.md">Web-Integration</a> ·
-  <a href="docs/velocity-migration.md">Umstieg von Velocity</a>
+  <a href="#-up-and-running-in-5-minutes">Quick start</a> ·
+  <a href="docs/configuration.md">Configuration</a> ·
+  <a href="docs/deployment.md">Deployment (SOTI, Intune, StageNow)</a> ·
+  <a href="docs/web-integration.md">Web integration</a>
 </p>
 
 ---
 
-## ✨ So sieht es aus
+## ✨ What it looks like
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-launcher.png" width="210" alt="Startseite"><br><sub><b>Profile</b><br>Ein Tipp öffnet die Web-App</sub></td>
-    <td align="center"><img src="docs/images/screen-browser.png" width="210" alt="Browser mit Scan"><br><sub><b>Scannen</b><br>Barcode landet im Feld + Enter</sub></td>
-    <td align="center"><img src="docs/images/screen-menu.png" width="210" alt="Menü"><br><sub><b>Menü</b><br>Alles mit einem Daumen</sub></td>
-    <td align="center"><img src="docs/images/screen-settings.png" width="210" alt="Einstellungen"><br><sub><b>Einstellungen</b><br>Passwortgeschützt</sub></td>
+    <td align="center"><img src="docs/images/screen-launcher.png" width="210" alt="Start screen"><br><sub><b>Profiles</b><br>One tap opens the web app</sub></td>
+    <td align="center"><img src="docs/images/screen-browser.png" width="210" alt="Browser with scans"><br><sub><b>Scanning</b><br>Barcode goes into the field + Enter</sub></td>
+    <td align="center"><img src="docs/images/screen-menu.png" width="210" alt="Menu"><br><sub><b>Menu</b><br>Everything within thumb reach</sub></td>
+    <td align="center"><img src="docs/images/screen-settings.png" width="210" alt="Settings"><br><sub><b>Settings</b><br>Password protected</sub></td>
   </tr>
 </table>
 
-## 🚀 Was es kann
+## 🚀 Features
 
 | | |
 |---|---|
-| 📦 **Profile** | Start-URL, Host-Allowlist, User-Agent, Viewport, Farben – mehrere Web-Apps auf einem Gerät |
-| 🔫 **Barcode-Scanner** | Zebra DataWedge, Honeywell, beliebige Scanner-Apps per Intent. Scan wird wie eine Tastatur ins Feld geschrieben (inkl. Tab/Enter) **und** als JS-Event gemeldet |
-| 🧭 **Seitensteuerung** | Velocity-kompatible Meta-Tags `scanner` und `ScannerNavigate` |
-| ⌨️ **Tastatur** | Bildschirmtastatur nur auf Knopfdruck, Hardware-Tasten umbelegen, Hotkeys, Makros wie `{F1}` `{TAB}` |
-| 🧩 **Injections** | Eigenes CSS/JS/HTML in fremde Web-Apps einfügen – passend zur URL, ohne Flackern |
-| 🔒 **Kiosk** | Toolbar/Systemleisten ausblenden, Beenden verbergen oder mit Passwort schützen, Lock Task per Device Owner |
-| 📡 **Provisionierung** | Managed Configuration (SOTI, Intune, Workspace ONE …), Konfigurationsdatei, StageNow-Intent, QR-Code |
-| 🎨 **Design anpassen** | Titel, Logo, Markenfarbe und Profilfarben – per Konfiguration oder direkt in der App |
-| 🛡️ **Sicherheit** | Strenge TLS-Prüfung, Client-Zertifikate, Passwörter nur als PBKDF2-Hash, JS-Schnittstelle nur für freigegebene Hosts |
+| 📦 **Profiles** | Start URL, host allow list, user agent, viewport, colors – several web apps on one device |
+| 🔫 **Barcode scanning** | Zebra DataWedge, Honeywell, any scanner app via intent. Scans are typed into the focused field like a keyboard (including Tab/Enter) **and** reported as a JavaScript event |
+| 🧭 **Page control** | `scanner` and `ScannerNavigate` meta tags control scanning per page |
+| ⌨️ **Keyboard** | On-screen keyboard only on demand, hardware key remapping, hotkeys, macros like `{F1}` `{TAB}` |
+| 🧩 **Injections** | Add your own CSS/JS/HTML to third-party web apps – matched by URL, without flicker |
+| 🔒 **Kiosk** | Hide toolbar/system bars, hide exit or protect it with a password, lock task via device owner |
+| 📡 **Provisioning** | Managed configuration (SOTI, Intune, Workspace ONE …), configuration file, StageNow intent, QR code |
+| 🎨 **Custom design** | Title, logo, brand color and profile colors – via configuration or right in the app |
+| 🛡️ **Security** | Strict TLS checks, client certificates, passwords only stored as PBKDF2 hashes, JavaScript API only for allowed hosts |
 
-## ⚡ In 5 Minuten startklar
+## ⚡ Up and running in 5 minutes
 
-**1. App installieren** – APK aus den [Releases](../../releases/latest) laden und per MDM verteilen oder per USB installieren:
+**1. Install the app** – download the APK from the [releases](../../releases/latest) and distribute it with your MDM, or install it over USB:
 
 ```bash
-adb install -r EnterpriseBrowser-0.3.0.apk
+adb install -r EnterpriseBrowser-0.3.1.apk
 ```
 
-**2. Konfiguration wählen** – fertige Vorlagen in [`examples/`](examples):
+**2. Pick a configuration** – ready-made templates in [`examples/`](examples):
 
-| Vorlage | Wofür |
+| Template | Use case |
 |---|---|
-| [`minimal.json`](examples/minimal.json) | Eine Web-App, startet automatisch |
-| [`sap-its-mobile.json`](examples/sap-its-mobile.json) | SAP ITS mobile / MDE mit Scanner-Enter, Velocity-Viewport |
-| [`kiosk-single-app.json`](examples/kiosk-single-app.json) | Vollständiger Kiosk ohne Ausweg (Passwörter anpassen!) |
-| [`multi-profile-branding.json`](examples/multi-profile-branding.json) | Mehrere Apps mit eigenem Titel und Farben |
-| [`injections-and-keys.json`](examples/injections-and-keys.json) | CSS/JS-Injection, Tastenbelegung, Scan-Hooks |
+| [`minimal.json`](examples/minimal.json) | One web app that opens automatically |
+| [`sap-its-mobile.json`](examples/sap-its-mobile.json) | SAP ITS mobile with Enter after each scan, device-width viewport |
+| [`kiosk-single-app.json`](examples/kiosk-single-app.json) | Full kiosk without a way out (change the passwords!) |
+| [`multi-profile-branding.json`](examples/multi-profile-branding.json) | Several apps with a custom title and colors |
+| [`injections-and-keys.json`](examples/injections-and-keys.json) | CSS/JS injection, key remapping, scan hooks |
 
-**3. Verteilen** – z. B. als Managed Configuration im MDM (Schlüssel `config_json`) oder als Datei
-(App einmal starten, damit der Ordner existiert):
+**3. Deploy** – for example as a managed configuration in your MDM (key `config_json`) or as a file
+(start the app once so the folder exists):
 
 ```bash
 adb push examples/minimal.json /sdcard/Android/data/io.github.pieewiee.enterprisebrowser/files/enterprisebrowser.json
 ```
 
-Alle Wege inkl. Schritt-für-Schritt für **SOTI MobiControl**: [Verteilung](docs/deployment.md).
+All options, including step by step for **SOTI MobiControl**: [Deployment](docs/deployment.md).
 
-**4. Testen** – das mitgelieferte Profil „Demo & Scanner-Test“ öffnen und scannen, oder ohne Scanner:
+**4. Test** – open the built-in profile "Demo & scanner test" and scan, or without a scanner:
 
 ```bash
 adb shell am broadcast -a io.github.pieewiee.enterprisebrowser.action.BARCODE \
   -p io.github.pieewiee.enterprisebrowser --es data 4006381333931 --es symbology EAN13
 ```
 
-## 🎨 Design anpassen
+## 🎨 Custom design
 
-Titel, Untertitel, Logo und Markenfarbe kommen aus der Konfiguration – oder werden direkt unter
-**Einstellungen → Design** gesetzt. Jedes Profil kann zusätzlich eine eigene Farbe haben, die auch
-die Toolbar in der Web-App einfärbt.
+Title, subtitle, logo and brand color come from the configuration – or are set right in the app under
+**Settings → Design**. Every profile can also have its own color, which also tints the toolbar inside
+the web app.
 
 <p align="center">
-  <img src="docs/images/branding.png" alt="Standard-Design und eigenes Branding im Vergleich" width="85%">
+  <img src="docs/images/branding.png" alt="Default design and custom branding side by side" width="85%">
 </p>
 
 ```json
 "global": {
   "branding": {
-    "title": "Logistikzentrum Nord",
-    "subtitle": "Schicht A · Halle 3",
+    "title": "North Logistics Center",
+    "subtitle": "Shift A · Hall 3",
     "color": "#00796B",
     "logo": "res:logo.png"
   }
@@ -108,81 +107,79 @@ die Toolbar in der Web-App einfärbt.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-color-picker.png" width="210" alt="Farbwahl"><br><sub>Markenfarbe in der App wählen</sub></td>
-    <td align="center"><img src="docs/images/screen-profile-editor.png" width="210" alt="Profil bearbeiten"><br><sub>Profil mit eigener Farbe</sub></td>
-    <td align="center"><img src="docs/images/screen-error.png" width="210" alt="Fehlerseite"><br><sub>Klare Fehlerseiten in Markenfarbe</sub></td>
+    <td align="center"><img src="docs/images/screen-color-picker.png" width="210" alt="Color picker"><br><sub>Pick the brand color in the app</sub></td>
+    <td align="center"><img src="docs/images/screen-profile-editor.png" width="210" alt="Edit profile"><br><sub>Profile with its own color</sub></td>
+    <td align="center"><img src="docs/images/screen-error.png" width="210" alt="Error page"><br><sub>Clear error pages in the brand color</sub></td>
   </tr>
 </table>
 
-Mehr dazu: [Konfiguration → Design](docs/configuration.md#design-anpassen).
+More: [Configuration → Custom design](docs/configuration.md#custom-design).
 
-## 🧩 Für Web-Entwickler
+## 🧩 For web developers
 
 ```html
-<!-- Nach jedem Scan Tab statt Enter senden -->
+<!-- Send Tab instead of Enter after each scan -->
 <meta http-equiv="scanner" content="Enable,AutoTab">
 ```
 
 ```js
 window.addEventListener('enterprisebrowser:scan', (e) => {
   if (e.detail.data.startsWith('LOC-')) {
-    e.preventDefault();               // nicht ins Feld schreiben
+    e.preventDefault();               // don't type it into the field
     openLocation(e.detail.data);
   }
 });
-EnterpriseBrowser.beep();             // JS-API auf freigegebenen Hosts
+EnterpriseBrowser.beep();             // JavaScript API on allowed hosts
 ```
 
-Alles zu Events, Meta-Tags und JavaScript-API: [Web-Integration](docs/web-integration.md).
+Everything about events, meta tags and the JavaScript API: [Web integration](docs/web-integration.md).
 
-## 🏗️ Aufbau
+## 🏗️ Architecture
 
 ```mermaid
 flowchart LR
-  subgraph Gerät
+  subgraph Device
     S[Scanner<br>DataWedge · Honeywell · Intent] --> M[ScannerManager]
     M --> B[BrowserActivity]
-    B -->|Text + Tab/Enter| W[(WebView)]
+    B -->|text + Tab/Enter| W[(WebView)]
     B -->|enterprisebrowser:scan| W
     W <-->|window.EnterpriseBrowser| B
   end
-  subgraph Provisionierung
-    MC[Managed Config] --> C[ConfigStore]
+  subgraph Provisioning
+    MC[Managed config] --> C[ConfigStore]
     F[enterprisebrowser.json] --> C
-    I[INSTALL_CONFIG Intent] --> C
-    Q[QR-Code] --> C
+    I[INSTALL_CONFIG intent] --> C
+    Q[QR code] --> C
   end
   C --> B
 ```
 
-## 🛠️ Selbst bauen
+## 🛠️ Building
 
-Voraussetzungen: JDK 17–21, Android SDK (Platform 36).
+Requirements: JDK 17–21, Android SDK (platform 36).
 
 ```bash
-./gradlew testDebugUnitTest assembleDebug     # Tests + APK
-./gradlew recordRoborazziDebug -Pscreenshots  # Doku-Screenshots neu rendern
+./gradlew testDebugUnitTest assembleDebug     # tests + APK
+./gradlew recordRoborazziDebug -Pscreenshots  # re-render the documentation screenshots
 ```
 
-Die Screenshots in dieser Doku werden direkt aus dem UI-Code gerendert
-(Robolectric/Roborazzi, Webinhalt mit Chromium) – siehe [`tools/screenshots`](tools/screenshots).
+The screenshots in this documentation are rendered straight from the UI code
+(Robolectric/Roborazzi, web content with Chromium) – see [`tools/screenshots`](tools/screenshots).
 
 ```
 app/src/main/java/io/github/pieewiee/enterprisebrowser/
-  config/        Profil-Modell, JSON-Format, Speicherung, Passwort-Hashing
-  web/           BrowserActivity, URL-Policy, Scan-Zustellung, JS-Bridge, Tastatur, Injections
-  scanner/       DataWedge, Honeywell, generischer Intent
-  provisioning/  Managed Configurations, Konfigurationsdateien, INSTALL_CONFIG
-  ui/, admin/    Startseite, Menü, Einstellungen, Branding
-examples/        fertige Konfigurationen (werden in den Tests geprüft)
-docs/            Dokumentation und Bilder
+  config/        profile model, JSON format, storage, password hashing
+  web/           BrowserActivity, URL policy, scan delivery, JS bridge, keyboard, injections
+  scanner/       DataWedge, Honeywell, generic intent
+  provisioning/  managed configurations, configuration files, INSTALL_CONFIG
+  ui/, admin/    start screen, menu, settings, branding
+examples/        ready-made configurations (validated by the tests)
+docs/            documentation and images
 ```
 
-## 📚 Dokumentation
+## 📚 Documentation
 
-- [Konfiguration](docs/configuration.md) – alle Einstellungen mit Beispielen
-- [Verteilung](docs/deployment.md) – SOTI MobiControl, Intune, Workspace ONE, StageNow, adb, QR
-- [Web-Integration](docs/web-integration.md) – Scan-Events, Meta-Tags, JavaScript-API
-- [Umstieg von Velocity](docs/velocity-migration.md) – welche Velocity-Einstellung wo landet
-- [Analyse von Velocity 3.0](docs/velocity-analysis.md) – Hintergrund der Neuimplementierung
+- [Configuration](docs/configuration.md) – every setting with examples
+- [Deployment](docs/deployment.md) – SOTI MobiControl, Intune, Workspace ONE, StageNow, adb, QR
+- [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
 - [Changelog](CHANGELOG.md)

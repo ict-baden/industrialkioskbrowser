@@ -1,14 +1,14 @@
 {
   "version": 2,
   "global": {
-    "adminPassword": "BITTE-AENDERN",
-    "exitPassword": "BITTE-AENDERN",
+    "adminPassword": "CHANGE-ME",
+    "exitPassword": "CHANGE-ME",
     "hideExit": true
   },
   "profiles": [
     {
       "id": "terminal",
-      "name": "Lager-Terminal",
+      "name": "Warehouse terminal",
       "startUrl": "https://wms.example.com/terminal",
       "allowList": ["wms.example.com", "sso.example.com"],
       "launchOnStartup": true,

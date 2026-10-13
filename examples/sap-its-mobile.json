@@ -1,14 +1,14 @@
 {
   "version": 2,
   "global": {
-    "adminPassword": "BITTE-AENDERN",
+    "adminPassword": "CHANGE-ME",
     "hideExit": false
   },
   "profiles": [
     {
-      "id": "sap-mde",
-      "name": "SAP MDE",
-      "startUrl": "https://sap.example.com:9001/sap/zwm_mde_le?sap-language=de",
+      "id": "sap-mobile",
+      "name": "SAP mobile",
+      "startUrl": "https://sap.example.com/sap/bc/gui/sap/its/zmobile?sap-language=en",
       "allowList": ["sap.example.com"],
       "launchOnStartup": true,
       "clearCookiesOnStart": true,

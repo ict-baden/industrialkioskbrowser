@@ -25,7 +25,7 @@ interface BarcodeScanner {
 
 /** Used on devices without a supported scanner service; intents are still handled by [GenericIntentReceiver]. */
 class NoScanner : BarcodeScanner {
-    override val name = "Kein Hardware-Scanner"
+    override val name = "No hardware scanner"
     override fun start(onScan: (ScanResult) -> Unit) = Unit
     override fun stop() = Unit
     override fun setEnabled(enabled: Boolean) = Unit

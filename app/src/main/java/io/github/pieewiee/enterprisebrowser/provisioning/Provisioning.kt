@@ -49,12 +49,12 @@ object Provisioning {
                 !configJson.isNullOrEmpty() -> store.import(ConfigJson.parse(configJson))
                 !startUrl.isNullOrEmpty() -> {
                     if (!startUrl.startsWith("http://") && !startUrl.startsWith("https://")) {
-                        throw ConfigException("start_url muss mit http:// oder https:// beginnen")
+                        throw ConfigException("start_url must start with http:// or https://")
                     }
                     val kiosk = restrictions.getBoolean("kiosk_mode", false)
                     val profile = Profile(
                         id = MANAGED_PROFILE_ID,
-                        name = restrictions.getString("profile_name")?.trim()?.ifEmpty { null } ?: "Verwaltet",
+                        name = restrictions.getString("profile_name")?.trim()?.ifEmpty { null } ?: "Managed",
                         startUrl = startUrl,
                         launchOnStartup = true,
                         kiosk = KioskSettings(hideToolbar = kiosk, immersive = kiosk),

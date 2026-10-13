@@ -1,100 +1,100 @@
-# Verteilung
+# Deployment
 
-Wie App und Konfiguration auf die Geräte kommen. Die Konfiguration ist immer dieselbe
-JSON-Datei ([Referenz](configuration.md), [Vorlagen](../examples)) – nur der Transportweg
-unterscheidet sich.
+How the app and its configuration get onto the devices. The configuration is always the
+same JSON file ([reference](configuration.md), [templates](../examples)) – only the
+transport differs.
 
-| Weg | Geeignet für | Konfiguration |
+| Method | Suited for | Configuration |
 |---|---|---|
-| [Managed Configuration](#managed-configuration-alle-emms) | SOTI, Intune, Workspace ONE, … (Android Enterprise) | Schlüssel `config_json` |
-| [Konfigurationsdatei](#konfigurationsdatei) | SOTI File Sync, Zebra StageNow/MX, adb | `enterprisebrowser.json` |
-| [Broadcast-Intent](#broadcast-intent-stagenow-adb) | Zebra StageNow (Intent CSP), Skripte, adb | Extra `config` |
-| [QR-Code](#qr-code) | Einzelgeräte, Tests | JSON im QR-Code |
+| [Managed configuration](#managed-configuration-all-emms) | SOTI, Intune, Workspace ONE, … (Android Enterprise) | key `config_json` |
+| [Configuration file](#configuration-file) | SOTI File Sync, Zebra StageNow/MX, adb | `enterprisebrowser.json` |
+| [Broadcast intent](#broadcast-intent-stagenow-adb) | Zebra StageNow (Intent CSP), scripts, adb | extra `config` |
+| [QR code](#qr-code) | single devices, testing | JSON inside the QR code |
 
-Paketname: **`io.github.pieewiee.enterprisebrowser`**
+Package name: **`io.github.pieewiee.enterprisebrowser`**
 
-## Managed Configuration (alle EMMs)
+## Managed configuration (all EMMs)
 
-Die App bringt ein Schema mit, das jedes EMM mit Android-Enterprise-Unterstützung anzeigt:
+The app ships a schema that every EMM with Android Enterprise support shows:
 
-| Schlüssel | Typ | Wirkung |
+| Key | Type | Effect |
 |---|---|---|
-| `config_json` | String | **Komplette Konfiguration** (Inhalt einer JSON-Datei aus `examples/`). Hat Vorrang. |
-| `start_url` | String | Einfacher Modus: legt ein Profil „managed“ an, das beim Start öffnet |
-| `profile_name` | String | Name dieses Profils |
-| `kiosk_mode` | Bool | Toolbar und Systemleisten aus, Beenden verborgen |
-| `admin_password` | String | Setzt das Admin-Passwort |
+| `config_json` | String | **Complete configuration** (contents of a JSON file from `examples/`). Takes precedence. |
+| `start_url` | String | Simple mode: creates a profile "managed" that opens on start |
+| `profile_name` | String | Name of that profile |
+| `kiosk_mode` | Bool | Toolbar and system bars hidden, exit hidden |
+| `admin_password` | String | Sets the admin password |
 
-Die Werte werden beim App-Start und bei jeder Rückkehr zur Profilliste übernommen,
-sobald sie sich geändert haben. Fehler (z. B. ungültiges JSON) stehen in der App unter
-**Einstellungen → Letzter Provisionierungsfehler**.
+The values are applied when the app starts and whenever you return to the profile list,
+as soon as they have changed. Errors (e.g. invalid JSON) are shown in the app under
+**Settings → Last provisioning error**.
 
 ## SOTI MobiControl
 
-Bezeichnungen der Menüs unterscheiden sich je nach MobiControl-Version und
-Geräteverwaltung (Android Enterprise oder Android+). Der Ablauf:
+Menu names differ between MobiControl versions and device management modes
+(Android Enterprise or Android+). The flow:
 
-1. **App hochladen** – APK aus den [Releases](../../../releases/latest) als Enterprise-App
-   in den App-Katalog (bzw. als Paket) aufnehmen und den Geräten zuweisen.
-   Ab Version 0.2.0 enthält die APK PNG-Icons, damit MobiControl das App-Icon anzeigt.
-2. **Konfiguration – Variante A, Managed Configuration** (Android Enterprise):
-   in den App-Einstellungen der Enterprise-App die App-Konfiguration öffnen und unter
-   `config_json` den Inhalt der JSON-Datei einfügen.
-3. **Konfiguration – Variante B, Datei** (z. B. Android+ mit Zebra-Agent):
-   per File Sync bzw. Paket `enterprisebrowser.json` nach `/enterprise/usr/` auf dem
-   Gerät legen (Zebra, bleibt auch nach einem Enterprise Reset erhalten).
-4. **Kiosk** – in einem Lockdown-/Kiosk-Profil den EnterpriseBrowser als einzige App
-   freigeben. Unter Android Enterprise (Dedicated Device) startet die App dann
-   automatisch im Lock-Task-Modus. Zusätzlich in der Konfiguration `global.hideExit`
-   setzen ([Vorlage](../examples/kiosk-single-app.json)).
-5. **Prüfen** – App auf einem Gerät öffnen: Die Profile aus der Konfiguration
-   erscheinen auf der Startseite, ein Profil mit `launchOnStartup` öffnet sofort.
+1. **Upload the app** – add the APK from the [releases](../../../releases/latest) to the app
+   catalog as an enterprise app (or as a package) and assign it to the devices.
+   Since version 0.2.0 the APK contains PNG icons, so MobiControl shows the app icon.
+2. **Configuration – option A, managed configuration** (Android Enterprise):
+   open the app configuration of the enterprise app and paste the contents of the JSON
+   file into `config_json`.
+3. **Configuration – option B, file** (e.g. Android+ with the Zebra agent):
+   put `enterprisebrowser.json` into `/enterprise/usr/` on the device with File Sync or a
+   package (Zebra; survives an enterprise reset).
+4. **Kiosk** – allow EnterpriseBrowser as the only app in a lockdown/kiosk profile. Under
+   Android Enterprise (dedicated device) the app then starts in lock task mode
+   automatically. Also set `global.hideExit` in the configuration
+   ([template](../examples/kiosk-single-app.json)).
+5. **Check** – open the app on a device: the profiles from the configuration appear on the
+   start screen, and a profile with `launchOnStartup` opens right away.
 
 ## Microsoft Intune
 
-1. Die App muss für Android-Enterprise-Geräte über **Managed Google Play** (private App)
-   bereitgestellt werden. Google Play nimmt nur release-signierte APKs an – die aktuelle
-   Debug-APK eignet sich dafür noch nicht (Release-Signierung ist in Vorbereitung).
-2. **App-Konfigurationsrichtlinie** (verwaltete Geräte) anlegen, Konfigurationsdesigner
-   verwenden und `config_json` bzw. `start_url` usw. setzen.
-3. Für Kiosk: Gerät als *Dedicated Device* einrichten und die App im Kioskprofil als
-   einzige App erlauben.
+1. On Android Enterprise devices the app has to be provided through **managed Google Play**
+   (private app). Google Play only accepts release-signed APKs – the current debug APK is
+   not suitable for this yet (release signing is planned).
+2. Create an **app configuration policy** (managed devices), use the configuration designer
+   and set `config_json` or `start_url` etc.
+3. For kiosk use: enroll the device as a *dedicated device* and allow the app as the only
+   app in the kiosk profile.
 
-## VMware Workspace ONE / andere EMMs
+## VMware Workspace ONE / other EMMs
 
-App als interne App bzw. über Managed Google Play hinzufügen und in der
-**App-Konfiguration** die Schlüssel aus der Tabelle oben setzen. Jedes EMM, das
-Android Managed Configurations unterstützt, zeigt das Schema automatisch an.
+Add the app as an internal app or through managed Google Play and set the keys from the
+table above in the **app configuration**. Every EMM that supports Android managed
+configurations shows the schema automatically.
 
 ## Zebra StageNow / MX
 
-- **App installieren:** AppMgr CSP mit der APK.
-- **Konfiguration als Datei:** FileMgr CSP, Ziel `/enterprise/usr/enterprisebrowser.json`.
-- **Konfiguration per Intent:** Intent CSP, *Send Broadcast* mit
-  Action `io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG`,
-  Package `io.github.pieewiee.enterprisebrowser` und String-Extra `config` (JSON).
-  Ist bereits ein Admin-Passwort gesetzt, zusätzlich String-Extra `admin_password`.
-- **Scanner:** Die App legt beim ersten Start ein DataWedge-Profil „EnterpriseBrowser“
-  an. Decoder (Symbologien, Längen, Beleuchtung …) können danach per DataWedge-CSP oder
-  in der DataWedge-App angepasst werden – die App überschreibt sie nicht.
+- **Install the app:** AppMgr CSP with the APK.
+- **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/enterprisebrowser.json`.
+- **Configuration via intent:** Intent CSP, *send broadcast* with
+  action `io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG`,
+  package `io.github.pieewiee.enterprisebrowser` and string extra `config` (JSON).
+  If an admin password is already set, also send the string extra `admin_password`.
+- **Scanner:** on first start the app creates a DataWedge profile "EnterpriseBrowser".
+  Decoders (symbologies, lengths, illumination …) can then be tuned with the DataWedge
+  CSP or in the DataWedge app – the app does not overwrite them.
 
-## Konfigurationsdatei
+## Configuration file
 
-Die App liest `enterprisebrowser.json` aus
+The app reads `enterprisebrowser.json` from
 
-1. `Android/data/io.github.pieewiee.enterprisebrowser/files/` (App-Ordner; existiert
-   nach dem ersten Start der App)
+1. `Android/data/io.github.pieewiee.enterprisebrowser/files/` (app folder; exists after
+   the app has been started once)
 2. `/enterprise/usr/` (Zebra, persistent)
 
-Eine Datei wird übernommen, sobald sich Zeitstempel oder Größe ändern – beim App-Start
-oder bei Rückkehr zur Profilliste.
+A file is applied as soon as its timestamp or size changes – when the app starts or when
+you return to the profile list.
 
 ```bash
 adb push examples/sap-its-mobile.json \
   /sdcard/Android/data/io.github.pieewiee.enterprisebrowser/files/enterprisebrowser.json
 ```
 
-## Broadcast-Intent (StageNow, adb)
+## Broadcast intent (StageNow, adb)
 
 ```bash
 adb shell am broadcast \
@@ -103,22 +103,21 @@ adb shell am broadcast \
   --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'
 ```
 
-Antwort (bei geordnetem Broadcast) im Result: `-1` = installiert, `2` = Admin-Passwort
-fehlt/falsch, `3` = ungültige Konfiguration.
+Result code (for ordered broadcasts): `-1` = installed, `2` = admin password missing or
+wrong, `3` = invalid configuration.
 
-## QR-Code
+## QR code
 
-In der App **Einstellungen → Per Barcode importieren** wählen und einen QR-Code
-scannen, der die JSON-Konfiguration enthält. Ein QR-Code fasst knapp 3 KB –
-für größere Konfigurationen (Ressourcen, Logo) Managed Configuration oder Datei nutzen.
+In the app choose **Settings → Import from barcode** and scan a QR code containing the JSON
+configuration. A QR code holds a little under 3 KB – use a managed configuration or a file
+for larger configurations (resources, logo).
 
 ```bash
 qrencode -r examples/minimal.json -o config-qr.png
 ```
 
-## Updates und Signatur
+## Updates and signing
 
-Android installiert ein Update nur, wenn die neue APK mit demselben Schlüssel signiert
-ist wie die installierte. Die aktuellen Releases sind **debug-signiert**. Beim späteren
-Wechsel auf einen Release-Schlüssel muss die App einmalig deinstalliert und neu
-installiert werden (Konfiguration danach erneut verteilen).
+Android only installs an update if the new APK is signed with the same key as the installed
+one. The current releases are **debug-signed**. When switching to a release key later, the
+app has to be uninstalled and reinstalled once (then distribute the configuration again).

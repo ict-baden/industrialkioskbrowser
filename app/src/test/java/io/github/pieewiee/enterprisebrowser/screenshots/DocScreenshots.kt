@@ -69,8 +69,8 @@ class DocScreenshots {
             sampleConfig().copy(
                 global = GlobalSettings(
                     branding = Branding(
-                        title = "Logistikzentrum Nord",
-                        subtitle = "Schicht A · Halle 3",
+                        title = "North Logistics Center",
+                        subtitle = "Shift A · Hall 3",
                         color = "#00796B",
                         logo = "res:logo.png",
                     ),
@@ -100,7 +100,7 @@ class DocScreenshots {
     fun colorPicker() {
         seed(sampleConfig())
         ActivityScenario.launch(AdminActivity::class.java).use { scenario ->
-            scenario.onActivity { it.pickColor("Markenfarbe", "#0D47A1") {} }
+            scenario.onActivity { it.pickColor("Brand color", "#0D47A1") {} }
             capture("color-picker")
         }
     }
@@ -114,7 +114,7 @@ class DocScreenshots {
     @Test
     fun browserError() {
         seed(sampleConfig())
-        browser("wareneingang").use { capture("browser-wms-frame") }
+        browser("goods-receipt").use { capture("browser-wms-frame") }
     }
 
     @Test
@@ -142,28 +142,28 @@ class DocScreenshots {
     private fun sampleConfig() = AppConfig(
         profiles = listOf(
             Profile(
-                id = "wareneingang",
-                name = "Wareneingang",
-                startUrl = "https://wms.example.com/wareneingang",
+                id = "goods-receipt",
+                name = "Goods receipt",
+                startUrl = "https://wms.example.com/goods-receipt",
                 allowList = listOf("example.com"),
                 launchOnStartup = true,
             ),
             Profile(
-                id = "kommissionierung",
-                name = "Kommissionierung",
+                id = "picking",
+                name = "Picking",
                 startUrl = "https://pick.example.com/app",
                 color = "#00796B",
                 allowList = listOf("example.com"),
                 kiosk = KioskSettings(hideToolbar = true, immersive = true),
             ),
             Profile(
-                id = "versand",
-                name = "Versand & Etiketten",
+                id = "shipping",
+                name = "Shipping & labels",
                 startUrl = "https://shipping.example.com",
                 color = "#F57C00",
                 scanner = ScannerSettings(enabled = false),
             ),
-            Profile(id = AppConfig.DEMO_PROFILE_ID, name = "Demo & Scanner-Test", startUrl = AppConfig.DEMO_URL, color = "#6A1B9A"),
+            Profile(id = AppConfig.DEMO_PROFILE_ID, name = "Demo & scanner test", startUrl = AppConfig.DEMO_URL, color = "#6A1B9A"),
         ),
     )
 
@@ -178,7 +178,7 @@ class DocScreenshots {
             typeface = Typeface.DEFAULT_BOLD
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("LN", 96f, 128f, paint)
+        canvas.drawText("NL", 96f, 128f, paint)
         return ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
     }
 }

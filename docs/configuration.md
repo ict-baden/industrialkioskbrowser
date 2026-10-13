@@ -1,33 +1,33 @@
-# Konfiguration
+# Configuration
 
-Die gesamte Konfiguration ist **eine JSON-Datei**. Sie wird per MDM verteilt
-([Verteilung](deployment.md)), in der App unter **Einstellungen** importiert/exportiert
-oder per QR-Code eingelesen. Fertige Vorlagen liegen in [`examples/`](../examples) –
-jede davon wird in den automatischen Tests gegen die App geprüft.
+The whole configuration is **one JSON file**. It is distributed through your MDM
+([Deployment](deployment.md)), imported/exported in the app under **Settings**, or read
+from a QR code. Ready-made templates are in [`examples/`](../examples) – each of them is
+checked against the app by the automated tests.
 
-> 💡 Nur `startUrl` ist Pflicht. Alles andere hat sinnvolle Standardwerte – die
-> minimale Konfiguration ist [drei Zeilen lang](../examples/minimal.json).
+> 💡 Only `startUrl` is required. Everything else has sensible defaults – the minimal
+> configuration is [three lines long](../examples/minimal.json).
 
-## Inhalt
+## Contents
 
-- [Überblick](#überblick)
-- [`global`](#global) – Passwörter, Kiosk, Branding
-- [Profile](#profile) – Start-URL, Allowlist, Grundeinstellungen
+- [Overview](#overview)
+- [`global`](#global) – passwords, kiosk, branding
+- [Profiles](#profiles) – start URL, allow list, basics
 - [`viewport`](#viewport) · [`keyboard`](#keyboard) · [`injections`](#injections) ·
-  [`errorPages` und `sounds`](#errorpages-und-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner)
-- [Ressourcen](#ressourcen)
-- [Design anpassen](#design-anpassen)
+  [`errorPages` and `sounds`](#errorpages-and-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner)
+- [Resources](#resources)
+- [Custom design](#custom-design)
 
-## Überblick
+## Overview
 
 ```json
 {
   "version": 2,
   "global": {
-    "adminPassword": "geheim",
-    "exitPassword": "auch-geheim",
+    "adminPassword": "secret",
+    "exitPassword": "also-secret",
     "hideExit": false,
-    "branding": { "title": "Logistikzentrum Nord", "color": "#00796B", "logo": "res:logo.png" }
+    "branding": { "title": "North Logistics Center", "color": "#00796B", "logo": "res:logo.png" }
   },
   "resources": {
     "logo.png": { "base64": "iVBORw0KGgo..." },
@@ -35,8 +35,8 @@ jede davon wird in den automatischen Tests gegen die App geprüft.
   },
   "profiles": [
     {
-      "id": "lager",
-      "name": "Lager",
+      "id": "warehouse",
+      "name": "Warehouse",
       "startUrl": "https://wms.example.com/",
       "color": "#1565C0",
       "allowList": ["example.com", "sso.example.org"],
@@ -58,51 +58,52 @@ jede davon wird in den automatischen Tests gegen die App geprüft.
 }
 ```
 
-Unbekannte Felder werden ignoriert, ungültige Werte führen zu einer klaren
-Fehlermeldung (Import-Dialog bzw. **Einstellungen → Letzter Provisionierungsfehler**).
-Jede Quelle ersetzt die Profilliste vollständig; nicht gesetzte Passwörter bleiben erhalten.
+Unknown fields are ignored; invalid values produce a clear error message (import dialog
+or **Settings → Last provisioning error**). Every source replaces the whole profile list;
+passwords that are not set keep their current value.
 
 ## `global`
 
-| Feld | Bedeutung |
+| Field | Meaning |
 |---|---|
-| `adminPassword` / `adminPasswordHash` | Schützt die Einstellungen. Klartext wird beim Import gehasht (PBKDF2); Exporte enthalten nur den Hash. |
-| `exitPassword` / `exitPasswordHash` | Wird beim Beenden abgefragt. |
-| `hideExit` | Blendet „Beenden“ und „Profil wechseln“ aus (Kiosk). |
-| `branding.title` | Titel der Startseite (Standard: „EnterpriseBrowser“) |
-| `branding.subtitle` | Untertitel (Standard: Gerätehersteller und -modell) |
-| `branding.color` | Markenfarbe `#RRGGBB` für Startseite, Toolbars und Fehlerseiten |
-| `branding.logo` | Logo als Ressource, z. B. `res:logo.png` (PNG/JPEG/WebP) |
+| `adminPassword` / `adminPasswordHash` | Protects the settings. Plain text is hashed on import (PBKDF2); exports only contain the hash. |
+| `exitPassword` / `exitPasswordHash` | Asked for when exiting. |
+| `hideExit` | Hides "Exit" and "Profiles" (kiosk). |
+| `branding.title` | Title of the start screen (default: "EnterpriseBrowser") |
+| `branding.subtitle` | Subtitle (default: device manufacturer and model) |
+| `branding.color` | Brand color `#RRGGBB` for the start screen, toolbars and error pages |
+| `branding.logo` | Logo as a resource, e.g. `res:logo.png` (PNG/JPEG/WebP) |
 
-## Profile
+## Profiles
 
-| Feld | Standard | Bedeutung |
+| Field | Default | Meaning |
 |---|---|---|
-| `id` | aus `name` | Eindeutige ID |
-| `name` | `startUrl` | Anzeigename |
-| `startUrl` | – | **Pflicht**, `http://` oder `https://` |
-| `color` | Markenfarbe | Farbe von Profilkarte und Toolbar, `#RRGGBB` |
-| `allowList` | `[]` | Erlaubte Hosts inkl. Subdomains (`example.com` erlaubt auch `a.example.com`). Leer = alles erlaubt. Der Host der Start-URL ist immer erlaubt. Gilt für Navigationen im Hauptframe. |
-| `launchOnStartup` | `false` | Profil beim App-Start direkt öffnen |
-| `userAgent` | Standard | Eigener User-Agent; `{default}` wird durch den Standard-UA ersetzt |
-| `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Beim Öffnen des Profils löschen (z. B. frische SAP-Sitzung) |
-| `allowFileUpload` | `false` | `<input type="file">` erlauben |
-| `allowDownloads` | `true` | Downloads über den Android-DownloadManager |
+| `id` | from `name` | Unique ID |
+| `name` | `startUrl` | Display name |
+| `startUrl` | – | **Required**, `http://` or `https://` |
+| `color` | brand color | Color of the profile card and toolbar, `#RRGGBB` |
+| `allowList` | `[]` | Allowed hosts including subdomains (`example.com` also allows `a.example.com`). Empty = everything allowed. The host of the start URL is always allowed. Applies to main-frame navigations. |
+| `launchOnStartup` | `false` | Open this profile directly when the app starts |
+| `userAgent` | default | Custom user agent; `{default}` is replaced by the default user agent |
+| `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Clear when the profile opens (e.g. a fresh SAP session) |
+| `allowFileUpload` | `false` | Allow `<input type="file">` |
+| `allowDownloads` | `true` | Downloads through the Android DownloadManager |
 
 ## `viewport`
 
-| Feld | Standard | Bedeutung |
+| Field | Default | Meaning |
 |---|---|---|
-| `mode` | `page` | `page`: die Seite bestimmt ihre Breite (wie Chrome). `device`: immer Gerätebreite – **so wie Velocity**. `fixed`: feste Layoutbreite `width`, auf den Bildschirm skaliert. |
-| `width` | `0` | Layoutbreite in CSS-Pixeln (nur bei `fixed`, Pflicht) |
-| `initialScale` | `0` | Startzoom in Prozent, `0` = automatisch |
-| `fitToScreen` | `true` | Zu breite Seiten beim Laden einpassen (Velocity: aus) |
-| `textZoom` | `100` | Schriftgröße in Prozent (25–400) |
-| `pinchZoom` | `true` | Zoomen per Geste |
-| `metaOverride` | – | Ersetzt das Viewport-Meta-Tag der Seite, z. B. `width=device-width, initial-scale=1` |
+| `mode` | `page` | `page`: the page decides its width (like Chrome). `device`: always the device width. `fixed`: fixed layout width `width`, scaled to the screen. |
+| `width` | `0` | Layout width in CSS pixels (only for `fixed`, required) |
+| `initialScale` | `0` | Initial zoom in percent, `0` = automatic |
+| `fitToScreen` | `true` | Fit pages that are too wide when loading |
+| `textZoom` | `100` | Font size in percent (25–400) |
+| `pinchZoom` | `true` | Pinch to zoom |
+| `metaOverride` | – | Replaces the page's viewport meta tag, e.g. `width=device-width, initial-scale=1` |
 
-> **Wie in Velocity:** `"viewport": { "mode": "device", "fitToScreen": false }`.
-> Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gelesen.
+> **Tip for classic scanner web apps:** `"viewport": { "mode": "device", "fitToScreen": false }`
+> renders at device width without zooming out.
+> Version 1 files with `textZoom`/`pinchZoom` directly on the profile are still read.
 
 ## `keyboard`
 
@@ -123,91 +124,91 @@ Jede Quelle ersetzt die Profilliste vollständig; nicht gesetzte Passwörter ble
 }
 ```
 
-| Feld | Bedeutung |
+| Field | Meaning |
 |---|---|
-| `soft` | `system` (Android-Tastatur) oder `none` (nie einblenden) |
-| `showOnFocus` | `false`: Tastatur erscheint nicht beim Antippen eines Feldes, nur über das Tastatur-Symbol in der Toolbar oder den Hotkey – wie Velocity |
-| `showOnPageLoad` | Tastatur nach jedem Seitenladen einblenden |
-| `backKey` | Makro für die Zurück-Taste; `{BACK}` = zurück bzw. Menü |
-| `remap` | Hardware-Taste (`key`: Android-Name ohne `KEYCODE_`, z. B. `F1`, `BUTTON_L1`, `ENTER`, oder Zahl) → Makro. `system` reicht die Taste durch, leer verschluckt sie. |
-| `hotkeys` | Aktion → Taste. Aktionen: `toggleKeyboard`, `menu`, `home`, `reload`, `back`, `forward`, `scan` |
-| `longPressDigitsAsF` | Langes Drücken von 1–9/0 sendet F1–F10 |
+| `soft` | `system` (Android keyboard) or `none` (never shown) |
+| `showOnFocus` | `false`: the keyboard does not appear when tapping a field, only via the keyboard button in the toolbar or the hotkey |
+| `showOnPageLoad` | Show the keyboard after every page load |
+| `backKey` | Macro for the back key; `{BACK}` = go back or open the menu |
+| `remap` | Hardware key (`key`: Android name without `KEYCODE_`, e.g. `F1`, `BUTTON_L1`, `ENTER`, or a number) → macro. `system` passes the key through, empty swallows it. |
+| `hotkeys` | Action → key. Actions: `toggleKeyboard`, `menu`, `home`, `reload`, `back`, `forward`, `scan` |
+| `longPressDigitsAsF` | Long press on 1–9/0 sends F1–F10 |
 
-**Makros** (Velocity-kompatibel, Groß-/Kleinschreibung egal): Text wird getippt,
+**Macros** (case-insensitive): plain text is typed,
 `{TAB}`, `{BACK-TAB}`, `{ENTER}`, `{ESC}`, `{BS}`, `{DELETE}`, `{INSERT}`, `{HOME}`,
 `{END}`, `{PAGE-UP}`, `{PAGE-DOWN}`, `{UP}` `{DOWN}` `{LEFT}` `{RIGHT}`, `{SPACE}`,
 `{F1}`–`{F12}`, `{CTRL-C}`, `{HEX:00E4}`, `{OPEN-BRACE}`/`{CLOSE-BRACE}`,
-`{PAUSE}` / `{PAUSE:500}`, Aktionen `{BACK}`, `{NAVIGATE-BACK}`,
+`{PAUSE}` / `{PAUSE:500}`, actions `{BACK}`, `{NAVIGATE-BACK}`,
 `{NAVIGATE-FORWARD}`, `{NAVIGATE-STOP}`, `{NAVIGATE-HOME}`, `{NAVIGATE-REFRESH}`,
-`{SPECIAL:SCAN}`, `{MENU}`, `{KEYBOARD}`. Unbekannte Tokens werden als Text getippt.
+`{SPECIAL:SCAN}`, `{MENU}`, `{KEYBOARD}`. Unknown tokens are typed as text.
 
 ## `injections`
 
-Eigenes CSS, JavaScript oder HTML in Seiten einfügen – etwa größere Eingabefelder
-für eine fremde Web-App oder ein Scan-Hook.
+Add your own CSS, JavaScript or HTML to pages – for example larger input fields for a
+third-party web app, or a scan hook.
 
 ```json
 "injections": [
-  { "match": { "url": "/sap/zwm_mde_le", "type": "contains" }, "when": "documentStart", "css": "res:sap.css" },
+  { "match": { "url": "/sap/bc/gui/sap/its/", "type": "contains" }, "when": "documentStart", "css": "res:sap.css" },
   { "match": { "url": "^https://wms\\.example\\.com/pick", "type": "regex", "source": "id=\"pickForm\"" },
     "when": "pageLoaded", "js": "res:pick.js", "frames": "main" },
-  { "html": "<div class='banner'>TESTSYSTEM</div>", "position": "bodyStart" }
+  { "html": "<div class='banner'>TEST SYSTEM</div>", "position": "bodyStart" }
 ]
 ```
 
-| Feld | Bedeutung |
+| Field | Meaning |
 |---|---|
-| `match.url` / `match.type` | `contains` (Standard), `prefix`, `regex`; ohne `url` gilt die Injection für alle Seiten |
-| `match.source` | Nur einfügen, wenn der Seitenquelltext diesen Text enthält |
-| `when` | `documentStart` (vor dem ersten Rendern, kein Flackern – Standard) oder `pageLoaded` |
-| `frames` | `main` (Standard) oder `all` (nur bei `documentStart`) |
-| `css` / `js` / `html` | Inline-Inhalt oder `res:<name>`; `<script>` in HTML wird ausgeführt |
-| `position` | Für HTML: `bodyEnd` (Standard), `bodyStart`, `head` |
+| `match.url` / `match.type` | `contains` (default), `prefix`, `regex`; without `url` the injection applies to every page |
+| `match.source` | Only inject if the page source contains this text |
+| `when` | `documentStart` (before first render, no flicker – default) or `pageLoaded` |
+| `frames` | `main` (default) or `all` (only with `documentStart`) |
+| `css` / `js` / `html` | Inline content or `res:<name>`; `<script>` inside HTML is executed |
+| `position` | For HTML: `bodyEnd` (default), `bodyStart`, `head` |
 
-## `errorPages` und `sounds`
+## `errorPages` and `sounds`
 
 ```json
 "errorPages": { "template": "res:error.html", "showHttpErrors": false },
 "sounds": { "scanOk": "none", "error": "tone:1400:200:1000:200" }
 ```
 
-- `template` – eigenes HTML mit den Platzhaltern `{{title}}`, `{{message}}`, `{{url}}`
-  und `{{color}}` (Markenfarbe). Der Link `ebrowser://retry` lädt neu. Ohne Vorlage wird
-  die eingebaute Fehlerseite verwendet (siehe [Bild](images/screen-error.png)).
-- `showHttpErrors` – ersetzt auch Fehlerseiten des Servers (HTTP ≥ 400).
-- Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` oder `res:<name>`
-  (Audiodatei). `error` ertönt bei Fehlerseiten und gesperrten Seiten.
+- `template` – your own HTML with the placeholders `{{title}}`, `{{message}}`, `{{url}}`
+  and `{{color}}` (brand color). The link `ebrowser://retry` reloads. Without a template
+  the built-in error page is used (see [image](images/screen-error.png)).
+- `showHttpErrors` – also replaces the server's error pages (HTTP ≥ 400).
+- Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` or `res:<name>`
+  (audio file). `error` plays on error pages and blocked pages.
 
 ## `kiosk`
 
-| Feld | Standard | Bedeutung |
+| Field | Default | Meaning |
 |---|---|---|
-| `hideToolbar` | `false` | Toolbar ausblenden (Menü dann über die Zurück-Taste bzw. den Hotkey) |
-| `immersive` | `false` | Status- und Navigationsleiste ausblenden |
-| `keepScreenOn` | `true` | Display bleibt an |
+| `hideToolbar` | `false` | Hide the toolbar (menu then via the back key or the hotkey) |
+| `immersive` | `false` | Hide status and navigation bars |
+| `keepScreenOn` | `true` | Keep the display on |
 | `orientation` | `auto` | `auto`, `portrait`, `landscape` |
 
-Für einen vollständigen Kiosk zusätzlich `global.hideExit` setzen und die App im MDM
-für **Lock Task** freigeben (Dedicated Device) – sie startet dann automatisch gesperrt.
-Vorlage: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
+For a full kiosk also set `global.hideExit` and allow the app for **lock task** in your
+MDM (dedicated device) – it then starts locked automatically.
+Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 
 ## `scanner`
 
-| Feld | Standard | Bedeutung |
+| Field | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | Scanner beim Laden einer Seite aktiv |
-| `terminator` | `enter` | Nach dem Einfügen gesendete Tasten: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
-| `injectIntoFocusedField` | `true` | Scan in das fokussierte Eingabefeld schreiben |
+| `enabled` | `true` | Scanner active when a page loads |
+| `terminator` | `enter` | Keys sent after inserting: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
+| `injectIntoFocusedField` | `true` | Type the scan into the focused input field |
 
-| Gerät | Anbindung |
+| Device | Integration |
 |---|---|
-| Zebra | DataWedge-Intent-API. Beim Start wird ein DataWedge-Profil „EnterpriseBrowser“ angelegt (Intent-Ausgabe an, Keystroke aus). Decoder-Einstellungen bleiben unangetastet und können in DataWedge/StageNow angepasst werden. |
-| Honeywell | Intent-API des Data Collection Service (Scanner wird mit Data-Intent beansprucht). |
-| Andere | Jede Scanner-App, die `io.github.pieewiee.enterprisebrowser.action.BARCODE` mit dem Barcode in einem Extra (`data`, `…data_string`, `…decode_string`, `barcode_string`) sendet. |
+| Zebra | DataWedge intent API. On start a DataWedge profile "EnterpriseBrowser" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. |
+| Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
+| Others | Any scanner app that broadcasts `io.github.pieewiee.enterprisebrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
 
-Seiten können den Scanner per Meta-Tag steuern – siehe [Web-Integration](web-integration.md).
+Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 
-## Ressourcen
+## Resources
 
 ```json
 "resources": {
@@ -216,28 +217,27 @@ Seiten können den Scanner per Meta-Tag steuern – siehe [Web-Integration](web-
 }
 ```
 
-Ressourcen gelten für alle Profile. Sie werden mit `res:<name>` referenziert und sind
-für Seiten unter `https://appassets.androidplatform.net/res/<name>` erreichbar
-(z. B. Bilder in injiziertem CSS). Namen dürfen Unterordner enthalten (`css/a.css`),
-aber kein `..`.
+Resources are shared by all profiles. They are referenced as `res:<name>` and available to
+pages at `https://appassets.androidplatform.net/res/<name>` (e.g. images in injected CSS).
+Names may contain folders (`css/a.css`), but no `..`.
 
-## Design anpassen
+## Custom design
 
-![Standard-Design und eigenes Branding](images/branding.png)
+![Default design and custom branding](images/branding.png)
 
-Drei Ebenen:
+Three levels:
 
-1. **Branding** (`global.branding`) – Titel, Untertitel, Logo und Markenfarbe der
-   Startseite; die Farbe gilt auch für Einstellungen und Fehlerseiten.
-2. **Profilfarbe** (`profiles[].color`) – färbt Profilkarte, Toolbar und Menü der
-   jeweiligen Web-App, damit Mitarbeiter sofort sehen, wo sie sind.
-3. **Injections** – Feinschliff an der Web-App selbst (Schriftgrößen, Buttons, Banner).
+1. **Branding** (`global.branding`) – title, subtitle, logo and brand color of the start
+   screen; the color also applies to the settings and error pages.
+2. **Profile color** (`profiles[].color`) – tints the profile card, toolbar and menu of
+   that web app, so people can see at a glance where they are.
+3. **Injections** – fine-tuning of the web app itself (font sizes, buttons, banners).
 
-Ohne MDM lässt sich das Design auch direkt am Gerät setzen: **Einstellungen → Design**
-(Titel, Markenfarbe aus Palette oder Hex-Wert, Logo aus einer Bilddatei). Text- und
-Symbolfarben passen sich automatisch an – auch helle Markenfarben bleiben lesbar.
+Without an MDM the design can also be set right on the device: **Settings → Design**
+(title, brand color from a palette or as a hex value, logo from an image file). Text and
+icon colors adapt automatically – even light brand colors stay readable.
 
 <p>
-  <img src="images/screen-color-picker.png" width="260" alt="Markenfarbe wählen">
-  <img src="images/screen-profile-editor.png" width="260" alt="Profil mit eigener Farbe">
+  <img src="images/screen-color-picker.png" width="260" alt="Pick the brand color">
+  <img src="images/screen-profile-editor.png" width="260" alt="Profile with its own color">
 </p>

@@ -15,10 +15,10 @@ class ConfigJsonTest {
             """
             {
               "version": 1,
-              "global": { "adminPassword": "geheim", "hideExit": true },
+              "global": { "adminPassword": "secret", "hideExit": true },
               "profiles": [{
-                "id": "lager",
-                "name": "Lager",
+                "id": "warehouse",
+                "name": "Warehouse",
                 "startUrl": "https://wms.example.com",
                 "allowList": ["example.com", " "],
                 "launchOnStartup": true,
@@ -29,12 +29,12 @@ class ConfigJsonTest {
             }
             """,
         )
-        assertTrue(PasswordHasher.verify("geheim", config.global.adminPasswordHash))
+        assertTrue(PasswordHasher.verify("secret", config.global.adminPasswordHash))
         assertNull(config.global.exitPasswordHash)
         assertTrue(config.global.hideExit)
 
         val profile = config.profiles.single()
-        assertEquals("lager", profile.id)
+        assertEquals("warehouse", profile.id)
         assertEquals(listOf("example.com"), profile.allowList)
         assertTrue(profile.launchOnStartup)
         assertEquals(400, profile.viewport.textZoom)
@@ -87,12 +87,12 @@ class ConfigJsonTest {
             """
             {
               "resources": { "logo.png": { "base64": "iVBORw0KGgo=" } },
-              "global": { "branding": { "title": "Lager Nord", "subtitle": "Halle 3", "color": "#00796b", "logo": "res:logo.png" } },
+              "global": { "branding": { "title": "Warehouse North", "subtitle": "Hall 3", "color": "#00796b", "logo": "res:logo.png" } },
               "profiles": [{ "startUrl": "https://x.test", "color": "#f57c00" }]
             }
             """,
         )
-        assertEquals(Branding("Lager Nord", "Halle 3", "#00796B", "res:logo.png"), config.global.branding)
+        assertEquals(Branding("Warehouse North", "Hall 3", "#00796B", "res:logo.png"), config.global.branding)
         assertEquals("#F57C00", config.profiles.single().color)
         assertEquals(config, ConfigJson.parse(ConfigJson.write(config)))
     }
@@ -131,8 +131,8 @@ class ConfigJsonTest {
 
     @Test
     fun `derives missing ids from names`() {
-        val config = ConfigJson.parse("""{"profiles":[{"name":"Wareneingang Halle 2","startUrl":"https://x.test"}]}""")
-        assertEquals("wareneingang-halle-2", config.profiles.single().id)
+        val config = ConfigJson.parse("""{"profiles":[{"name":"Goods Receipt Hall 2","startUrl":"https://x.test"}]}""")
+        assertEquals("goods-receipt-hall-2", config.profiles.single().id)
     }
 
     @Test
@@ -158,11 +158,11 @@ class ConfigJsonTest {
 
     @Test
     fun `password hashes verify only the right password`() {
-        val hash = PasswordHasher.hash("richtig")
-        assertTrue(PasswordHasher.verify("richtig", hash))
-        assertFalse(PasswordHasher.verify("falsch", hash))
-        assertFalse(PasswordHasher.verify("richtig", null))
-        assertFalse(PasswordHasher.verify("richtig", "pbkdf2-sha256\$x\$y\$z"))
+        val hash = PasswordHasher.hash("correct")
+        assertTrue(PasswordHasher.verify("correct", hash))
+        assertFalse(PasswordHasher.verify("wrong", hash))
+        assertFalse(PasswordHasher.verify("correct", null))
+        assertFalse(PasswordHasher.verify("correct", "pbkdf2-sha256\$x\$y\$z"))
     }
 
     private fun assertRejected(json: String) {

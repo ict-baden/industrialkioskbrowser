@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
             if (profile.launchOnStartup) add("Autostart")
             if (profile.kiosk.hideToolbar || profile.kiosk.immersive) add("Kiosk")
             if (profile.allowList.isNotEmpty()) add("Allowlist")
-            if (!profile.scanner.enabled) add("Scanner aus")
+            if (!profile.scanner.enabled) add("Scanner off")
         }
 
         private fun badge(context: Context, label: String, color: Int) = TextView(context).apply {

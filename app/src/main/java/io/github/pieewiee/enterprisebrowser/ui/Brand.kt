@@ -60,5 +60,5 @@ object Brand {
     fun host(url: String): String = url.substringAfter("://").substringBefore('/').substringBefore('?')
 
     /** Address shown to users: the host, or a label for the bundled demo. */
-    fun address(url: String): String = host(url).let { if (it == UrlPolicy.ASSET_HOST) "Integrierte Demo" else it }
+    fun address(url: String): String = host(url).let { if (it == UrlPolicy.ASSET_HOST) "Built-in demo" else it }
 }

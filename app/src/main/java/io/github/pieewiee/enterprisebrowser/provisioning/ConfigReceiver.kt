@@ -22,19 +22,19 @@ class ConfigReceiver : BroadcastReceiver() {
         val store = ConfigStore.get(context)
         val adminHash = store.config.global.adminPasswordHash
         if (adminHash != null && !PasswordHasher.verify(intent.getStringExtra(EXTRA_ADMIN_PASSWORD).orEmpty(), adminHash)) {
-            reply(RESULT_DENIED, "admin_password fehlt oder ist falsch")
+            reply(RESULT_DENIED, "admin_password is missing or wrong")
             return
         }
         val json = intent.getStringExtra(EXTRA_CONFIG)
         if (json.isNullOrBlank()) {
-            reply(RESULT_INVALID, "Extra \"$EXTRA_CONFIG\" fehlt")
+            reply(RESULT_INVALID, "Extra \"$EXTRA_CONFIG\" is missing")
             return
         }
         try {
             val imported = store.import(ConfigJson.parse(json))
-            reply(Activity.RESULT_OK, "${imported.profiles.size} Profil(e) installiert")
+            reply(Activity.RESULT_OK, "${imported.profiles.size} profile(s) installed")
         } catch (e: ConfigException) {
-            reply(RESULT_INVALID, e.message ?: "Ungültige Konfiguration")
+            reply(RESULT_INVALID, e.message ?: "Invalid configuration")
         }
     }
 

@@ -32,9 +32,9 @@ open(os.path.join(out, "demo.html"), "w", encoding="utf-8").write(demo.replace("
 
 status = open(os.path.join(assets, "status.html"), encoding="utf-8").read()
 for key, value in {
-    "title": "Server nicht gefunden",
-    "message": "Die Adresse konnte nicht aufgelöst werden. Prüfe die WLAN-Verbindung. (net::ERR_NAME_NOT_RESOLVED)",
-    "url": "https://wms.example.com/wareneingang",
+    "title": "Server not found",
+    "message": "The address could not be resolved. Check the Wi-Fi connection. (net::ERR_NAME_NOT_RESOLVED)",
+    "url": "https://wms.example.com/goods-receipt",
     "color": "#0D47A1",
 }.items():
     status = status.replace("{{" + key + "}}", value)

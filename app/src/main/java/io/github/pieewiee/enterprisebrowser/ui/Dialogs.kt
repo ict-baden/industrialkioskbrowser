@@ -24,7 +24,7 @@ object Dialogs {
     fun requireAdmin(activity: Activity, onSuccess: () -> Unit) = requirePassword(
         activity,
         ConfigStore.get(activity).config.global.adminPasswordHash,
-        "Admin-Passwort",
+        "Admin password",
         onSuccess,
     )
 
@@ -34,38 +34,38 @@ object Dialogs {
             onSuccess()
             return
         }
-        val field = textField(activity, "Passwort", password = true)
+        val field = textField(activity, "Password", password = true)
         MaterialAlertDialogBuilder(activity)
             .setIcon(icon(activity, R.drawable.ic_lock))
             .setTitle(title)
             .setView(form(activity, field))
-            .setPositiveButton("Entsperren") { _, _ ->
+            .setPositiveButton("Unlock") { _, _ ->
                 if (PasswordHasher.verify(field.value, hash)) {
                     onSuccess()
                 } else {
-                    Toast.makeText(activity, "Falsches Passwort", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "Wrong password", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
         field.editText?.requestFocus()
     }
 
     /** Asks for HTTP credentials; [onResult] receives `null` when cancelled. */
     fun credentials(activity: Activity, host: String, onResult: (Pair<String, String>?) -> Unit) {
-        val user = textField(activity, "Benutzername")
-        val password = textField(activity, "Passwort", password = true)
+        val user = textField(activity, "User name")
+        val password = textField(activity, "Password", password = true)
         var answered = false
         MaterialAlertDialogBuilder(activity)
             .setIcon(icon(activity, R.drawable.ic_key))
-            .setTitle("Anmeldung")
+            .setTitle("Sign in")
             .setMessage(host)
             .setView(form(activity, user, password))
-            .setPositiveButton("Anmelden") { _, _ ->
+            .setPositiveButton("Sign in") { _, _ ->
                 answered = true
                 onResult(user.value to password.value)
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .setOnDismissListener { if (!answered) onResult(null) }
             .show()
     }

@@ -3,7 +3,7 @@ package io.github.pieewiee.enterprisebrowser.web
 import android.view.KeyEvent
 
 /**
- * Key macros in Velocity-compatible `{TOKEN}` syntax, e.g. `{F1}`, `abc{TAB}`, `{CTRL-C}`,
+ * Key macros in `{TOKEN}` syntax, e.g. `{F1}`, `abc{TAB}`, `{CTRL-C}`,
  * `{PAUSE:200}`, `{NAVIGATE-HOME}`. Tokens are case-insensitive; unknown tokens are typed literally.
  */
 sealed interface MacroStep {

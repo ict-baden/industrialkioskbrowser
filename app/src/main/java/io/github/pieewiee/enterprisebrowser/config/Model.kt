@@ -226,7 +226,7 @@ data class AppConfig(
 
         fun initial(): AppConfig = AppConfig(
             profiles = listOf(
-                Profile(id = DEMO_PROFILE_ID, name = "Demo & Scanner-Test", startUrl = DEMO_URL),
+                Profile(id = DEMO_PROFILE_ID, name = "Demo & scanner test", startUrl = DEMO_URL),
             ),
         )
     }

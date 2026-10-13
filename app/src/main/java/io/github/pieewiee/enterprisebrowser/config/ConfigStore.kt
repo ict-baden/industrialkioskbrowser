@@ -19,7 +19,7 @@ class ConfigStore private constructor(private val file: File) {
         tmp.writeText(ConfigJson.write(updated))
         if (!tmp.renameTo(file)) {
             file.delete()
-            check(tmp.renameTo(file)) { "Konfiguration konnte nicht gespeichert werden" }
+            check(tmp.renameTo(file)) { "Could not save the configuration" }
         }
         config = updated
         return updated

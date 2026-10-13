@@ -84,7 +84,7 @@ class BridgeHandler(private val context: Context, private val host: Host) : WebV
         "scanner.disable" -> host.setScannerEnabledByPage(false).let { null }
         "scanner.trigger" -> host.softTrigger(if (args.isNull("start")) null else args.optBoolean("start")).let { null }
         "scanner.status" -> JSONObject().put("name", host.scannerName).put("enabled", host.scannerEnabled)
-        else -> throw IllegalArgumentException("Unbekannter Befehl: $cmd")
+        else -> throw IllegalArgumentException("Unknown command: $cmd")
     }
 
     private fun vibrate(ms: Long) {
