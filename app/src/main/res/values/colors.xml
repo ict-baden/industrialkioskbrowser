@@ -2,5 +2,4 @@
 <resources>
     <color name="toolbar">#FF0D47A1</color>
     <color name="accent">#FF1565C0</color>
-    <color name="launcher_background">#FF0D47A1</color>
 </resources>

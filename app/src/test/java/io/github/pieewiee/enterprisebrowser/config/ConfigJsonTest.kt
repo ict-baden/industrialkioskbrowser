@@ -37,7 +37,7 @@ class ConfigJsonTest {
         assertEquals("lager", profile.id)
         assertEquals(listOf("example.com"), profile.allowList)
         assertTrue(profile.launchOnStartup)
-        assertEquals(400, profile.textZoom)
+        assertEquals(400, profile.viewport.textZoom)
         assertTrue(profile.kiosk.hideToolbar)
         assertTrue(profile.kiosk.keepScreenOn)
         assertEquals(ScreenOrientation.LANDSCAPE, profile.kiosk.orientation)
@@ -49,12 +49,68 @@ class ConfigJsonTest {
     fun `write and parse round trip`() {
         val original = AppConfig(
             global = GlobalSettings(adminPasswordHash = PasswordHasher.hash("x"), hideExit = true),
+            resources = mapOf(
+                "fix.css" to Resource("body{}".toByteArray(), isText = true),
+                "beep.ogg" to Resource(byteArrayOf(0, 1, -1, 42), isText = false),
+            ),
             profiles = listOf(
                 Profile(id = "a", name = "A", startUrl = "https://a.test", allowList = listOf("a.test"), userAgent = "UA {default}"),
-                Profile(id = "b", name = "B", startUrl = "http://10.0.0.1", kiosk = KioskSettings(immersive = true)),
+                Profile(
+                    id = "b",
+                    name = "B",
+                    startUrl = "http://10.0.0.1",
+                    kiosk = KioskSettings(immersive = true),
+                    viewport = ViewportSettings(mode = ViewportMode.FIXED, width = 320, initialScale = 150, pinchZoom = false),
+                    keyboard = KeyboardSettings(
+                        soft = SoftKeyboard.NONE,
+                        showOnFocus = false,
+                        backKey = "{F3}",
+                        remap = listOf(KeyRemap("BUTTON_L1", "{TAB}"), KeyRemap("F7", "")),
+                        hotkeys = mapOf("toggleKeyboard" to "F12"),
+                        longPressDigitsAsF = true,
+                    ),
+                    injections = listOf(
+                        Injection(urlMatch = "/sap/", matchType = MatchType.CONTAINS, css = "res:fix.css"),
+                        Injection(timing = InjectionTiming.PAGE_LOADED, html = "<b>x</b>", htmlPosition = HtmlPosition.HEAD, sourceContains = "form"),
+                    ),
+                    errorPages = ErrorPageSettings(template = "<p>{{message}}</p>", showHttpErrors = true),
+                    sounds = SoundSettings(scanOk = "res:beep.ogg", error = "tone:1400:200"),
+                ),
             ),
         )
         assertEquals(original, ConfigJson.parse(ConfigJson.write(original)))
+    }
+
+    @Test
+    fun `version 1 zoom fields map into viewport`() {
+        val profile = ConfigJson.parse("""{"version":1,"profiles":[{"startUrl":"https://x.test","textZoom":150,"pinchZoom":false}]}""")
+            .profiles.single()
+        assertEquals(150, profile.viewport.textZoom)
+        assertFalse(profile.viewport.pinchZoom)
+        assertEquals(ViewportMode.PAGE, profile.viewport.mode)
+    }
+
+    @Test
+    fun `parses keyboard injections and resources`() {
+        val config = ConfigJson.parse(
+            """
+            {
+              "resources": { "sap.css": { "text": "input{font-size:20px}" } },
+              "profiles": [{
+                "startUrl": "https://sap.test",
+                "keyboard": { "soft": "system", "showOnFocus": false, "remap": [{ "key": "F5", "send": "{NAVIGATE-REFRESH}" }],
+                              "hotkeys": { "toggleKeyboard": "F12", "menu": null } },
+                "injections": [{ "match": { "url": "^https://sap\\.test/a", "type": "regex" }, "css": "res:sap.css" }]
+              }]
+            }
+            """,
+        )
+        val profile = config.profiles.single()
+        assertEquals(mapOf("toggleKeyboard" to "F12"), profile.keyboard.hotkeys)
+        assertEquals(KeyRemap("F5", "{NAVIGATE-REFRESH}"), profile.keyboard.remap.single())
+        assertEquals(MatchType.REGEX, profile.injections.single().matchType)
+        assertEquals(InjectionTiming.DOCUMENT_START, profile.injections.single().timing)
+        assertEquals("input{font-size:20px}", config.content(profile.injections.single().css))
     }
 
     @Test
@@ -71,6 +127,13 @@ class ConfigJsonTest {
         assertRejected("""{"profiles":[{"id":"a","startUrl":"https://x"},{"id":"a","startUrl":"https://y"}]}""")
         assertRejected("""{"version":99}""")
         assertRejected("""{"global":{"adminPasswordHash":"plain"}}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","viewport":{"mode":"fixed"}}]}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","injections":[{"css":"res:missing.css"}]}]}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","injections":[{"match":{"url":"(","type":"regex"},"css":"x"}]}]}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","injections":[{"match":{"url":"/a"}}]}]}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","keyboard":{"hotkeys":{"fly":"F1"}}}]}""")
+        assertRejected("""{"resources":{"../evil":{"text":"x"}}}""")
+        assertRejected("""{"resources":{"a.bin":{"base64":"!!!"}}}""")
     }
 
     @Test

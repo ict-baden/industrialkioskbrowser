@@ -6,6 +6,7 @@
     <string name="action_home">Startseite</string>
     <string name="action_reload">Neu laden</string>
     <string name="action_scan">Scannen</string>
+    <string name="action_keyboard">Tastatur</string>
     <string name="action_menu">Menü</string>
     <string name="action_settings">Einstellungen</string>
     <string name="no_profiles">Keine Profile konfiguriert.\nÜber das Menü oben rechts anlegen oder per MDM bereitstellen.</string>
