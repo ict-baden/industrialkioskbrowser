@@ -8,7 +8,7 @@ ein EMM/MDM verteilt werden.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "global": {
     "adminPassword": "geheim",
     "exitPassword": "auch-geheim",
@@ -22,12 +22,10 @@ ein EMM/MDM verteilt werden.
       "allowList": ["example.com", "sso.example.org"],
       "launchOnStartup": true,
       "userAgent": "{default} WMS-Terminal",
-      "textZoom": 100,
       "clearCacheOnStart": false,
       "clearCookiesOnStart": false,
       "allowFileUpload": false,
       "allowDownloads": true,
-      "pinchZoom": true,
       "kiosk": {
         "hideToolbar": false,
         "immersive": false,
@@ -62,11 +60,9 @@ ein EMM/MDM verteilt werden.
 | `allowList` | `[]` | Erlaubte Hosts inkl. Subdomains (`example.com` erlaubt auch `a.example.com`). Leer = alles erlaubt. Der Host der Start-URL ist immer erlaubt. Gilt für Navigationen im Hauptframe. |
 | `launchOnStartup` | `false` | Profil beim App-Start direkt öffnen |
 | `userAgent` | Standard | Eigener User-Agent, `{default}` wird durch den Standard-UA ersetzt |
-| `textZoom` | `100` | Textgröße in Prozent (25–400) |
 | `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Beim Öffnen des Profils löschen |
 | `allowFileUpload` | `false` | `<input type="file">` erlauben |
 | `allowDownloads` | `true` | Downloads über den Android-DownloadManager |
-| `pinchZoom` | `true` | Zoomen per Geste |
 | `kiosk.hideToolbar` | `false` | Toolbar ausblenden (Menü dann über die Zurück-Taste) |
 | `kiosk.immersive` | `false` | Status- und Navigationsleiste ausblenden |
 | `kiosk.keepScreenOn` | `true` | Display bleibt an |
@@ -74,6 +70,103 @@ ein EMM/MDM verteilt werden.
 | `scanner.enabled` | `true` | Scanner beim Laden einer Seite aktiv |
 | `scanner.terminator` | `enter` | Nach dem Einfügen gesendete Tasten: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
 | `scanner.injectIntoFocusedField` | `true` | Scan in das fokussierte Eingabefeld einfügen |
+
+### `viewport`
+
+| Feld | Standard | Bedeutung |
+|---|---|---|
+| `mode` | `page` | `page`: Seite bestimmt per `<meta name="viewport">`. `device`: immer Gerätebreite. `fixed`: feste Layoutbreite `width`, auf den Bildschirm skaliert. |
+| `width` | `0` | Layoutbreite in CSS-Pixeln (Pflicht bei `fixed`, z. B. `320` für alte MDE-Masken) |
+| `initialScale` | `0` | Startzoom in Prozent, `0` = automatisch |
+| `fitToScreen` | `true` | Zu breite Seiten beim Laden einpassen |
+| `textZoom` | `100` | Schriftgröße in Prozent (25–400) |
+| `pinchZoom` | `true` | Zoomen per Geste |
+| `metaOverride` | – | Ersetzt das Viewport-Meta-Tag der Seite, z. B. `width=device-width, initial-scale=1` |
+
+Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gelesen.
+
+### `keyboard`
+
+```json
+"keyboard": {
+  "soft": "system",
+  "showOnFocus": false,
+  "showOnPageLoad": false,
+  "backKey": "{BACK}",
+  "remap": [
+    { "key": "BUTTON_L1", "send": "{TAB}" },
+    { "key": "F5", "send": "{NAVIGATE-REFRESH}" },
+    { "key": "VOLUME_UP", "send": "system" },
+    { "key": "F7", "send": "" }
+  ],
+  "hotkeys": { "toggleKeyboard": "F12", "menu": "F11" },
+  "longPressDigitsAsF": false
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `soft` | `system` (Android-Tastatur) oder `none` (nie einblenden) |
+| `showOnFocus` | `false`: Tastatur erscheint nicht beim Antippen eines Feldes, nur über das Tastatur-Symbol in der Toolbar oder den Hotkey (wie Velocity) |
+| `showOnPageLoad` | Tastatur nach jedem Seitenladen einblenden |
+| `backKey` | Makro für die Zurück-Taste; `{BACK}` = zurück bzw. Menü |
+| `remap` | Hardware-Taste (`key`: Android-Name ohne `KEYCODE_`, z. B. `F1`, `BUTTON_L1`, `ENTER`, oder Zahl) → Makro. `system` reicht die Taste unverändert durch, leer verschluckt sie. |
+| `hotkeys` | Aktion → Taste. Aktionen: `toggleKeyboard`, `menu`, `home`, `reload`, `back`, `forward`, `scan` |
+| `longPressDigitsAsF` | Langes Drücken von 1–9/0 sendet F1–F10 |
+
+**Makros** (Velocity-kompatibel, Groß-/Kleinschreibung egal): Text wird getippt,
+`{TAB}`, `{BACK-TAB}`, `{ENTER}`, `{ESC}`, `{BS}`, `{DELETE}`, `{INSERT}`, `{HOME}`,
+`{END}`, `{PAGE-UP}`, `{PAGE-DOWN}`, `{UP}` `{DOWN}` `{LEFT}` `{RIGHT}`, `{SPACE}`,
+`{F1}`–`{F12}`, `{CTRL-C}`, `{HEX:00E4}`, `{OPEN-BRACE}`/`{CLOSE-BRACE}`,
+`{PAUSE}` / `{PAUSE:500}`, Aktionen `{BACK}`, `{NAVIGATE-BACK}`,
+`{NAVIGATE-FORWARD}`, `{NAVIGATE-STOP}`, `{NAVIGATE-HOME}`, `{NAVIGATE-REFRESH}`,
+`{SPECIAL:SCAN}`, `{MENU}`, `{KEYBOARD}`. Unbekannte Tokens werden als Text getippt.
+
+### `injections`
+
+```json
+"injections": [
+  { "match": { "url": "/sap/zwm_mde_le", "type": "contains" }, "when": "documentStart", "css": "res:sap.css" },
+  { "match": { "url": "^https://wms\.example\.com/pick", "type": "regex", "source": "id=\"pickForm\"" },
+    "when": "pageLoaded", "js": "res:pick.js", "frames": "main" },
+  { "html": "<div class='banner'>TEST</div>", "position": "bodyStart" }
+]
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `match.url` / `match.type` | `contains` (Standard), `prefix`, `regex`; ohne `url` gilt die Injection für alle Seiten |
+| `match.source` | Nur einfügen, wenn der Seitenquelltext diesen Text enthält |
+| `when` | `documentStart` (vor dem ersten Rendern, kein Flackern) oder `pageLoaded` |
+| `frames` | `main` (Standard) oder `all` (nur bei `documentStart`) |
+| `css` / `js` / `html` | Inline-Inhalt oder `res:<name>`; `<script>` in HTML wird ausgeführt |
+| `position` | Für HTML: `bodyEnd` (Standard), `bodyStart`, `head` |
+
+### `errorPages` und `sounds`
+
+```json
+"errorPages": { "template": "res:error.html", "showHttpErrors": false },
+"sounds": { "scanOk": "none", "error": "tone:1400:200:1000:200" }
+```
+
+`template` ist HTML mit `{{title}}`, `{{message}}`, `{{url}}`; der Link
+`ebrowser://retry` lädt neu. `showHttpErrors` ersetzt auch Server-Fehlerseiten
+(HTTP ≥ 400). Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]`
+oder `res:<name>` (Audiodatei). `error` ertönt bei Fehlerseiten und gesperrten
+Seiten.
+
+## Ressourcen
+
+```json
+"resources": {
+  "sap.css": { "text": "input { min-height: 44px; font-size: 18px; }" },
+  "logo.png": { "base64": "iVBORw0KGgo..." }
+}
+```
+
+Ressourcen gelten für alle Profile. Sie werden mit `res:<name>` referenziert und
+sind für Seiten unter `https://appassets.androidplatform.net/res/<name>`
+erreichbar (z. B. Bilder in injiziertem CSS).
 
 ## Verteilung
 

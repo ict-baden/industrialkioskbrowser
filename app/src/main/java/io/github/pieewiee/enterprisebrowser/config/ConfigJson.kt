@@ -3,6 +3,7 @@ package io.github.pieewiee.enterprisebrowser.config
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.Base64
 
 class ConfigException(message: String) : Exception(message)
 
@@ -13,7 +14,7 @@ class ConfigException(message: String) : Exception(message)
  * exported files only ever contain hashes.
  */
 object ConfigJson {
-    const val VERSION = 1
+    const val VERSION = 2
 
     fun parse(text: String): AppConfig {
         val root = try {
@@ -25,15 +26,16 @@ object ConfigJson {
         if (version > VERSION) throw ConfigException("Konfigurationsversion $version wird nicht unterstützt")
 
         val global = parseGlobal(root.optJSONObject("global") ?: JSONObject())
+        val resources = parseResources(root.optJSONObject("resources") ?: JSONObject())
         val profilesJson = root.optJSONArray("profiles") ?: JSONArray()
         val profiles = (0 until profilesJson.length()).map { index ->
             val json = profilesJson.optJSONObject(index)
                 ?: throw ConfigException("profiles[$index] ist kein Objekt")
-            parseProfile(json, index)
+            parseProfile(json, index, resources)
         }
         val duplicate = profiles.groupBy { it.id }.entries.firstOrNull { it.value.size > 1 }
         if (duplicate != null) throw ConfigException("Profil-ID \"${duplicate.key}\" ist doppelt vergeben")
-        return AppConfig(global, profiles)
+        return AppConfig(global, resources, profiles)
     }
 
     fun write(config: AppConfig): String {
@@ -44,9 +46,22 @@ object ConfigJson {
             putOpt("exitPasswordHash", config.global.exitPasswordHash)
             put("hideExit", config.global.hideExit)
         })
+        root.put("resources", JSONObject().apply {
+            config.resources.toSortedMap().forEach { (name, resource) ->
+                put(name, JSONObject().apply {
+                    if (resource.isText) {
+                        put("text", resource.text)
+                    } else {
+                        put("base64", Base64.getEncoder().encodeToString(resource.bytes))
+                    }
+                })
+            }
+        })
         root.put("profiles", JSONArray(config.profiles.map(::writeProfile)))
         return root.toString(2)
     }
+
+    // region parsing
 
     private fun parseGlobal(json: JSONObject) = GlobalSettings(
         adminPasswordHash = passwordHash(json, "adminPassword"),
@@ -62,27 +77,57 @@ object ConfigJson {
         return json.optNonBlank(key)?.let(PasswordHasher::hash)
     }
 
-    private fun parseProfile(json: JSONObject, index: Int): Profile {
-        val startUrl = json.optNonBlank("startUrl")
-            ?: throw ConfigException("profiles[$index]: startUrl fehlt")
+    private fun parseResources(json: JSONObject): Map<String, Resource> =
+        json.keys().asSequence().associateWith { name ->
+            if (name.isBlank() || name.split('/').any { it == ".." || it.isEmpty() }) {
+                throw ConfigException("Ungültiger Ressourcenname \"$name\"")
+            }
+            val entry = json.optJSONObject(name)
+                ?: throw ConfigException("resources.$name muss ein Objekt mit \"text\" oder \"base64\" sein")
+            when {
+                entry.has("text") -> Resource(entry.getString("text").toByteArray(Charsets.UTF_8), isText = true)
+                entry.has("base64") -> try {
+                    val encoded = entry.getString("base64").filterNot(Char::isWhitespace)
+                    Resource(Base64.getDecoder().decode(encoded), isText = false)
+                } catch (_: IllegalArgumentException) {
+                    throw ConfigException("resources.$name: base64 ist ungültig")
+                }
+                else -> throw ConfigException("resources.$name braucht \"text\" oder \"base64\"")
+            }
+        }
+
+    private fun parseProfile(json: JSONObject, index: Int, resources: Map<String, Resource>): Profile {
+        val where = "profiles[$index]"
+        val startUrl = json.optNonBlank("startUrl") ?: throw ConfigException("$where: startUrl fehlt")
         if (!startUrl.startsWith("http://", ignoreCase = true) && !startUrl.startsWith("https://", ignoreCase = true)) {
-            throw ConfigException("profiles[$index]: startUrl muss mit http:// oder https:// beginnen")
+            throw ConfigException("$where: startUrl muss mit http:// oder https:// beginnen")
         }
         val name = json.optNonBlank("name") ?: startUrl
         val id = json.optNonBlank("id") ?: slug(name).ifEmpty { "profile-${index + 1}" }
         val kiosk = json.optJSONObject("kiosk") ?: JSONObject()
         val scanner = json.optJSONObject("scanner") ?: JSONObject()
+        val sounds = json.optJSONObject("sounds") ?: JSONObject()
+        val errorPages = json.optJSONObject("errorPages") ?: JSONObject()
         val defaults = Profile(id = id, name = name, startUrl = startUrl)
-        return defaults.copy(
+        val profile = defaults.copy(
             allowList = json.optStringList("allowList"),
             launchOnStartup = json.optBoolean("launchOnStartup", defaults.launchOnStartup),
             userAgent = json.optNonBlank("userAgent"),
-            textZoom = json.optInt("textZoom", defaults.textZoom).coerceIn(25, 400),
             clearCacheOnStart = json.optBoolean("clearCacheOnStart", defaults.clearCacheOnStart),
             clearCookiesOnStart = json.optBoolean("clearCookiesOnStart", defaults.clearCookiesOnStart),
             allowFileUpload = json.optBoolean("allowFileUpload", defaults.allowFileUpload),
             allowDownloads = json.optBoolean("allowDownloads", defaults.allowDownloads),
-            pinchZoom = json.optBoolean("pinchZoom", defaults.pinchZoom),
+            viewport = parseViewport(json),
+            keyboard = parseKeyboard(json.optJSONObject("keyboard") ?: JSONObject(), where),
+            injections = parseInjections(json.optJSONArray("injections") ?: JSONArray(), where),
+            errorPages = ErrorPageSettings(
+                template = errorPages.optNonBlank("template"),
+                showHttpErrors = errorPages.optBoolean("showHttpErrors", false),
+            ),
+            sounds = SoundSettings(
+                scanOk = sounds.optNonBlank("scanOk") ?: defaults.sounds.scanOk,
+                error = sounds.optNonBlank("error") ?: defaults.sounds.error,
+            ),
             kiosk = KioskSettings(
                 hideToolbar = kiosk.optBoolean("hideToolbar", defaults.kiosk.hideToolbar),
                 immersive = kiosk.optBoolean("immersive", defaults.kiosk.immersive),
@@ -98,7 +143,98 @@ object ConfigJson {
                 ),
             ),
         )
+        checkResourceReferences(profile, resources, where)
+        return profile
     }
+
+    private fun parseViewport(profile: JSONObject): ViewportSettings {
+        val json = profile.optJSONObject("viewport") ?: JSONObject()
+        val defaults = ViewportSettings()
+        // Version 1 kept textZoom and pinchZoom on the profile itself.
+        val textZoom = if (json.has("textZoom")) json.optInt("textZoom") else profile.optInt("textZoom", defaults.textZoom)
+        val pinchZoom = if (json.has("pinchZoom")) json.optBoolean("pinchZoom") else profile.optBoolean("pinchZoom", defaults.pinchZoom)
+        val viewport = ViewportSettings(
+            mode = parseKey(json.optNonBlank("mode"), defaults.mode),
+            width = json.optInt("width", 0).coerceIn(0, 4096),
+            initialScale = json.optInt("initialScale", 0).coerceIn(0, 1000),
+            fitToScreen = json.optBoolean("fitToScreen", defaults.fitToScreen),
+            textZoom = textZoom.coerceIn(25, 400),
+            pinchZoom = pinchZoom,
+            metaOverride = json.optNonBlank("metaOverride"),
+        )
+        if (viewport.mode == ViewportMode.FIXED && viewport.width == 0) {
+            throw ConfigException("viewport.width ist bei mode \"fixed\" erforderlich")
+        }
+        return viewport
+    }
+
+    private fun parseKeyboard(json: JSONObject, where: String): KeyboardSettings {
+        val defaults = KeyboardSettings()
+        val remapJson = json.optJSONArray("remap") ?: JSONArray()
+        val remap = (0 until remapJson.length()).map { i ->
+            val entry = remapJson.optJSONObject(i) ?: throw ConfigException("$where.keyboard.remap[$i] ist kein Objekt")
+            val key = entry.optNonBlank("key") ?: throw ConfigException("$where.keyboard.remap[$i]: key fehlt")
+            KeyRemap(key, if (entry.isNull("send")) "" else entry.optString("send", ""))
+        }
+        val hotkeysJson = json.optJSONObject("hotkeys") ?: JSONObject()
+        val hotkeys = hotkeysJson.keys().asSequence().mapNotNull { action ->
+            if (HotkeyAction.entries.none { it.key == action }) {
+                throw ConfigException("$where.keyboard.hotkeys: unbekannte Aktion \"$action\"")
+            }
+            hotkeysJson.optNonBlank(action)?.let { action to it }
+        }.toMap()
+        return KeyboardSettings(
+            soft = parseKey(json.optNonBlank("soft"), defaults.soft),
+            showOnFocus = json.optBoolean("showOnFocus", defaults.showOnFocus),
+            showOnPageLoad = json.optBoolean("showOnPageLoad", defaults.showOnPageLoad),
+            backKey = json.optNonBlank("backKey") ?: defaults.backKey,
+            remap = remap,
+            hotkeys = hotkeys,
+            longPressDigitsAsF = json.optBoolean("longPressDigitsAsF", defaults.longPressDigitsAsF),
+        )
+    }
+
+    private fun parseInjections(array: JSONArray, where: String): List<Injection> = (0 until array.length()).map { i ->
+        val json = array.optJSONObject(i) ?: throw ConfigException("$where.injections[$i] ist kein Objekt")
+        val match = json.optJSONObject("match") ?: JSONObject()
+        val urlMatch = match.optNonBlank("url").orEmpty()
+        val injection = Injection(
+            urlMatch = urlMatch,
+            matchType = parseKey(match.optNonBlank("type"), if (urlMatch.isEmpty()) MatchType.ALL else MatchType.CONTAINS),
+            sourceContains = match.optNonBlank("source"),
+            timing = parseKey(json.optNonBlank("when"), InjectionTiming.DOCUMENT_START),
+            allFrames = json.optNonBlank("frames") == "all",
+            css = json.optNonBlank("css"),
+            js = json.optNonBlank("js"),
+            html = json.optNonBlank("html"),
+            htmlPosition = parseKey(json.optNonBlank("position"), HtmlPosition.BODY_END),
+        )
+        if (injection.css == null && injection.js == null && injection.html == null) {
+            throw ConfigException("$where.injections[$i] braucht css, js oder html")
+        }
+        if (injection.matchType == MatchType.REGEX) {
+            try {
+                Regex(injection.urlMatch)
+            } catch (e: IllegalArgumentException) {
+                throw ConfigException("$where.injections[$i]: ungültiger regulärer Ausdruck: ${e.message}")
+            }
+        }
+        injection
+    }
+
+    private fun checkResourceReferences(profile: Profile, resources: Map<String, Resource>, where: String) {
+        val references = profile.injections.flatMap { listOf(it.css, it.js, it.html) } +
+            listOf(profile.errorPages.template, profile.sounds.scanOk, profile.sounds.error)
+        references.filterNotNull()
+            .filter { it.startsWith(AppConfig.RES_PREFIX) }
+            .map { it.removePrefix(AppConfig.RES_PREFIX) }
+            .firstOrNull { it !in resources }
+            ?.let { throw ConfigException("$where verweist auf unbekannte Ressource \"$it\"") }
+    }
+
+    // endregion
+
+    // region writing
 
     private fun writeProfile(profile: Profile) = JSONObject().apply {
         put("id", profile.id)
@@ -107,12 +243,36 @@ object ConfigJson {
         put("allowList", JSONArray(profile.allowList))
         put("launchOnStartup", profile.launchOnStartup)
         putOpt("userAgent", profile.userAgent)
-        put("textZoom", profile.textZoom)
         put("clearCacheOnStart", profile.clearCacheOnStart)
         put("clearCookiesOnStart", profile.clearCookiesOnStart)
         put("allowFileUpload", profile.allowFileUpload)
         put("allowDownloads", profile.allowDownloads)
-        put("pinchZoom", profile.pinchZoom)
+        put("viewport", JSONObject().apply {
+            val v = profile.viewport
+            put("mode", v.mode.key)
+            put("width", v.width)
+            put("initialScale", v.initialScale)
+            put("fitToScreen", v.fitToScreen)
+            put("textZoom", v.textZoom)
+            put("pinchZoom", v.pinchZoom)
+            putOpt("metaOverride", v.metaOverride)
+        })
+        put("keyboard", JSONObject().apply {
+            val k = profile.keyboard
+            put("soft", k.soft.key)
+            put("showOnFocus", k.showOnFocus)
+            put("showOnPageLoad", k.showOnPageLoad)
+            put("backKey", k.backKey)
+            put("remap", JSONArray(k.remap.map { JSONObject().put("key", it.key).put("send", it.send) }))
+            put("hotkeys", JSONObject(k.hotkeys))
+            put("longPressDigitsAsF", k.longPressDigitsAsF)
+        })
+        put("injections", JSONArray(profile.injections.map(::writeInjection)))
+        put("errorPages", JSONObject().apply {
+            putOpt("template", profile.errorPages.template)
+            put("showHttpErrors", profile.errorPages.showHttpErrors)
+        })
+        put("sounds", JSONObject().put("scanOk", profile.sounds.scanOk).put("error", profile.sounds.error))
         put("kiosk", JSONObject().apply {
             put("hideToolbar", profile.kiosk.hideToolbar)
             put("immersive", profile.kiosk.immersive)
@@ -125,6 +285,24 @@ object ConfigJson {
             put("injectIntoFocusedField", profile.scanner.injectIntoFocusedField)
         })
     }
+
+    private fun writeInjection(injection: Injection) = JSONObject().apply {
+        put("match", JSONObject().apply {
+            if (injection.matchType != MatchType.ALL) {
+                put("url", injection.urlMatch)
+                put("type", injection.matchType.key)
+            }
+            putOpt("source", injection.sourceContains)
+        })
+        put("when", injection.timing.key)
+        put("frames", if (injection.allFrames) "all" else "main")
+        putOpt("css", injection.css)
+        putOpt("js", injection.js)
+        putOpt("html", injection.html)
+        if (injection.html != null) put("position", injection.htmlPosition.key)
+    }
+
+    // endregion
 
     fun slug(text: String): String =
         text.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')

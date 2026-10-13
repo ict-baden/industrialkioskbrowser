@@ -50,6 +50,12 @@
             android:textSize="15sp" />
 
         <ImageButton
+            android:id="@+id/keyboard"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_keyboard"
+            android:src="@drawable/ic_keyboard" />
+
+        <ImageButton
             android:id="@+id/scan"
             style="@style/ToolbarButton"
             android:contentDescription="@string/action_scan"

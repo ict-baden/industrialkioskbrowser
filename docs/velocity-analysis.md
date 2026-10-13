@@ -133,3 +133,62 @@ Terminal-Emulation, Sprachsteuerung, Neurons Forms/MQTT, Lizenzserver,
 Telemetrie (Application Insights), Tap-to-Share, verschlüsselte Bundles mit
 hartkodiertem Schlüssel, Annahme beliebiger Zertifikate ohne Pin,
 dauerhaft aktiviertes WebView-Remote-Debugging.
+
+## Vertiefung: Tastatur
+
+- Eigene Bildschirmtastatur aus `keyboards/keyboards.xml` (Bundle, Fallback
+  `assets/Default.zip`, 34 Layouts). Layouts haben Modus (WEB/TE/…) und
+  Ausrichtung, Tasten liegen in einem Raster (`x`,`y`,`w`,`h`), je Taste
+  Belegung für normal/shift, Long-Press-Alternativen, Icons, Styles
+  (Farben, Bloom-Vorschau, haptisches Feedback).
+- Tastenwerte: Text/Makro, `{layout:Name}`, `{modifier:shift}`,
+  `{lock:shift}`, `{special:scan}`.
+- Web-Sessions: Tastatur wird bei jedem Seitenladen versteckt und nur über
+  Toolbar-Icon, Hotkey oder Skript geöffnet; `EnableAutomaticSIP` wird nicht
+  ausgewertet. Systemtastatur nur, wenn `SystemKeyboardEnabled` und nicht
+  `UseVelocityKeyboard`.
+- Andocken oben/unten/links/rechts, Höhe in % (Standard 45), Transparenz
+  (>0 = über der Seite, sonst wird die WebView verkleinert).
+- Hardware-Tasten: Skript-Remap (`Keyboard.mapKeypress`) → gerätespezifische
+  Tabellen nach `Build.MODEL` (MC93, WT6000, VC8300, CK65, …) mit
+  Modifier-Filter → Velocity-Codes (Private-Use-Bereich, z. B. F1 = E03B,
+  Browser-Zurück = E201 … Neu laden = E206) → Android-KeyEvents.
+  Optional Multi-Tap und Ziffern-Long-Press als F1–F10.
+- Makrosprache `{TOKEN}`: F1–F24, Steuerzeichen, Navigation, `{HEX:hhhh}`,
+  `{CTRL-x}`, `{PAUSE[:ms]}`, `{SPECIAL:scan}`, `{SCRIPT:js}`, Browser-Aktionen
+  `{BACK}`, `{NAVIGATE-HOME}`, `{NAVIGATE-REFRESH}` …
+- Seitenhooks: `<meta http-equiv="OnKey<hex>">`, `OnAllKeys`; Hotkeys für
+  Tastatur ein/aus, Menüs, Session-Wechsel; Tastentest-Modus.
+
+## Vertiefung: JS-/CSS-/HTML-Injection und Skripte
+
+- `View.insertCss/insertJavaScript/insertHtml(datei, HEAD|BODY, TOP|BOTTOM,
+  {MATCH-URL, MATCH-SOURCE})`: URL-Match = Teilstring, Quelltext-Match =
+  Teilstring im serialisierten DOM. Ausführung nur in `onPageFinished`, nur
+  Hauptframe, einmal pro Navigation, unter einem weißen Overlay, das danach
+  entfernt wird. CSS/JS werden als `<link>`/`<script>` auf
+  `//velocity/resources/<datei>` eingefügt, HTML synchron über die Bridge.
+- Session-Skript `scripts/session.js` läuft in einer separaten JS-Engine
+  (Jurassic) mit Event-Modell (Scopes `global`, `session`, `screen`,
+  `@<pfad>`), Events u. a. `Scan`, `AfterScan` (Daten änderbar), `OnKey…`,
+  `OnLoaded`, `WebAlert`, `WebDownload`, `Beep`.
+- Aktions-URLs `ida:IDA_BEEP`, `IDA_SCAN_ENABLE/DISABLE`, `IDA_BACK_DISABLE`
+  usw.; `wls:`-Links rufen Skriptfunktionen auf.
+- Skript-APIs: Storage (inkl. MDM-Variablen), HTTP-Requests, Prompts,
+  Intents/Broadcasts, Geräteinfos, Töne.
+- Autofill nur für Velocity-Forms (`data-source`-Selektoren, Variablen wie
+  `%DeviceModel%`).
+
+## Vertiefung: Ressourcen
+
+- `.wldep` = ZIP mit `resources/`, `images/`, `themes/`, `scripts/`,
+  `keyboards/`, `hosts/`, … Auslieferung an die WebView über den Fake-Host
+  `velocity` bzw. Schema `velocity://` (Pfad = Bundle-Pfad, Ordner-Whitelist,
+  fehlende Theme-CSS → leere Antwort, sonst Fallback auf APK-Assets).
+  Unbekannte Dateitypen werden als `text/html` ausgeliefert.
+- Branding nur für die Profilliste (`global.wlxgp` → `profiles.css` + Bilder);
+  Statusseiten nur per CSS anpassbar. Felder für eigene 404/500/Offline-Seiten
+  existieren, werden aber nicht verwendet; HTTP-Fehler zeigen auf Android
+  keine Statusseite.
+- Töne: generierte Beeps (Frequenz/Dauer/Lautstärke) oder Audiodatei aus
+  `resources/` (`Device.beepPlayFile`).

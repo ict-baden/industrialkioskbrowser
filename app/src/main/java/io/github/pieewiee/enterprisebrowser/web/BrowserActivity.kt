@@ -55,8 +55,11 @@ import androidx.webkit.WebViewFeature
 import io.github.pieewiee.enterprisebrowser.BuildConfig
 import io.github.pieewiee.enterprisebrowser.R
 import io.github.pieewiee.enterprisebrowser.admin.AdminActivity
+import io.github.pieewiee.enterprisebrowser.config.AppConfig
 import io.github.pieewiee.enterprisebrowser.config.ConfigStore
+import io.github.pieewiee.enterprisebrowser.config.InjectionTiming
 import io.github.pieewiee.enterprisebrowser.config.Profile
+import io.github.pieewiee.enterprisebrowser.config.ViewportMode
 import io.github.pieewiee.enterprisebrowser.config.ScanTerminator
 import io.github.pieewiee.enterprisebrowser.config.ScreenOrientation
 import io.github.pieewiee.enterprisebrowser.scanner.NoScanner
@@ -78,15 +81,28 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private lateinit var backButton: ImageButton
     private lateinit var forwardButton: ImageButton
     private lateinit var scanButton: ImageButton
+    private lateinit var keyboardButton: ImageButton
     private lateinit var scanner: ScannerManager
+    private lateinit var config: AppConfig
+    private lateinit var keyboard: KeyboardController
+    private lateinit var sounds: Sounds
 
     private var bridge: BridgeHandler? = null
     private var bridgeAtDocumentStart = false
+    private var injectionsAtDocumentStart = false
     private val bridgeScript by lazy { assets.open("js/bridge.js").bufferedReader().use { it.readText() } }
+    private val documentStartScript by lazy {
+        listOfNotNull(
+            InjectionScripts.viewport(profile.viewport),
+            InjectionScripts.build(profile.injections, InjectionTiming.DOCUMENT_START, config),
+        ).joinToString("\n").ifEmpty { null }
+    }
+    private val pageLoadedScript by lazy { InjectionScripts.build(profile.injections, InjectionTiming.PAGE_LOADED, config) }
     private val assetLoader by lazy {
         WebViewAssetLoader.Builder()
             .setDomain(UrlPolicy.ASSET_HOST)
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler(ResourcePathHandler.PATH, ResourcePathHandler { config })
             .build()
     }
 
@@ -120,7 +136,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        profile = ConfigStore.get(this).config.profile(intent.getStringExtra(EXTRA_PROFILE_ID)) ?: run {
+        config = ConfigStore.get(this).config
+        profile = config.profile(intent.getStringExtra(EXTRA_PROFILE_ID)) ?: run {
             Toast.makeText(this, "Profil nicht gefunden", Toast.LENGTH_LONG).show()
             finish()
             return
@@ -133,19 +150,25 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         backButton = findViewById(R.id.back)
         forwardButton = findViewById(R.id.forward)
         scanButton = findViewById(R.id.scan)
+        keyboardButton = findViewById(R.id.keyboard)
 
         scanner = ScannerManager(this, ::onScan)
+        sounds = Sounds(this, config)
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()
-        setupToolbar()
 
         webView = WebView(this)
         findViewById<ViewGroup>(R.id.webContainer).addView(
             webView,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
+        keyboard = KeyboardController(this, webView, profile.keyboard, ::perform)
+        keyboard.onPageStarted()
+        setupToolbar()
         configureWebView()
-        onBackPressedDispatcher.addCallback(this) { if (webView.canGoBack()) webView.goBack() else showMenu() }
+        onBackPressedDispatcher.addCallback(this) {
+            if (!keyboard.onBack()) perform(BrowserAction.BACK)
+        }
 
         if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) {
             clearDataIfConfigured()
@@ -187,6 +210,23 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         if (hasFocus && profile.kiosk.immersive) hideSystemBars()
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        (::keyboard.isInitialized && keyboard.dispatch(event)) || super.dispatchKeyEvent(event)
+
+    /** Browser actions triggered by toolbar, hotkeys, macros and the back key. */
+    private fun perform(action: BrowserAction) {
+        when (action) {
+            BrowserAction.BACK -> if (webView.canGoBack()) webView.goBack() else showMenu()
+            BrowserAction.FORWARD -> if (webView.canGoForward()) webView.goForward()
+            BrowserAction.STOP -> webView.stopLoading()
+            BrowserAction.HOME -> loadStart()
+            BrowserAction.RELOAD -> webView.reload()
+            BrowserAction.SCAN -> scanner.softTrigger(null)
+            BrowserAction.MENU -> showMenu()
+            BrowserAction.TOGGLE_KEYBOARD -> keyboard.toggleSoftKeyboard()
+        }
+    }
+
     // region setup
 
     private fun applyKioskSettings() {
@@ -214,6 +254,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         findViewById<View>(R.id.menu).setOnClickListener { showMenu() }
         scanButton.isVisible = scanner.scanner !is NoScanner
         scanButton.setOnClickListener { scanner.softTrigger(null) }
+        keyboardButton.isVisible = keyboard.softKeyboardAvailable && !profile.keyboard.showOnFocus
+        keyboardButton.setOnClickListener { keyboard.toggleSoftKeyboard() }
     }
 
     private fun configureWebView() {
@@ -226,24 +268,39 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             mediaPlaybackRequiresUserGesture = false
             javaScriptCanOpenWindowsAutomatically = false
             setSupportMultipleWindows(false)
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            setSupportZoom(profile.pinchZoom)
-            builtInZoomControls = profile.pinchZoom
+            val viewport = profile.viewport
+            // DEVICE ignores the page's viewport width and lays out at screen width.
+            useWideViewPort = viewport.mode != ViewportMode.DEVICE
+            loadWithOverviewMode = viewport.fitToScreen
+            setSupportZoom(viewport.pinchZoom)
+            builtInZoomControls = viewport.pinchZoom
             displayZoomControls = false
-            textZoom = profile.textZoom
+            textZoom = viewport.textZoom
             profile.userAgent?.let { userAgentString = it.replace("{default}", WebSettings.getDefaultUserAgent(this@BrowserActivity)) }
         }
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(webView, true)
         }
+        if (profile.viewport.initialScale > 0) webView.setInitialScale(profile.viewport.initialScale)
         webView.webViewClient = Client()
         webView.webChromeClient = Chrome()
         webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
             download(url, userAgent, contentDisposition, mimeType)
         }
         installBridge()
+        installDocumentStartScript()
+    }
+
+    /** Viewport override and document-start injections; they check the URL themselves, so they match all origins. */
+    private fun installDocumentStartScript() {
+        val script = documentStartScript ?: return
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            WebViewCompat.addDocumentStartJavaScript(webView, script, setOf("*"))
+            injectionsAtDocumentStart = true
+        } else {
+            Log.w(TAG, "DOCUMENT_START_SCRIPT unsupported, injecting after page load")
+        }
     }
 
     private fun installBridge() {
@@ -312,6 +369,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         val terminator = pagePolicy.terminator ?: profile.scanner.terminator
         webView.requestFocus()
         webView.evaluateJavascript(ScanScripts.deliver(scan, profile.scanner.injectIntoFocusedField)) { result ->
+            sounds.play(profile.sounds.scanOk)
             if (ScanScripts.decodeStringResult(result) == "inserted") sendTerminator(terminator)
         }
     }
@@ -325,10 +383,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             ScanTerminator.ENTER_TAB -> listOf(KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_TAB)
         }
         keys.forEachIndexed { index, code ->
-            webView.postDelayed({
-                webView.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, code))
-                webView.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, code))
-            }, KEY_DELAY_MS * (index + 1))
+            webView.postDelayed({ keyboard.pressKey(code) }, KEY_DELAY_MS * (index + 1))
         }
     }
 
@@ -371,7 +426,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private fun showStatus(title: String, message: String, url: String?) {
         failedUrl = url
-        val html = StatusPage.render(this, title, message, url)
+        sounds.play(profile.sounds.error)
+        val html = StatusPage.render(this, config.content(profile.errorPages.template), title, message, url)
         webView.loadDataWithBaseURL(StatusPage.BASE_URL, html, "text/html", "utf-8", null)
     }
 
@@ -446,6 +502,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             }
             if (!request.isForMainFrame || UrlPolicy.isAllowed(url, profile)) return false
             toast("Seite nicht erlaubt: ${request.url.host ?: url}")
+            sounds.play(profile.sounds.error)
             return true
         }
 
@@ -453,6 +510,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             pagePolicy = PagePolicy.NONE
             scannerWanted = profile.scanner.enabled
             updateScannerState()
+            keyboard.onPageStarted()
             progress.isVisible = true
             updateNavigation()
         }
@@ -464,6 +522,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             if (bridge != null && !bridgeAtDocumentStart && UrlPolicy.isBridgeOrigin(url, profile)) {
                 view.evaluateJavascript(bridgeScript, null)
             }
+            if (!url.startsWith(StatusPage.BASE_URL)) {
+                if (!injectionsAtDocumentStart) documentStartScript?.let { view.evaluateJavascript(it, null) }
+                pageLoadedScript?.let { view.evaluateJavascript(it, null) }
+            }
+            keyboard.onPageFinished()
             view.evaluateJavascript(ScanScripts.COLLECT_META_TAGS) { result ->
                 pagePolicy = PagePolicy.fromMetaTags(ScanScripts.parseMetaTags(result))
                 pagePolicy.scannerEnabled?.let { scannerWanted = it }
@@ -474,6 +537,15 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (!request.isForMainFrame) return
             showStatus("Seite nicht erreichbar", error.description?.toString().orEmpty(), request.url.toString())
+        }
+
+        override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
+            if (!profile.errorPages.showHttpErrors || !request.isForMainFrame || errorResponse.statusCode < 400) return
+            showStatus(
+                "Fehler ${errorResponse.statusCode}",
+                errorResponse.reasonPhrase?.takeIf { it.isNotBlank() } ?: "Der Server hat die Anfrage abgelehnt.",
+                request.url.toString(),
+            )
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
