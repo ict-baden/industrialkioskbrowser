@@ -1,28 +1,33 @@
 # Changelog
 
+## 0.3.1
+
+- App, documentation, examples and screenshots are now in **English**.
+- Example configurations use neutral placeholder systems only.
+
 ## 0.3.0
 
-- **Neues Design** (Material 3): Startseite mit Farbverlauf-Header und Profilkarten,
-  Toolbar mit Adresszeile und Scan-Button, Menü als Bottom Sheet, neu gestaltete
-  Einstellungen und Dialoge, Splash-Screen.
-- **Design anpassen:** `global.branding` (Titel, Untertitel, Markenfarbe, Logo) und
-  `profiles[].color`; in der App unter Einstellungen → Design inkl. Farbpalette und
-  Logo-Import. Text- und Symbolfarben passen sich hellen Markenfarben an.
-- Verständliche Fehlerseiten (Server nicht gefunden, Zeitüberschreitung …) in
-  Markenfarbe; Dark-Mode-Darstellung der Fehlerseite korrigiert.
-- Eingebaute Demo heißt in der Oberfläche „Integrierte Demo“.
-- Beispielkonfigurationen in `examples/`, automatisch gegen den Parser getestet.
-- Dokumentation mit Screenshots (aus dem UI-Code gerendert), Verteilungs- und
-  Migrationsleitfaden.
+- **New design** (Material 3): start screen with gradient header and profile cards,
+  toolbar with address line and scan button, bottom sheet menu, redesigned settings and
+  dialogs, splash screen.
+- **Custom design:** `global.branding` (title, subtitle, brand color, logo) and
+  `profiles[].color`; in the app under Settings → Design including a color palette and
+  logo import. Text and icon colors adapt to light brand colors.
+- Clear error pages (server not found, timeout …) in the brand color; fixed the error
+  page in dark mode.
+- The built-in demo is called "Built-in demo" in the UI.
+- Example configurations in `examples/`, automatically tested against the parser.
+- Documentation with screenshots (rendered from the UI code), deployment guide and web
+  integration guide.
 
 ## 0.2.0
 
-- `viewport`, `keyboard` (Remap, Hotkeys, Makros), `injections`, `resources`,
+- `viewport`, `keyboard` (remapping, hotkeys, macros), `injections`, `resources`,
   `errorPages`, `sounds`.
-- PNG-Launcher-Icons, damit MDM-Konsolen wie SOTI das Icon anzeigen.
+- PNG launcher icons, so MDM consoles such as SOTI show the icon.
 
 ## 0.1.0
 
-- Erste Version: Profile, Allowlist, Zebra DataWedge / Honeywell / Intent-Scanner,
-  Meta-Tags, JavaScript-API, Kiosk-Optionen, Managed Configuration, Konfigurationsdatei,
-  INSTALL_CONFIG-Broadcast, QR-Import.
+- First version: profiles, allow list, Zebra DataWedge / Honeywell / intent scanners,
+  meta tags, JavaScript API, kiosk options, managed configuration, configuration file,
+  INSTALL_CONFIG broadcast, QR import.

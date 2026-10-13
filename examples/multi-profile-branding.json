@@ -1,32 +1,32 @@
 {
   "version": 2,
   "global": {
-    "adminPassword": "BITTE-AENDERN",
+    "adminPassword": "CHANGE-ME",
     "branding": {
-      "title": "Logistikzentrum Nord",
-      "subtitle": "Schicht A · Halle 3",
+      "title": "North Logistics Center",
+      "subtitle": "Shift A · Hall 3",
       "color": "#00796B"
     }
   },
   "profiles": [
     {
-      "id": "wareneingang",
-      "name": "Wareneingang",
-      "startUrl": "https://wms.example.com/wareneingang",
+      "id": "goods-receipt",
+      "name": "Goods receipt",
+      "startUrl": "https://wms.example.com/goods-receipt",
       "allowList": ["example.com"],
       "launchOnStartup": true
     },
     {
-      "id": "kommissionierung",
-      "name": "Kommissionierung",
+      "id": "picking",
+      "name": "Picking",
       "startUrl": "https://pick.example.com/app",
       "color": "#1565C0",
       "allowList": ["example.com"],
       "kiosk": { "immersive": true }
     },
     {
-      "id": "versand",
-      "name": "Versand & Etiketten",
+      "id": "shipping",
+      "name": "Shipping & labels",
       "startUrl": "https://shipping.example.com",
       "color": "#F57C00",
       "scanner": { "terminator": "tab" }

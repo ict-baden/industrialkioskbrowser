@@ -73,7 +73,7 @@ class AdminActivity : AppCompatActivity() {
         uri ?: return@registerForActivityResult
         runCatching {
             contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(ConfigJson.write(store.config)) }
-        }.onSuccess { toast("Konfiguration exportiert") }.onFailure { toast("Export fehlgeschlagen: ${it.message}") }
+        }.onSuccess { toast("Configuration exported") }.onFailure { toast("Export failed: ${it.message}") }
     }
 
     private val pickLogo = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -84,7 +84,7 @@ class AdminActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         toolbar = MaterialToolbar(this).apply {
-            title = "Einstellungen"
+            title = "Settings"
             navigationIcon = ContextCompat.getDrawable(this@AdminActivity, R.drawable.ic_back)
             setNavigationContentDescription(R.string.action_back)
             setNavigationOnClickListener { finish() }
@@ -130,53 +130,53 @@ class AdminActivity : AppCompatActivity() {
         Brand.applySystemBars(this, brandColor)
         content.removeAllViews()
 
-        section("Profile")
+        section("Profiles")
         card(
             config.profiles.map(::profileRow) +
-                row(R.drawable.ic_add, "Profil hinzufügen", "Start-URL, Kiosk und Scanner festlegen") { editProfile(null) },
+                row(R.drawable.ic_add, "Add profile", "Start URL, kiosk and scanner") { editProfile(null) },
         )
 
         val branding = config.global.branding
         section("Design")
         card(
             listOf(
-                row(R.drawable.ic_title, "Titel", branding.title ?: getString(R.string.app_name)) { editTitle() },
-                row(R.drawable.ic_palette, "Markenfarbe", branding.color ?: "Standard", trailing = swatch(brandColor, 28)) {
-                    pickColor("Markenfarbe", branding.color) { color ->
+                row(R.drawable.ic_title, "Title", branding.title ?: getString(R.string.app_name)) { editTitle() },
+                row(R.drawable.ic_palette, "Brand color", branding.color ?: "Default", trailing = swatch(brandColor, 28)) {
+                    pickColor("Brand color", branding.color) { color ->
                         store.update { it.copy(global = it.global.copy(branding = it.global.branding.copy(color = color))) }
                         render()
                     }
                 },
-                row(R.drawable.ic_image, "Logo", if (branding.logo != null) "Eigenes Logo" else "Standard-Logo", trailing = logoPreview(config)) {
+                row(R.drawable.ic_image, "Logo", if (branding.logo != null) "Custom logo" else "Default logo", trailing = logoPreview(config)) {
                     editLogo()
                 },
             ),
         )
 
-        section("Konfiguration")
+        section("Configuration")
         card(
             listOfNotNull(
-                row(R.drawable.ic_upload, "Aus Datei importieren", "JSON-Konfiguration laden") {
+                row(R.drawable.ic_upload, "Import from file", "Load a JSON configuration") {
                     importFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
                 },
-                row(R.drawable.ic_download, "In Datei exportieren", "Aktuelle Konfiguration sichern") {
+                row(R.drawable.ic_download, "Export to file", "Save the current configuration") {
                     exportFile.launch("enterprisebrowser.json")
                 },
-                row(R.drawable.ic_qr, "Per Barcode importieren", "QR-Code mit JSON scannen") { startBarcodeImport() },
-                Provisioning.lastError(this)?.let { row(R.drawable.ic_info, "Letzter Provisionierungsfehler", it, onClick = null) },
+                row(R.drawable.ic_qr, "Import from barcode", "Scan a QR code containing JSON") { startBarcodeImport() },
+                Provisioning.lastError(this)?.let { row(R.drawable.ic_info, "Last provisioning error", it, onClick = null) },
             ),
         )
 
-        section("Sicherheit")
+        section("Security")
         card(
             listOf(
-                row(R.drawable.ic_key, "Admin-Passwort", if (config.global.adminPasswordHash == null) "Nicht gesetzt" else "Gesetzt") {
-                    changePassword("Admin-Passwort") { hash -> store.update { it.copy(global = it.global.copy(adminPasswordHash = hash)) } }
+                row(R.drawable.ic_key, "Admin password", if (config.global.adminPasswordHash == null) "Not set" else "Set") {
+                    changePassword("Admin password") { hash -> store.update { it.copy(global = it.global.copy(adminPasswordHash = hash)) } }
                 },
-                row(R.drawable.ic_power, "Exit-Passwort", if (config.global.exitPasswordHash == null) "Nicht gesetzt" else "Gesetzt") {
-                    changePassword("Exit-Passwort") { hash -> store.update { it.copy(global = it.global.copy(exitPasswordHash = hash)) } }
+                row(R.drawable.ic_power, "Exit password", if (config.global.exitPasswordHash == null) "Not set" else "Set") {
+                    changePassword("Exit password") { hash -> store.update { it.copy(global = it.global.copy(exitPasswordHash = hash)) } }
                 },
-                switchRow(R.drawable.ic_shield, "Kiosk-Modus", "Beenden und Profilwechsel ausblenden", config.global.hideExit) { checked ->
+                switchRow(R.drawable.ic_shield, "Kiosk mode", "Hide exit and profile switching", config.global.hideExit) { checked ->
                     store.update { it.copy(global = it.global.copy(hideExit = checked)) }
                 },
             ),
@@ -189,7 +189,7 @@ class AdminActivity : AppCompatActivity() {
                 row(R.drawable.ic_scan, "Scanner", scanner.scanner.name, onClick = null),
                 row(
                     R.drawable.ic_download,
-                    "Konfigurationsdatei für EMM",
+                    "Configuration file for EMM",
                     "Android/data/$packageName/files/${Provisioning.CONFIG_FILE_NAME}",
                     onClick = null,
                 ),
@@ -204,31 +204,31 @@ class AdminActivity : AppCompatActivity() {
         val profile = existing ?: Profile(id = "", name = "", startUrl = "https://")
         var color = profile.color
         val name = Dialogs.textField(this, "Name", profile.name)
-        val url = Dialogs.textField(this, "Start-URL", profile.startUrl, inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        val url = Dialogs.textField(this, "Start URL", profile.startUrl, inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         val allowList = Dialogs.textField(
             this,
-            "Erlaubte Hosts",
+            "Allowed hosts",
             profile.allowList.joinToString(", "),
-            helper = "Kommagetrennt, leer = alle Seiten erlaubt",
+            helper = "Comma-separated, empty = all sites allowed",
         )
         val colorSwatch = swatch(Brand.parse(color) ?: brandColor, 24)
         lateinit var colorRow: LinearLayout
-        colorRow = row(R.drawable.ic_palette, "Profilfarbe", color ?: "Wie Markenfarbe", trailing = colorSwatch) {
-            pickColor("Profilfarbe", color) { picked ->
+        colorRow = row(R.drawable.ic_palette, "Profile color", color ?: "Same as brand color", trailing = colorSwatch) {
+            pickColor("Profile color", color) { picked ->
                 color = picked
-                colorRow.findViewWithTag<TextView>(SUBTITLE_TAG).text = picked ?: "Wie Markenfarbe"
+                colorRow.findViewWithTag<TextView>(SUBTITLE_TAG).text = picked ?: "Same as brand color"
                 colorSwatch.imageTintList = ColorStateList.valueOf(Brand.parse(picked) ?: brandColor)
             }
         }
         colorRow.setPadding(0, dp(8), 0, dp(8))
-        val launchOnStartup = switch("Beim App-Start öffnen", profile.launchOnStartup)
-        val hideToolbar = switch("Toolbar ausblenden", profile.kiosk.hideToolbar)
-        val immersive = switch("Vollbild", profile.kiosk.immersive)
-        val keepScreenOn = switch("Bildschirm anlassen", profile.kiosk.keepScreenOn)
-        val scannerEnabled = switch("Scanner aktiv", profile.scanner.enabled)
-        val terminatorLabels = listOf("Keine Taste", "Tab", "Enter", "Tab + Enter", "Enter + Tab")
+        val launchOnStartup = switch("Open on app start", profile.launchOnStartup)
+        val hideToolbar = switch("Hide toolbar", profile.kiosk.hideToolbar)
+        val immersive = switch("Full screen", profile.kiosk.immersive)
+        val keepScreenOn = switch("Keep screen on", profile.kiosk.keepScreenOn)
+        val scannerEnabled = switch("Scanner enabled", profile.scanner.enabled)
+        val terminatorLabels = listOf("No key", "Tab", "Enter", "Tab + Enter", "Enter + Tab")
         val terminator = TextInputLayout(this, null, com.google.android.material.R.attr.textInputOutlinedExposedDropdownMenuStyle).apply {
-            hint = "Nach dem Scan senden"
+            hint = "Send after scan"
             addView(MaterialAutoCompleteTextView(context).apply {
                 inputType = InputType.TYPE_NULL
                 setSimpleItems(terminatorLabels.toTypedArray())
@@ -237,15 +237,15 @@ class AdminActivity : AppCompatActivity() {
         }
         val form = Dialogs.form(this, name, url, allowList, colorRow, launchOnStartup, hideToolbar, immersive, keepScreenOn, scannerEnabled, terminator)
         val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(if (existing == null) "Neues Profil" else "Profil bearbeiten")
+            .setTitle(if (existing == null) "New profile" else "Edit profile")
             .setView(ScrollView(this).apply { addView(form) })
-            .setPositiveButton("Speichern", null)
-            .setNegativeButton("Abbrechen", null)
+            .setPositiveButton("Save", null)
+            .setNegativeButton("Cancel", null)
             .show()
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val startUrl = url.value.trim()
             if (!startUrl.matches(Regex("^https?://[^/\\s]+.*", RegexOption.IGNORE_CASE))) {
-                url.error = "URL muss mit http:// oder https:// beginnen"
+                url.error = "URL must start with http:// or https://"
                 return@setOnClickListener
             }
             val displayName = name.value.trim().ifEmpty { Brand.host(startUrl) }
@@ -283,13 +283,13 @@ class AdminActivity : AppCompatActivity() {
     private fun confirmDelete(profile: Profile) {
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_delete))
-            .setTitle("Profil löschen?")
-            .setMessage("„${profile.name}“ wird von diesem Gerät entfernt.")
-            .setPositiveButton("Löschen") { _, _ ->
+            .setTitle("Delete profile?")
+            .setMessage("\"${profile.name}\" will be removed from this device.")
+            .setPositiveButton("Delete") { _, _ ->
                 store.update { it.remove(profile.id) }
                 render()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -307,13 +307,13 @@ class AdminActivity : AppCompatActivity() {
 
     private fun editTitle() {
         val branding = store.config.global.branding
-        val title = Dialogs.textField(this, "Titel", branding.title.orEmpty(), helper = "Leer = EnterpriseBrowser")
-        val subtitle = Dialogs.textField(this, "Untertitel", branding.subtitle.orEmpty(), helper = "Leer = Gerätemodell")
+        val title = Dialogs.textField(this, "Title", branding.title.orEmpty(), helper = "Empty = EnterpriseBrowser")
+        val subtitle = Dialogs.textField(this, "Subtitle", branding.subtitle.orEmpty(), helper = "Empty = device model")
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_title))
-            .setTitle("Titel der Startseite")
+            .setTitle("Start screen title")
             .setView(Dialogs.form(this, title, subtitle))
-            .setPositiveButton("Speichern") { _, _ ->
+            .setPositiveButton("Save") { _, _ ->
                 store.update {
                     it.copy(
                         global = it.global.copy(
@@ -326,14 +326,14 @@ class AdminActivity : AppCompatActivity() {
                 }
                 render()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     /** Swatch palette plus hex input; [onPicked] receives `null` for "default". */
     @VisibleForTesting
     internal fun pickColor(title: String, current: String?, onPicked: (String?) -> Unit) {
-        val hex = Dialogs.textField(this, "Farbe (#RRGGBB)", current.orEmpty(), helper = "Leer = Standardfarbe")
+        val hex = Dialogs.textField(this, "Color (#RRGGBB)", current.orEmpty(), helper = "Empty = default color")
         val marks = mutableMapOf<String, ImageView>()
         fun select(color: String?) {
             marks.forEach { (key, mark) -> mark.visibility = if (key.equals(color, ignoreCase = true)) View.VISIBLE else View.INVISIBLE }
@@ -370,7 +370,7 @@ class AdminActivity : AppCompatActivity() {
         }
         select(current)
         val reset = MaterialButton(this, null, androidx.appcompat.R.attr.borderlessButtonStyle).apply {
-            text = "Standardfarbe verwenden"
+            text = "Use default color"
             setOnClickListener {
                 hex.editText?.setText("")
                 select(null)
@@ -380,15 +380,15 @@ class AdminActivity : AppCompatActivity() {
             .setIcon(Dialogs.icon(this, R.drawable.ic_palette))
             .setTitle(title)
             .setView(Dialogs.form(this, grid, hex, reset))
-            .setPositiveButton("Übernehmen") { _, _ ->
+            .setPositiveButton("Apply") { _, _ ->
                 val value = hex.value.trim().uppercase()
                 when {
                     value.isEmpty() -> onPicked(null)
                     value.matches(Regex("#[0-9A-F]{6}")) -> onPicked(value)
-                    else -> toast("Ungültige Farbe: $value")
+                    else -> toast("Invalid color: $value")
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -400,8 +400,8 @@ class AdminActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_image))
             .setTitle("Logo")
-            .setPositiveButton("Ändern") { _, _ -> pickLogo.launch(arrayOf("image/png", "image/jpeg", "image/webp")) }
-            .setNeutralButton("Entfernen") { _, _ ->
+            .setPositiveButton("Change") { _, _ -> pickLogo.launch(arrayOf("image/png", "image/jpeg", "image/webp")) }
+            .setNeutralButton("Remove") { _, _ ->
                 store.update { config ->
                     config.copy(
                         resources = config.resources - LOGO_RESOURCE,
@@ -410,14 +410,14 @@ class AdminActivity : AppCompatActivity() {
                 }
                 render()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun importLogo(uri: Uri) {
         val bytes = runCatching { contentResolver.openInputStream(uri)!!.use { it.readBytes() } }.getOrNull()
         if (bytes == null || bytes.size > MAX_LOGO_BYTES || BitmapFactory.decodeByteArray(bytes, 0, bytes.size) == null) {
-            toast("Bild ungültig oder größer als 1 MB")
+            toast("Invalid image or larger than 1 MB")
             return
         }
         store.update { config ->
@@ -434,22 +434,22 @@ class AdminActivity : AppCompatActivity() {
     // region import, export, passwords
 
     private fun changePassword(title: String, save: (String?) -> Unit) {
-        val first = Dialogs.textField(this, "Neues Passwort", password = true, helper = "Leer lassen, um das Passwort zu entfernen")
-        val second = Dialogs.textField(this, "Wiederholen", password = true)
+        val first = Dialogs.textField(this, "New password", password = true, helper = "Leave empty to remove the password")
+        val second = Dialogs.textField(this, "Repeat", password = true)
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_key))
             .setTitle(title)
             .setView(Dialogs.form(this, first, second))
-            .setPositiveButton("Speichern") { _, _ ->
+            .setPositiveButton("Save") { _, _ ->
                 val password = first.value
                 when {
-                    password != second.value -> toast("Passwörter stimmen nicht überein")
-                    password.isEmpty() -> save(null).also { toast("$title entfernt") }
-                    else -> save(PasswordHasher.hash(password)).also { toast("$title gespeichert") }
+                    password != second.value -> toast("Passwords do not match")
+                    password.isEmpty() -> save(null).also { toast("$title removed") }
+                    else -> save(PasswordHasher.hash(password)).also { toast("$title saved") }
                 }
                 render()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -457,9 +457,9 @@ class AdminActivity : AppCompatActivity() {
         scanner.enabled = true
         barcodeImportDialog = MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_qr))
-            .setTitle("Per Barcode importieren")
-            .setMessage("Jetzt den Konfigurations-Barcode (QR-Code mit JSON) scannen.")
-            .setNegativeButton("Abbrechen", null)
+            .setTitle("Import from barcode")
+            .setMessage("Scan the configuration barcode (QR code containing JSON) now.")
+            .setNegativeButton("Cancel", null)
             .setOnDismissListener {
                 scanner.enabled = false
                 barcodeImportDialog = null
@@ -480,7 +480,7 @@ class AdminActivity : AppCompatActivity() {
         } catch (e: ConfigException) {
             MaterialAlertDialogBuilder(this)
                 .setIcon(Dialogs.icon(this, R.drawable.ic_info))
-                .setTitle("Import fehlgeschlagen")
+                .setTitle("Import failed")
                 .setMessage(e.message)
                 .setPositiveButton("OK", null)
                 .show()
@@ -488,20 +488,20 @@ class AdminActivity : AppCompatActivity() {
         }
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_upload))
-            .setTitle("Konfiguration importieren?")
-            .setMessage("${imported.profiles.size} Profil(e). Die aktuelle Konfiguration wird ersetzt.")
-            .setPositiveButton("Importieren") { _, _ ->
+            .setTitle("Import configuration?")
+            .setMessage("${imported.profiles.size} profile(s). The current configuration will be replaced.")
+            .setPositiveButton("Import") { _, _ ->
                 store.import(imported)
-                toast("Konfiguration importiert")
+                toast("Configuration imported")
                 render()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun readText(uri: Uri): String? = runCatching {
         contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }
-    }.onFailure { toast("Datei konnte nicht gelesen werden: ${it.message}") }.getOrNull()
+    }.onFailure { toast("Could not read the file: ${it.message}") }.getOrNull()
 
     // endregion
 
@@ -563,7 +563,7 @@ class AdminActivity : AppCompatActivity() {
             setImageResource(R.drawable.ic_delete)
             imageTintList = ColorStateList.valueOf(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant))
             setBackgroundResource(ripple(borderless = true))
-            contentDescription = "Löschen"
+            contentDescription = "Delete"
             setOnClickListener { confirmDelete(profile) }
         }
         return LinearLayout(this).apply {

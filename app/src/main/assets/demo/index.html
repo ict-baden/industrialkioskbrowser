@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="scanner" content="Enable,AutoEnter">
-<title>Scanner-Demo</title>
+<title>Scanner demo</title>
 <style>
   :root { color-scheme: light dark; --brand: #0d47a1; --surface: #fff; --bg: #f4f6fb; --muted: #5d6270; --line: #e3e6ee; }
   @media (prefers-color-scheme: dark) { :root { --surface: #1d2024; --bg: #111318; --muted: #a9adb8; --line: #33363c; } }
@@ -47,16 +47,16 @@
 <body>
 <div class="hero">
   <h1>Scanner &amp; Bridge Demo</h1>
-  <p>Barcode scannen: Der Wert landet im fokussierten Feld, danach folgt automatisch Enter und der Fokus springt weiter.</p>
+  <p>Scan a barcode: the value lands in the focused field, then Enter is sent and the focus moves on.</p>
 </div>
 
 <div class="card">
   <form id="form">
-    <label for="article">Artikel</label>
-    <input id="article" name="article" type="text" autocomplete="off" placeholder="Artikelnummer scannen">
-    <label for="location">Lagerplatz</label>
-    <input id="location" name="location" type="text" autocomplete="off" placeholder="Lagerplatz scannen">
-    <button type="submit" tabindex="-1" style="position:absolute;left:-9999px">Senden</button>
+    <label for="article">Item</label>
+    <input id="article" name="article" type="text" autocomplete="off" placeholder="Scan item number">
+    <label for="location">Location</label>
+    <input id="location" name="location" type="text" autocomplete="off" placeholder="Scan location">
+    <button type="submit" tabindex="-1" style="position:absolute;left:-9999px">Submit</button>
   </form>
 </div>
 
@@ -65,14 +65,14 @@
     <button id="trigger"><svg viewBox="0 0 24 24"><path d="M2,5h2v14H2zM5,5h1v14H5zM7,5h3v14H7zM11,5h1v14h-1zM14,5h2v14h-2zM17,5h1v14h-1zM19,5h3v14h-3z"/></svg>Scan</button>
     <button id="beep"><svg viewBox="0 0 24 24"><path d="M3,9v6h4l5,5V4L7,9H3zM16.5,12c0,-1.77 -1.02,-3.29 -2.5,-4.03v8.05c1.48,-0.73 2.5,-2.25 2.5,-4.02z"/></svg>Beep</button>
     <button id="vibrate"><svg viewBox="0 0 24 24"><path d="M0,15h2V9H0v6zM3,17h2V7H3v10zM22,9v6h2V9h-2zM19,17h2V7h-2v10zM16.5,3h-9C6.67,3 6,3.67 6,4.5v15c0,0.83 0.67,1.5 1.5,1.5h9c0.83,0 1.5,-0.67 1.5,-1.5v-15c0,-0.83 -0.67,-1.5 -1.5,-1.5zM16,19H8V5h8v14z"/></svg>Vibration</button>
-    <button id="info"><svg viewBox="0 0 24 24"><path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/></svg>Gerät</button>
+    <button id="info"><svg viewBox="0 0 24 24"><path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/></svg>Device</button>
   </div>
-  <label class="toggle"><input type="checkbox" id="intercept"> Scans per JavaScript abfangen statt einfügen</label>
+  <label class="toggle"><input type="checkbox" id="intercept"> Intercept scans in JavaScript instead of inserting</label>
 </div>
 
 <div class="card">
-  <h2>Letzte Scans</h2>
-  <ul id="log"><li class="empty">Noch keine Scans</li></ul>
+  <h2>Recent scans</h2>
+  <ul id="log"><li class="empty">No scans yet</li></ul>
 </div>
 
 <script>
@@ -81,7 +81,7 @@
     var empty = log.querySelector('.empty');
     if (empty) empty.remove();
     var li = document.createElement('li');
-    var time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    var time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     li.innerHTML = '<span class="chip"></span><span class="data"></span><span class="time"></span>';
     li.children[0].textContent = chip;
     li.children[1].textContent = data;
@@ -103,8 +103,8 @@
 
   var bridge = window.EnterpriseBrowser;
   function run(fn) {
-    if (!bridge) { entry('window.EnterpriseBrowser nicht verfügbar', 'INFO'); return; }
-    fn().then(function (r) { if (r) entry(JSON.stringify(r), 'INFO'); }, function (e) { entry(e.message, 'FEHLER'); });
+    if (!bridge) { entry('window.EnterpriseBrowser is not available', 'INFO'); return; }
+    fn().then(function (r) { if (r) entry(JSON.stringify(r), 'INFO'); }, function (e) { entry(e.message, 'ERROR'); });
   }
   document.getElementById('trigger').onclick = function () { run(function () { return bridge.scanner.trigger(); }); };
   document.getElementById('beep').onclick = function () { run(function () { return bridge.beep(); }); };

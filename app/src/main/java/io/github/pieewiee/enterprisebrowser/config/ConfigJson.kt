@@ -20,21 +20,21 @@ object ConfigJson {
         val root = try {
             JSONObject(text.trim())
         } catch (e: JSONException) {
-            throw ConfigException("Ungültiges JSON: ${e.message}")
+            throw ConfigException("Invalid JSON: ${e.message}")
         }
         val version = root.optInt("version", VERSION)
-        if (version > VERSION) throw ConfigException("Konfigurationsversion $version wird nicht unterstützt")
+        if (version > VERSION) throw ConfigException("Configuration version $version is not supported")
 
         val resources = parseResources(root.optJSONObject("resources") ?: JSONObject())
         val global = parseGlobal(root.optJSONObject("global") ?: JSONObject(), resources)
         val profilesJson = root.optJSONArray("profiles") ?: JSONArray()
         val profiles = (0 until profilesJson.length()).map { index ->
             val json = profilesJson.optJSONObject(index)
-                ?: throw ConfigException("profiles[$index] ist kein Objekt")
+                ?: throw ConfigException("profiles[$index] is not an object")
             parseProfile(json, index, resources)
         }
         val duplicate = profiles.groupBy { it.id }.entries.firstOrNull { it.value.size > 1 }
-        if (duplicate != null) throw ConfigException("Profil-ID \"${duplicate.key}\" ist doppelt vergeben")
+        if (duplicate != null) throw ConfigException("Profile ID \"${duplicate.key}\" is used more than once")
         return AppConfig(global, resources, profiles)
     }
 
@@ -74,7 +74,7 @@ object ConfigJson {
         val branding = json.optJSONObject("branding") ?: JSONObject()
         val logo = branding.optNonBlank("logo")
         if (logo != null && (!logo.startsWith(AppConfig.RES_PREFIX) || logo.removePrefix(AppConfig.RES_PREFIX) !in resources)) {
-            throw ConfigException("global.branding.logo muss auf eine Ressource verweisen (res:<name>)")
+            throw ConfigException("global.branding.logo must reference a resource (res:<name>)")
         }
         return GlobalSettings(
             adminPasswordHash = passwordHash(json, "adminPassword"),
@@ -93,14 +93,14 @@ object ConfigJson {
     private fun color(value: String?, where: String): String? {
         value ?: return null
         if (!value.matches(Regex("#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})"))) {
-            throw ConfigException("$where muss eine Farbe im Format #RRGGBB sein")
+            throw ConfigException("$where must be a color in the format #RRGGBB")
         }
         return value.uppercase()
     }
 
     private fun passwordHash(json: JSONObject, key: String): String? {
         json.optNonBlank("${key}Hash")?.let { hash ->
-            if (!PasswordHasher.isHash(hash)) throw ConfigException("${key}Hash hat ein unbekanntes Format")
+            if (!PasswordHasher.isHash(hash)) throw ConfigException("${key}Hash has an unknown format")
             return hash
         }
         return json.optNonBlank(key)?.let(PasswordHasher::hash)
@@ -109,27 +109,27 @@ object ConfigJson {
     private fun parseResources(json: JSONObject): Map<String, Resource> =
         json.keys().asSequence().associateWith { name ->
             if (name.isBlank() || name.split('/').any { it == ".." || it.isEmpty() }) {
-                throw ConfigException("Ungültiger Ressourcenname \"$name\"")
+                throw ConfigException("Invalid resource name \"$name\"")
             }
             val entry = json.optJSONObject(name)
-                ?: throw ConfigException("resources.$name muss ein Objekt mit \"text\" oder \"base64\" sein")
+                ?: throw ConfigException("resources.$name must be an object with \"text\" or \"base64\"")
             when {
                 entry.has("text") -> Resource(entry.getString("text").toByteArray(Charsets.UTF_8), isText = true)
                 entry.has("base64") -> try {
                     val encoded = entry.getString("base64").filterNot(Char::isWhitespace)
                     Resource(Base64.getDecoder().decode(encoded), isText = false)
                 } catch (_: IllegalArgumentException) {
-                    throw ConfigException("resources.$name: base64 ist ungültig")
+                    throw ConfigException("resources.$name: invalid base64")
                 }
-                else -> throw ConfigException("resources.$name braucht \"text\" oder \"base64\"")
+                else -> throw ConfigException("resources.$name needs \"text\" or \"base64\"")
             }
         }
 
     private fun parseProfile(json: JSONObject, index: Int, resources: Map<String, Resource>): Profile {
         val where = "profiles[$index]"
-        val startUrl = json.optNonBlank("startUrl") ?: throw ConfigException("$where: startUrl fehlt")
+        val startUrl = json.optNonBlank("startUrl") ?: throw ConfigException("$where: startUrl is missing")
         if (!startUrl.startsWith("http://", ignoreCase = true) && !startUrl.startsWith("https://", ignoreCase = true)) {
-            throw ConfigException("$where: startUrl muss mit http:// oder https:// beginnen")
+            throw ConfigException("$where: startUrl must start with http:// or https://")
         }
         val name = json.optNonBlank("name") ?: startUrl
         val id = json.optNonBlank("id") ?: slug(name).ifEmpty { "profile-${index + 1}" }
@@ -193,7 +193,7 @@ object ConfigJson {
             metaOverride = json.optNonBlank("metaOverride"),
         )
         if (viewport.mode == ViewportMode.FIXED && viewport.width == 0) {
-            throw ConfigException("viewport.width ist bei mode \"fixed\" erforderlich")
+            throw ConfigException("viewport.width is required for mode \"fixed\"")
         }
         return viewport
     }
@@ -202,14 +202,14 @@ object ConfigJson {
         val defaults = KeyboardSettings()
         val remapJson = json.optJSONArray("remap") ?: JSONArray()
         val remap = (0 until remapJson.length()).map { i ->
-            val entry = remapJson.optJSONObject(i) ?: throw ConfigException("$where.keyboard.remap[$i] ist kein Objekt")
-            val key = entry.optNonBlank("key") ?: throw ConfigException("$where.keyboard.remap[$i]: key fehlt")
+            val entry = remapJson.optJSONObject(i) ?: throw ConfigException("$where.keyboard.remap[$i] is not an object")
+            val key = entry.optNonBlank("key") ?: throw ConfigException("$where.keyboard.remap[$i]: key is missing")
             KeyRemap(key, if (entry.isNull("send")) "" else entry.optString("send", ""))
         }
         val hotkeysJson = json.optJSONObject("hotkeys") ?: JSONObject()
         val hotkeys = hotkeysJson.keys().asSequence().mapNotNull { action ->
             if (HotkeyAction.entries.none { it.key == action }) {
-                throw ConfigException("$where.keyboard.hotkeys: unbekannte Aktion \"$action\"")
+                throw ConfigException("$where.keyboard.hotkeys: unknown action \"$action\"")
             }
             hotkeysJson.optNonBlank(action)?.let { action to it }
         }.toMap()
@@ -225,7 +225,7 @@ object ConfigJson {
     }
 
     private fun parseInjections(array: JSONArray, where: String): List<Injection> = (0 until array.length()).map { i ->
-        val json = array.optJSONObject(i) ?: throw ConfigException("$where.injections[$i] ist kein Objekt")
+        val json = array.optJSONObject(i) ?: throw ConfigException("$where.injections[$i] is not an object")
         val match = json.optJSONObject("match") ?: JSONObject()
         val urlMatch = match.optNonBlank("url").orEmpty()
         val injection = Injection(
@@ -240,13 +240,13 @@ object ConfigJson {
             htmlPosition = parseKey(json.optNonBlank("position"), HtmlPosition.BODY_END),
         )
         if (injection.css == null && injection.js == null && injection.html == null) {
-            throw ConfigException("$where.injections[$i] braucht css, js oder html")
+            throw ConfigException("$where.injections[$i] needs css, js or html")
         }
         if (injection.matchType == MatchType.REGEX) {
             try {
                 Regex(injection.urlMatch)
             } catch (e: IllegalArgumentException) {
-                throw ConfigException("$where.injections[$i]: ungültiger regulärer Ausdruck: ${e.message}")
+                throw ConfigException("$where.injections[$i]: invalid regular expression: ${e.message}")
             }
         }
         injection
@@ -259,7 +259,7 @@ object ConfigJson {
             .filter { it.startsWith(AppConfig.RES_PREFIX) }
             .map { it.removePrefix(AppConfig.RES_PREFIX) }
             .firstOrNull { it !in resources }
-            ?.let { throw ConfigException("$where verweist auf unbekannte Ressource \"$it\"") }
+            ?.let { throw ConfigException("$where references unknown resource \"$it\"") }
     }
 
     // endregion

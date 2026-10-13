@@ -218,11 +218,11 @@ hero.alpha_composite(front, (1135, 80))
 text_layer = Image.new("RGBA", hero.size, (0, 0, 0, 0))
 draw = ImageDraw.Draw(text_layer)
 draw.text((110, 300), "EnterpriseBrowser", font=font("Roboto-Black.ttf", 96), fill=(255, 255, 255, 255))
-draw.text((114, 420), "Der Kiosk-Browser für Zebra & Honeywell", font=font("Roboto-Medium.ttf", 44), fill=(255, 255, 255, 230))
-draw.text((114, 486), "Scanner · Kiosk · MDM-Provisionierung · JavaScript-API", font=font("Roboto-Regular.ttf", 32), fill=(255, 255, 255, 175))
+draw.text((114, 420), "The kiosk browser for Zebra & Honeywell", font=font("Roboto-Medium.ttf", 44), fill=(255, 255, 255, 230))
+draw.text((114, 486), "Scanner · Kiosk · MDM provisioning · JavaScript API", font=font("Roboto-Regular.ttf", 32), fill=(255, 255, 255, 175))
 hero.alpha_composite(text_layer)
 x = 114
-for label in ["DataWedge", "Managed Config", "Lock Task", "Velocity-kompatibel"]:
+for label in ["DataWedge", "Managed config", "Lock task", "Keyboard wedge"]:
     x = chip(hero, (x, 580), label, font("Roboto-Medium.ttf", 27))
 save(hero.convert("RGB"), "hero.png", width=1400)
 
@@ -240,6 +240,6 @@ cx, cy = 800, 520
 bd.ellipse([cx - 58, cy - 58, cx + 58, cy + 58], fill=(13, 71, 161, 255))
 bd.polygon([(cx - 24, cy - 26), (cx + 30, cy), (cx - 24, cy + 26)], fill=(255, 255, 255, 255))
 label_font = font("Roboto-Medium.ttf", 34)
-bd.text((200 + left.width // 2, 1000), "Standard", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
-bd.text((1600 - 200 - right.width // 2, 1000), "Eigenes Branding per Konfiguration", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
+bd.text((200 + left.width // 2, 1000), "Default", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
+bd.text((1600 - 200 - right.width // 2, 1000), "Custom branding via configuration", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
 save(B.convert("RGB"), "branding.png", width=1200)

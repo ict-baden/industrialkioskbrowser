@@ -146,7 +146,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         enableEdgeToEdge()
         config = ConfigStore.get(this).config
         profile = config.profile(intent.getStringExtra(EXTRA_PROFILE_ID)) ?: run {
-            Toast.makeText(this, "Profil nicht gefunden", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Profile not found", Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -417,7 +417,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 target.startsWith("javascript:", ignoreCase = true) ->
                     webView.evaluateJavascript(target.substringAfter(':'), null)
                 UrlPolicy.isAllowed(target, profile) -> webView.loadUrl(target)
-                else -> toast("Ziel nicht erlaubt: $target")
+                else -> toast("Target not allowed: $target")
             }
             return
         }
@@ -450,22 +450,22 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     internal fun showMenu() {
         val config = ConfigStore.get(this).config
         val actions = buildList {
-            add(ActionSheet.Action("Startseite", R.drawable.ic_home) { loadStart() })
-            add(ActionSheet.Action("Neu laden", R.drawable.ic_refresh) { webView.reload() })
-            add(ActionSheet.Action("Vor", R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
+            add(ActionSheet.Action("Home", R.drawable.ic_home) { loadStart() })
+            add(ActionSheet.Action("Reload", R.drawable.ic_refresh) { webView.reload() })
+            add(ActionSheet.Action("Forward", R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
             add(ActionSheet.Action("Scanner", R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
             if (keyboard.softKeyboardAvailable) {
-                add(ActionSheet.Action("Tastatur", R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
+                add(ActionSheet.Action("Keyboard", R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
             }
             if (config.profiles.size > 1 && !config.global.hideExit) {
-                add(ActionSheet.Action("Profile", R.drawable.ic_swap) { finish() })
+                add(ActionSheet.Action("Profiles", R.drawable.ic_swap) { finish() })
             }
-            add(ActionSheet.Action("Einstellungen", R.drawable.ic_settings) {
+            add(ActionSheet.Action("Settings", R.drawable.ic_settings) {
                 Dialogs.requireAdmin(this@BrowserActivity) { startActivity(Intent(this@BrowserActivity, AdminActivity::class.java)) }
             })
             if (!config.global.hideExit) {
-                add(ActionSheet.Action("Beenden", R.drawable.ic_power) {
-                    Dialogs.requirePassword(this@BrowserActivity, config.global.exitPasswordHash, "Exit-Passwort", ::exitApp)
+                add(ActionSheet.Action("Exit", R.drawable.ic_power) {
+                    Dialogs.requirePassword(this@BrowserActivity, config.global.exitPasswordHash, "Exit password", ::exitApp)
                 })
             }
         }
@@ -491,11 +491,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private fun download(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
         if (!profile.allowDownloads) {
-            toast("Downloads sind deaktiviert")
+            toast("Downloads are disabled")
             return
         }
         if (!URLUtil.isNetworkUrl(url)) {
-            toast("Dieser Download-Typ wird nicht unterstützt")
+            toast("This download type is not supported")
             return
         }
         val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
@@ -507,7 +507,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
         CookieManager.getInstance().getCookie(url)?.let { request.addRequestHeader("Cookie", it) }
         getSystemService(DownloadManager::class.java).enqueue(request)
-        toast("Download gestartet: $fileName")
+        toast("Download started: $fileName")
     }
 
     private fun chooseClientCertificate(request: ClientCertRequest) {
@@ -559,7 +559,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 return true
             }
             if (!request.isForMainFrame || UrlPolicy.isAllowed(url, profile)) return false
-            toast("Seite nicht erlaubt: ${request.url.host ?: url}")
+            toast("Page not allowed: ${request.url.host ?: url}")
             sounds.play(profile.sounds.error)
             return true
         }
@@ -596,11 +596,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (!request.isForMainFrame) return
             val (title, message) = when (error.errorCode) {
-                ERROR_HOST_LOOKUP -> "Server nicht gefunden" to "Die Adresse konnte nicht aufgelöst werden. Prüfe die WLAN-Verbindung."
-                ERROR_CONNECT -> "Keine Verbindung" to "Der Server ist nicht erreichbar."
-                ERROR_TIMEOUT -> "Zeitüberschreitung" to "Der Server hat nicht rechtzeitig geantwortet."
-                ERROR_FAILED_SSL_HANDSHAKE -> "Unsichere Verbindung" to "Die sichere Verbindung konnte nicht aufgebaut werden."
-                else -> "Seite nicht erreichbar" to "Die Seite konnte nicht geladen werden."
+                ERROR_HOST_LOOKUP -> "Server not found" to "The address could not be resolved. Check the Wi-Fi connection."
+                ERROR_CONNECT -> "No connection" to "The server cannot be reached."
+                ERROR_TIMEOUT -> "Timeout" to "The server did not respond in time."
+                ERROR_FAILED_SSL_HANDSHAKE -> "Insecure connection" to "The secure connection could not be established."
+                else -> "Page not available" to "The page could not be loaded."
             }
             val detail = error.description?.toString()?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
             showStatus(title, message + detail, request.url.toString())
@@ -609,8 +609,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
             if (!profile.errorPages.showHttpErrors || !request.isForMainFrame || errorResponse.statusCode < 400) return
             showStatus(
-                "Fehler ${errorResponse.statusCode}",
-                errorResponse.reasonPhrase?.takeIf { it.isNotBlank() } ?: "Der Server hat die Anfrage abgelehnt.",
+                "Error ${errorResponse.statusCode}",
+                errorResponse.reasonPhrase?.takeIf { it.isNotBlank() } ?: "The server rejected the request.",
                 request.url.toString(),
             )
         }
@@ -618,14 +618,14 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
             handler.cancel()
             val reason = when (error.primaryError) {
-                SslError.SSL_UNTRUSTED -> "Das Zertifikat stammt nicht von einer vertrauenswürdigen Stelle."
-                SslError.SSL_EXPIRED -> "Das Zertifikat ist abgelaufen."
-                SslError.SSL_NOTYETVALID -> "Das Zertifikat ist noch nicht gültig."
-                SslError.SSL_IDMISMATCH -> "Das Zertifikat passt nicht zum Servernamen."
-                SslError.SSL_DATE_INVALID -> "Das Zertifikatsdatum ist ungültig."
-                else -> "Das Zertifikat ist ungültig."
+                SslError.SSL_UNTRUSTED -> "The certificate is not issued by a trusted authority."
+                SslError.SSL_EXPIRED -> "The certificate has expired."
+                SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
+                SslError.SSL_IDMISMATCH -> "The certificate does not match the server name."
+                SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
+                else -> "The certificate is invalid."
             }
-            showStatus("Unsichere Verbindung", "$reason Vertrauenswürdige Zertifikate werden über das MDM als CA installiert.", error.url)
+            showStatus("Insecure connection", "$reason Trusted certificates are installed as a CA through the MDM.", error.url)
         }
 
         override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String?) {

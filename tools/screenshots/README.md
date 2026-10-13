@@ -1,27 +1,26 @@
-# Doku-Screenshots neu erzeugen
+# Regenerating the documentation screenshots
 
-Die Bilder in `docs/images/` werden aus dem echten UI-Code gerendert, ohne Gerät
-oder Emulator:
+The images in `docs/images/` are rendered from the real UI code, without a device or an
+emulator:
 
-1. **App-Oberfläche** – Robolectric rendert die Activities
-   (`app/src/test/.../screenshots/DocScreenshots.kt`) nach `app/build/screenshots`:
+1. **App UI** – Robolectric renders the activities
+   (`app/src/test/.../screenshots/DocScreenshots.kt`) into `app/build/screenshots`:
    ```bash
    ./gradlew recordRoborazziDebug -Pscreenshots
    ```
-2. **Webinhalt** – die mitgelieferten Seiten (Demo, Fehlerseite) werden in einen
-   realistischen Zustand gebracht und mit Chromium in WebView-Auflösung gerendert:
+2. **Web content** – the bundled pages (demo, error page) are put into a realistic state
+   and rendered with Chromium at WebView resolution:
    ```bash
    python tools/screenshots/stage_web.py . build/docs-web
    npx -y -p playwright@1.55.0 node tools/screenshots/render_web.mjs build/docs-web
    ```
-3. **Zusammensetzen** – Statusleiste, Gerätrahmen, Hero-Banner, Branding-Vergleich:
+3. **Composition** – status bar, device frame, hero banner, branding comparison:
    ```bash
    python tools/screenshots/compose.py . build/docs-web
    ```
 
-Voraussetzungen: JDK 17–21, Python 3 mit Pillow, Node.js (für Playwright), Roboto
-(unter Windows vorhanden, sonst `FONTS_DIR` setzen).
+Requirements: JDK 17–21, Python 3 with Pillow, Node.js (for Playwright), Roboto
+(available on Windows, otherwise set `FONTS_DIR`).
 
-Die WebView selbst kann Robolectric nicht rendern; für die Browser-Ansichten wird
-deshalb der Chromium-Render der Seite in den Inhaltsbereich der gerenderten
-Activity eingesetzt.
+Robolectric cannot render the WebView itself, so for the browser screens the Chromium
+render of the page is placed into the content area of the rendered activity.

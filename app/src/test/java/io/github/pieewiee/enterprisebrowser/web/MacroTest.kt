@@ -58,8 +58,8 @@ class MacroTest {
     @Test
     fun `fills error page templates case insensitively and escapes`() {
         assertEquals(
-            "<h1>Fehler 404</h1><p>a &lt;b&gt;</p><i>https://x/?a=1&amp;b=\$2</i>",
-            StatusPage.fill("<h1>{{Title}}</h1><p>{{message}}</p><i>{{URL}}</i>", "Fehler 404", "a <b>", "https://x/?a=1&b=\$2"),
+            "<h1>Error 404</h1><p>a &lt;b&gt;</p><i>https://x/?a=1&amp;b=\$2</i>",
+            StatusPage.fill("<h1>{{Title}}</h1><p>{{message}}</p><i>{{URL}}</i>", "Error 404", "a <b>", "https://x/?a=1&b=\$2"),
         )
     }
 

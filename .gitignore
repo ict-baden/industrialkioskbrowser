@@ -24,3 +24,6 @@ Thumbs.db
 .kotlin/
 *.iml
 captures/
+
+# Local notes (not part of the repository)
+notes/

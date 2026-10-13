@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">EnterpriseBrowser</string>
-    <string name="action_back">Zurück</string>
-    <string name="action_scan">Scannen</string>
-    <string name="action_keyboard">Tastatur</string>
-    <string name="action_menu">Menü</string>
-    <string name="action_settings">Einstellungen</string>
-    <string name="no_profiles_title">Noch keine Profile</string>
-    <string name="no_profiles">Lege ein Profil in den Einstellungen an oder stelle eine Konfiguration per MDM bereit.</string>
+    <string name="action_back">Back</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_keyboard">Keyboard</string>
+    <string name="action_menu">Menu</string>
+    <string name="action_settings">Settings</string>
+    <string name="no_profiles_title">No profiles yet</string>
+    <string name="no_profiles">Add a profile in the settings or provide a configuration through your MDM.</string>
 
-    <string name="mc_config_json_title">Konfiguration (JSON)</string>
-    <string name="mc_config_json_description">Komplette Konfiguration im EnterpriseBrowser-JSON-Format. Hat Vorrang vor Start-URL und Profilname.</string>
-    <string name="mc_profile_name_title">Profilname</string>
-    <string name="mc_profile_name_description">Name des verwalteten Profils (nur zusammen mit der Start-URL).</string>
-    <string name="mc_start_url_title">Start-URL</string>
-    <string name="mc_start_url_description">Legt ein verwaltetes Profil an, das beim Start geöffnet wird.</string>
-    <string name="mc_kiosk_mode_title">Kiosk-Modus</string>
-    <string name="mc_kiosk_mode_description">Toolbar und Systemleisten ausblenden, Beenden verbergen.</string>
-    <string name="mc_admin_password_title">Admin-Passwort</string>
-    <string name="mc_admin_password_description">Schützt die Einstellungen der App.</string>
+    <string name="mc_config_json_title">Configuration (JSON)</string>
+    <string name="mc_config_json_description">Complete configuration in the EnterpriseBrowser JSON format. Takes precedence over start URL and profile name.</string>
+    <string name="mc_profile_name_title">Profile name</string>
+    <string name="mc_profile_name_description">Name of the managed profile (only together with the start URL).</string>
+    <string name="mc_start_url_title">Start URL</string>
+    <string name="mc_start_url_description">Creates a managed profile that opens when the app starts.</string>
+    <string name="mc_kiosk_mode_title">Kiosk mode</string>
+    <string name="mc_kiosk_mode_description">Hide toolbar and system bars, hide exit.</string>
+    <string name="mc_admin_password_title">Admin password</string>
+    <string name="mc_admin_password_description">Protects the app settings.</string>
 </resources>
