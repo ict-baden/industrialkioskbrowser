@@ -3,21 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{TITLE}}</title>
+<title>{{title}}</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: sans-serif; margin: 0; padding: 32px 20px; background: Canvas; color: CanvasText; }
-  h1 { font-size: 1.4em; margin: 0 0 12px; }
-  p { line-height: 1.5; margin: 0 0 12px; }
-  .url { font-family: monospace; font-size: .85em; word-break: break-all; opacity: .7; }
-  a.button { display: inline-block; margin-top: 16px; padding: 12px 24px; border-radius: 6px;
-             background: #1565c0; color: #fff; text-decoration: none; font-weight: bold; }
+  :root { color-scheme: light dark; --brand: {{color}}; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 32px 24px; font-family: Roboto, "Segoe UI", sans-serif;
+    background: #f4f6fb; color: #1b1d22;
+  }
+  .card {
+    width: 100%; max-width: 420px; background: #fff; border-radius: 28px; padding: 32px 24px 28px;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, .08); text-align: center;
+  }
+  .badge {
+    width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(13, 71, 161, .12); /* older WebViews without color-mix() */
+    background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand);
+  }
+  .badge svg { width: 44px; height: 44px; fill: currentColor; }
+  h1 { font-size: 1.35rem; margin: 0 0 10px; }
+  p { margin: 0 0 18px; line-height: 1.5; opacity: .8; }
+  .url {
+    font-family: ui-monospace, monospace; font-size: .8rem; word-break: break-all;
+    background: #f1f3f8; border-radius: 12px; padding: 10px 12px; margin-bottom: 24px; opacity: .85;
+  }
+  a.button {
+    display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 100px;
+    background: var(--brand); color: #fff; text-decoration: none; font-weight: 600; letter-spacing: .2px;
+  }
+  a.button svg { width: 20px; height: 20px; fill: currentColor; }
+  /* Dark overrides last, so they win over the base rules above. */
+  @media (prefers-color-scheme: dark) {
+    body { background: #111318; color: #e2e2e9; }
+    .card { background: #1d2024; box-shadow: none; }
+    .url { background: #282a2f; }
+  }
 </style>
 </head>
 <body>
-<h1>{{TITLE}}</h1>
-<p>{{MESSAGE}}</p>
-<p class="url">{{URL}}</p>
-<a class="button" href="ebrowser://retry">Erneut versuchen</a>
+<div class="card">
+  <div class="badge">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-2h2v2zM13,13h-2V7h2v6z"/></svg>
+  </div>
+  <h1>{{title}}</h1>
+  <p>{{message}}</p>
+  <div class="url">{{url}}</div>
+  <a class="button" href="ebrowser://retry">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4c-4.42,0 -7.99,3.58 -7.99,8s3.57,8 7.99,8c3.73,0 6.84,-2.55 7.73,-6h-2.08c-0.82,2.33 -3.04,4 -5.65,4 -3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6c1.66,0 3.14,0.69 4.22,1.78L13,11h7V4l-2.35,2.35z"/></svg>
+    Erneut versuchen
+  </a>
+</div>
 </body>
 </html>

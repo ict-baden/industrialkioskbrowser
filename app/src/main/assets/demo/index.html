@@ -4,64 +4,112 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="scanner" content="Enable,AutoEnter">
-<title>EnterpriseBrowser Demo</title>
+<title>Scanner-Demo</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: sans-serif; margin: 0; padding: 16px; background: Canvas; color: CanvasText; }
-  h1 { font-size: 1.3em; }
-  label { display: block; margin: 12px 0 4px; font-weight: bold; }
-  input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 1.1em; }
-  button { margin: 4px 4px 4px 0; padding: 10px 14px; font-size: 1em; }
-  #log { font-family: monospace; font-size: .85em; white-space: pre-wrap; border: 1px solid #8884;
-         padding: 8px; min-height: 6em; margin-top: 12px; }
+  :root { color-scheme: light dark; --brand: #0d47a1; --surface: #fff; --bg: #f4f6fb; --muted: #5d6270; --line: #e3e6ee; }
+  @media (prefers-color-scheme: dark) { :root { --surface: #1d2024; --bg: #111318; --muted: #a9adb8; --line: #33363c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: Roboto, "Segoe UI", sans-serif; background: var(--bg); color: inherit; }
+  .hero {
+    border-radius: 24px; padding: 20px; color: #fff; margin-bottom: 14px;
+    background: linear-gradient(135deg, #1e5bbf, #0a2f6e);
+    box-shadow: 0 8px 24px rgba(13, 71, 161, .25);
+  }
+  .hero h1 { margin: 0 0 6px; font-size: 1.3rem; }
+  .hero p { margin: 0; opacity: .85; font-size: .9rem; line-height: 1.4; }
+  .card { background: var(--surface); border-radius: 20px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(16, 24, 40, .06); }
+  label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin: 12px 0 6px; text-transform: uppercase; letter-spacing: .4px; }
+  label:first-child { margin-top: 0; }
+  input[type=text] {
+    width: 100%; padding: 14px 14px; font-size: 1.05rem; border-radius: 14px; border: 2px solid var(--line);
+    background: transparent; color: inherit; outline: none; transition: border-color .15s;
+  }
+  input[type=text]:focus { border-color: var(--brand); }
+  .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .actions button {
+    border: 0; border-radius: 16px; padding: 12px 4px; font-size: .78rem; font-weight: 600;
+    background: rgba(13, 71, 161, .1); color: var(--brand); display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  @media (prefers-color-scheme: dark) { .actions button { color: #abc7ff; background: rgba(171, 199, 255, .12); } }
+  .actions svg { width: 22px; height: 22px; fill: currentColor; }
+  .toggle { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
+  .toggle input { width: 18px; height: 18px; accent-color: var(--brand); }
+  h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 10px; }
+  #log { list-style: none; margin: 0; padding: 0; }
+  #log li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: .9rem; }
+  #log li:first-child { border-top: 0; }
+  .chip { font-size: .7rem; font-weight: 700; border-radius: 100px; padding: 3px 8px; background: rgba(0, 121, 107, .14); color: #00796b; white-space: nowrap; }
+  .data { font-family: ui-monospace, monospace; font-weight: 600; flex: 1; word-break: break-all; }
+  .time { font-size: .75rem; color: var(--muted); }
+  .empty { color: var(--muted); font-size: .9rem; }
 </style>
 </head>
 <body>
-<h1>Scanner &amp; Bridge Demo</h1>
-<p>Barcode scannen, während ein Feld fokussiert ist: Der Wert wird eingefügt und mit Enter abgeschlossen
-  (<code>&lt;meta http-equiv="scanner" content="Enable,AutoEnter"&gt;</code>).</p>
+<div class="hero">
+  <h1>Scanner &amp; Bridge Demo</h1>
+  <p>Barcode scannen: Der Wert landet im fokussierten Feld, danach folgt automatisch Enter und der Fokus springt weiter.</p>
+</div>
 
-<form id="form">
-  <label for="article">Artikel</label>
-  <input id="article" name="article" autocomplete="off">
-  <label for="location">Lagerplatz</label>
-  <input id="location" name="location" autocomplete="off">
-  <button type="submit" tabindex="-1" style="position:absolute;left:-9999px">Senden</button>
-</form>
+<div class="card">
+  <form id="form">
+    <label for="article">Artikel</label>
+    <input id="article" name="article" type="text" autocomplete="off" placeholder="Artikelnummer scannen">
+    <label for="location">Lagerplatz</label>
+    <input id="location" name="location" type="text" autocomplete="off" placeholder="Lagerplatz scannen">
+    <button type="submit" tabindex="-1" style="position:absolute;left:-9999px">Senden</button>
+  </form>
+</div>
 
-<p>
-  <button id="trigger">Scan auslösen</button>
-  <button id="beep">Beep</button>
-  <button id="vibrate">Vibrieren</button>
-  <button id="info">Geräteinfo</button>
-</p>
-<label><input type="checkbox" id="intercept" style="width:auto"> Scans per JavaScript abfangen (nicht einfügen)</label>
-<div id="log"></div>
+<div class="card">
+  <div class="actions">
+    <button id="trigger"><svg viewBox="0 0 24 24"><path d="M2,5h2v14H2zM5,5h1v14H5zM7,5h3v14H7zM11,5h1v14h-1zM14,5h2v14h-2zM17,5h1v14h-1zM19,5h3v14h-3z"/></svg>Scan</button>
+    <button id="beep"><svg viewBox="0 0 24 24"><path d="M3,9v6h4l5,5V4L7,9H3zM16.5,12c0,-1.77 -1.02,-3.29 -2.5,-4.03v8.05c1.48,-0.73 2.5,-2.25 2.5,-4.02z"/></svg>Beep</button>
+    <button id="vibrate"><svg viewBox="0 0 24 24"><path d="M0,15h2V9H0v6zM3,17h2V7H3v10zM22,9v6h2V9h-2zM19,17h2V7h-2v10zM16.5,3h-9C6.67,3 6,3.67 6,4.5v15c0,0.83 0.67,1.5 1.5,1.5h9c0.83,0 1.5,-0.67 1.5,-1.5v-15c0,-0.83 -0.67,-1.5 -1.5,-1.5zM16,19H8V5h8v14z"/></svg>Vibration</button>
+    <button id="info"><svg viewBox="0 0 24 24"><path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/></svg>Gerät</button>
+  </div>
+  <label class="toggle"><input type="checkbox" id="intercept"> Scans per JavaScript abfangen statt einfügen</label>
+</div>
+
+<div class="card">
+  <h2>Letzte Scans</h2>
+  <ul id="log"><li class="empty">Noch keine Scans</li></ul>
+</div>
 
 <script>
   var log = document.getElementById('log');
-  function write(text) { log.textContent = text + '\n' + log.textContent; }
+  function entry(data, chip) {
+    var empty = log.querySelector('.empty');
+    if (empty) empty.remove();
+    var li = document.createElement('li');
+    var time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    li.innerHTML = '<span class="chip"></span><span class="data"></span><span class="time"></span>';
+    li.children[0].textContent = chip;
+    li.children[1].textContent = data;
+    li.children[2].textContent = time;
+    log.insertBefore(li, log.firstChild);
+  }
 
   document.getElementById('form').addEventListener('submit', function (e) {
     e.preventDefault();
-    write('Formular abgeschickt: ' + new URLSearchParams(new FormData(e.target)).toString());
-    var fields = Array.from(e.target.elements);
-    var next = fields[fields.indexOf(document.activeElement) + 1];
-    if (next) next.focus();
+    var fields = Array.from(e.target.querySelectorAll('input'));
+    var next = fields[fields.indexOf(document.activeElement) + 1] || fields[0];
+    next.focus();
   });
 
   window.addEventListener('enterprisebrowser:scan', function (e) {
-    write('Scan: ' + e.detail.data + ' (' + (e.detail.symbology || '?') + ', ' + e.detail.source + ')');
+    entry(e.detail.data, e.detail.symbology || 'SCAN');
     if (document.getElementById('intercept').checked) e.preventDefault();
   });
 
   var bridge = window.EnterpriseBrowser;
-  if (!bridge) write('window.EnterpriseBrowser ist nicht verfügbar (WebView zu alt?)');
-  function run(promise) { promise.then(function (r) { if (r) write(JSON.stringify(r)); }, function (e) { write('Fehler: ' + e.message); }); }
-  document.getElementById('trigger').onclick = function () { run(bridge.scanner.trigger()); };
-  document.getElementById('beep').onclick = function () { run(bridge.beep()); };
-  document.getElementById('vibrate').onclick = function () { run(bridge.vibrate(300)); };
-  document.getElementById('info').onclick = function () { run(bridge.deviceInfo()); };
+  function run(fn) {
+    if (!bridge) { entry('window.EnterpriseBrowser nicht verfügbar', 'INFO'); return; }
+    fn().then(function (r) { if (r) entry(JSON.stringify(r), 'INFO'); }, function (e) { entry(e.message, 'FEHLER'); });
+  }
+  document.getElementById('trigger').onclick = function () { run(function () { return bridge.scanner.trigger(); }); };
+  document.getElementById('beep').onclick = function () { run(function () { return bridge.beep(); }); };
+  document.getElementById('vibrate').onclick = function () { run(function () { return bridge.vibrate(300); }); };
+  document.getElementById('info').onclick = function () { run(function () { return bridge.deviceInfo(); }); };
   document.getElementById('article').focus();
 </script>
 </body>

@@ -152,6 +152,8 @@ data class Profile(
     val id: String,
     val name: String,
     val startUrl: String,
+    /** Profile color as `#RRGGBB` (tile and toolbar); falls back to the brand color. */
+    val color: String? = null,
     /** Hosts (and their subdomains) the browser may navigate to. Empty means no restriction. */
     val allowList: List<String> = emptyList(),
     val launchOnStartup: Boolean = false,
@@ -169,10 +171,22 @@ data class Profile(
     val scanner: ScannerSettings = ScannerSettings(),
 )
 
+/** App-wide look: shown on the start screen, toolbars and error pages. */
+data class Branding(
+    /** Title of the start screen; defaults to the app name. */
+    val title: String? = null,
+    val subtitle: String? = null,
+    /** Brand color as `#RRGGBB`. */
+    val color: String? = null,
+    /** Logo image as `res:<name>` (PNG/JPEG/WebP). */
+    val logo: String? = null,
+)
+
 data class GlobalSettings(
     val adminPasswordHash: String? = null,
     val exitPasswordHash: String? = null,
     val hideExit: Boolean = false,
+    val branding: Branding = Branding(),
 )
 
 /** A file referenced as `res:<name>` and served at `https://appassets.androidplatform.net/res/<name>`. */

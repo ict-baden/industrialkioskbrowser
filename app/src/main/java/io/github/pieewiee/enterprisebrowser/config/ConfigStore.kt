@@ -2,6 +2,7 @@ package io.github.pieewiee.enterprisebrowser.config
 
 import android.content.Context
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import java.io.File
 
 /** Process-wide holder of the persisted [AppConfig] (`files/config.json`). */
@@ -52,6 +53,12 @@ class ConfigStore private constructor(private val file: File) {
 
         fun get(context: Context): ConfigStore = instance ?: synchronized(this) {
             instance ?: ConfigStore(File(context.applicationContext.filesDir, "config.json")).also { instance = it }
+        }
+
+        /** Forgets the cached store so the next [get] reads the file again (tests). */
+        @VisibleForTesting
+        internal fun reset() {
+            instance = null
         }
     }
 }

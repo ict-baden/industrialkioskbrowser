@@ -25,8 +25,8 @@ object ConfigJson {
         val version = root.optInt("version", VERSION)
         if (version > VERSION) throw ConfigException("Konfigurationsversion $version wird nicht unterstützt")
 
-        val global = parseGlobal(root.optJSONObject("global") ?: JSONObject())
         val resources = parseResources(root.optJSONObject("resources") ?: JSONObject())
+        val global = parseGlobal(root.optJSONObject("global") ?: JSONObject(), resources)
         val profilesJson = root.optJSONArray("profiles") ?: JSONArray()
         val profiles = (0 until profilesJson.length()).map { index ->
             val json = profilesJson.optJSONObject(index)
@@ -45,6 +45,13 @@ object ConfigJson {
             putOpt("adminPasswordHash", config.global.adminPasswordHash)
             putOpt("exitPasswordHash", config.global.exitPasswordHash)
             put("hideExit", config.global.hideExit)
+            val branding = config.global.branding
+            put("branding", JSONObject().apply {
+                putOpt("title", branding.title)
+                putOpt("subtitle", branding.subtitle)
+                putOpt("color", branding.color)
+                putOpt("logo", branding.logo)
+            })
         })
         root.put("resources", JSONObject().apply {
             config.resources.toSortedMap().forEach { (name, resource) ->
@@ -63,11 +70,33 @@ object ConfigJson {
 
     // region parsing
 
-    private fun parseGlobal(json: JSONObject) = GlobalSettings(
-        adminPasswordHash = passwordHash(json, "adminPassword"),
-        exitPasswordHash = passwordHash(json, "exitPassword"),
-        hideExit = json.optBoolean("hideExit", false),
-    )
+    private fun parseGlobal(json: JSONObject, resources: Map<String, Resource>): GlobalSettings {
+        val branding = json.optJSONObject("branding") ?: JSONObject()
+        val logo = branding.optNonBlank("logo")
+        if (logo != null && (!logo.startsWith(AppConfig.RES_PREFIX) || logo.removePrefix(AppConfig.RES_PREFIX) !in resources)) {
+            throw ConfigException("global.branding.logo muss auf eine Ressource verweisen (res:<name>)")
+        }
+        return GlobalSettings(
+            adminPasswordHash = passwordHash(json, "adminPassword"),
+            exitPasswordHash = passwordHash(json, "exitPassword"),
+            hideExit = json.optBoolean("hideExit", false),
+            branding = Branding(
+                title = branding.optNonBlank("title"),
+                subtitle = branding.optNonBlank("subtitle"),
+                color = color(branding.optNonBlank("color"), "global.branding.color"),
+                logo = logo,
+            ),
+        )
+    }
+
+    /** Validates `#RRGGBB` (or `#AARRGGBB`) and normalizes it to upper case. */
+    private fun color(value: String?, where: String): String? {
+        value ?: return null
+        if (!value.matches(Regex("#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})"))) {
+            throw ConfigException("$where muss eine Farbe im Format #RRGGBB sein")
+        }
+        return value.uppercase()
+    }
 
     private fun passwordHash(json: JSONObject, key: String): String? {
         json.optNonBlank("${key}Hash")?.let { hash ->
@@ -110,6 +139,7 @@ object ConfigJson {
         val errorPages = json.optJSONObject("errorPages") ?: JSONObject()
         val defaults = Profile(id = id, name = name, startUrl = startUrl)
         val profile = defaults.copy(
+            color = color(json.optNonBlank("color"), "$where.color"),
             allowList = json.optStringList("allowList"),
             launchOnStartup = json.optBoolean("launchOnStartup", defaults.launchOnStartup),
             userAgent = json.optNonBlank("userAgent"),
@@ -240,6 +270,7 @@ object ConfigJson {
         put("id", profile.id)
         put("name", profile.name)
         put("startUrl", profile.startUrl)
+        putOpt("color", profile.color)
         put("allowList", JSONArray(profile.allowList))
         put("launchOnStartup", profile.launchOnStartup)
         putOpt("userAgent", profile.userAgent)

@@ -82,6 +82,22 @@ class ConfigJsonTest {
     }
 
     @Test
+    fun `parses branding and profile colors`() {
+        val config = ConfigJson.parse(
+            """
+            {
+              "resources": { "logo.png": { "base64": "iVBORw0KGgo=" } },
+              "global": { "branding": { "title": "Lager Nord", "subtitle": "Halle 3", "color": "#00796b", "logo": "res:logo.png" } },
+              "profiles": [{ "startUrl": "https://x.test", "color": "#f57c00" }]
+            }
+            """,
+        )
+        assertEquals(Branding("Lager Nord", "Halle 3", "#00796B", "res:logo.png"), config.global.branding)
+        assertEquals("#F57C00", config.profiles.single().color)
+        assertEquals(config, ConfigJson.parse(ConfigJson.write(config)))
+    }
+
+    @Test
     fun `version 1 zoom fields map into viewport`() {
         val profile = ConfigJson.parse("""{"version":1,"profiles":[{"startUrl":"https://x.test","textZoom":150,"pinchZoom":false}]}""")
             .profiles.single()
@@ -133,6 +149,10 @@ class ConfigJsonTest {
         assertRejected("""{"profiles":[{"startUrl":"https://x","injections":[{"match":{"url":"/a"}}]}]}""")
         assertRejected("""{"profiles":[{"startUrl":"https://x","keyboard":{"hotkeys":{"fly":"F1"}}}]}""")
         assertRejected("""{"resources":{"../evil":{"text":"x"}}}""")
+        assertRejected("""{"global":{"branding":{"color":"blue"}}}""")
+        assertRejected("""{"global":{"branding":{"logo":"res:missing.png"}}}""")
+        assertRejected("""{"global":{"branding":{"logo":"https://x.test/logo.png"}}}""")
+        assertRejected("""{"profiles":[{"startUrl":"https://x","color":"#12345"}]}""")
         assertRejected("""{"resources":{"a.bin":{"base64":"!!!"}}}""")
     }
 

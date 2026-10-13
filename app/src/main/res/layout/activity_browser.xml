@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/toolbar"
+    android:background="@color/brand"
     android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@color/toolbar"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:minHeight="56dp"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
         <ImageButton
             android:id="@+id/back"
@@ -20,34 +23,32 @@
             android:contentDescription="@string/action_back"
             android:src="@drawable/ic_back" />
 
-        <ImageButton
-            android:id="@+id/forward"
-            style="@style/ToolbarButton"
-            android:contentDescription="@string/action_forward"
-            android:src="@drawable/ic_forward" />
-
-        <ImageButton
-            android:id="@+id/home"
-            style="@style/ToolbarButton"
-            android:contentDescription="@string/action_home"
-            android:src="@drawable/ic_home" />
-
-        <ImageButton
-            android:id="@+id/reload"
-            style="@style/ToolbarButton"
-            android:contentDescription="@string/action_reload"
-            android:src="@drawable/ic_refresh" />
-
-        <TextView
-            android:id="@+id/title"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:paddingHorizontal="8dp"
-            android:singleLine="true"
-            android:textColor="@android:color/white"
-            android:textSize="15sp" />
+            android:orientation="vertical"
+            android:paddingHorizontal="8dp">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="@color/on_brand" />
+
+            <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="4dp"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="@color/on_brand_secondary" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/keyboard"
@@ -57,7 +58,7 @@
 
         <ImageButton
             android:id="@+id/scan"
-            style="@style/ToolbarButton"
+            style="@style/ToolbarScanButton"
             android:contentDescription="@string/action_scan"
             android:src="@drawable/ic_scan" />
 
@@ -68,20 +69,24 @@
             android:src="@drawable/ic_menu" />
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progress"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:background="@android:color/white"
-        android:indeterminate="false"
-        android:max="100"
-        android:visibility="gone" />
-
     <FrameLayout
-        android:id="@+id/webContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@android:color/white" />
+        android:background="@android:color/white">
+
+        <FrameLayout
+            android:id="@+id/webContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:max="100"
+            android:visibility="gone"
+            app:trackThickness="3dp" />
+    </FrameLayout>
 </LinearLayout>
