@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "resources": {
+    "big-fields.css": {
+      "text": "input, select, button { min-height: 44px; font-size: 18px; } :focus { outline: 3px solid #1565C0; }"
+    },
+    "scan-hook.js": {
+      "text": "window.addEventListener('enterprisebrowser:scan', function (e) { if (e.detail.data.indexOf('LOC-') === 0) { e.preventDefault(); location.href = '/location/' + encodeURIComponent(e.detail.data); } });"
+    }
+  },
+  "profiles": [
+    {
+      "id": "wms",
+      "name": "WMS",
+      "startUrl": "https://wms.example.com/",
+      "allowList": ["wms.example.com"],
+      "keyboard": {
+        "soft": "system",
+        "showOnFocus": false,
+        "remap": [
+          { "key": "BUTTON_L1", "send": "{TAB}" },
+          { "key": "BUTTON_R1", "send": "{BACK-TAB}" },
+          { "key": "F5", "send": "{NAVIGATE-REFRESH}" },
+          { "key": "VOLUME_UP", "send": "system" }
+        ],
+        "hotkeys": { "toggleKeyboard": "F12", "scan": "F10" },
+        "longPressDigitsAsF": true
+      },
+      "injections": [
+        { "match": { "url": "/pick/", "type": "contains" }, "when": "documentStart", "css": "res:big-fields.css" },
+        { "when": "pageLoaded", "js": "res:scan-hook.js" }
+      ],
+      "scanner": { "terminator": "none" }
+    }
+  ]
+}

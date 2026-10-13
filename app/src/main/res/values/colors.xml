@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="toolbar">#FF0D47A1</color>
-    <color name="accent">#FF1565C0</color>
+    <!-- Default brand color; overridable via global.branding.color. -->
+    <color name="brand">#FF0D47A1</color>
+    <color name="on_brand">#FFFFFFFF</color>
+    <color name="on_brand_secondary">#CCFFFFFF</color>
+
+    <!-- Material 3 scheme (light) derived from the brand color. -->
+    <color name="md_primary">#FF0D47A1</color>
+    <color name="md_on_primary">#FFFFFFFF</color>
+    <color name="md_primary_container">#FFD7E2FF</color>
+    <color name="md_on_primary_container">#FF001A41</color>
+    <color name="md_secondary">#FF565E71</color>
+    <color name="md_on_secondary">#FFFFFFFF</color>
+    <color name="md_secondary_container">#FFDAE2F9</color>
+    <color name="md_on_secondary_container">#FF131C2B</color>
+    <color name="md_tertiary">#FF00796B</color>
+    <color name="md_on_tertiary">#FFFFFFFF</color>
+    <color name="md_tertiary_container">#FFA7F3E4</color>
+    <color name="md_on_tertiary_container">#FF00201C</color>
+    <color name="md_error">#FFBA1A1A</color>
+    <color name="md_on_error">#FFFFFFFF</color>
+    <color name="md_error_container">#FFFFDAD6</color>
+    <color name="md_on_error_container">#FF410002</color>
+    <color name="md_background">#FFF9F9FF</color>
+    <color name="md_on_background">#FF191C20</color>
+    <color name="md_surface">#FFF9F9FF</color>
+    <color name="md_on_surface">#FF191C20</color>
+    <color name="md_surface_variant">#FFE0E2EC</color>
+    <color name="md_on_surface_variant">#FF44474E</color>
+    <color name="md_outline">#FF74777F</color>
+    <color name="md_outline_variant">#FFC4C6D0</color>
+    <color name="md_surface_container_lowest">#FFFFFFFF</color>
+    <color name="md_surface_container_low">#FFF3F3FA</color>
+    <color name="md_surface_container">#FFEDEDF4</color>
+    <color name="md_surface_container_high">#FFE7E8EE</color>
+    <color name="md_surface_container_highest">#FFE2E2E9</color>
+    <color name="md_inverse_surface">#FF2E3036</color>
+    <color name="md_inverse_on_surface">#FFF0F0F7</color>
+    <color name="md_inverse_primary">#FFABC7FF</color>
+
+    <color name="splash_background">#FF0D47A1</color>
 </resources>

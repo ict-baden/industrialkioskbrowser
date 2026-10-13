@@ -1,12 +1,14 @@
 package io.github.pieewiee.enterprisebrowser.web
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
@@ -36,19 +38,22 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -65,8 +70,9 @@ import io.github.pieewiee.enterprisebrowser.config.ScreenOrientation
 import io.github.pieewiee.enterprisebrowser.scanner.NoScanner
 import io.github.pieewiee.enterprisebrowser.scanner.ScanResult
 import io.github.pieewiee.enterprisebrowser.scanner.ScannerManager
+import io.github.pieewiee.enterprisebrowser.ui.ActionSheet
+import io.github.pieewiee.enterprisebrowser.ui.Brand
 import io.github.pieewiee.enterprisebrowser.ui.Dialogs
-import io.github.pieewiee.enterprisebrowser.ui.applySystemInsets
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
@@ -77,15 +83,16 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private lateinit var webView: WebView
     private lateinit var toolbar: View
     private lateinit var titleView: TextView
-    private lateinit var progress: ProgressBar
+    private lateinit var subtitleView: TextView
+    private lateinit var progress: LinearProgressIndicator
     private lateinit var backButton: ImageButton
-    private lateinit var forwardButton: ImageButton
     private lateinit var scanButton: ImageButton
     private lateinit var keyboardButton: ImageButton
     private lateinit var scanner: ScannerManager
     private lateinit var config: AppConfig
     private lateinit var keyboard: KeyboardController
     private lateinit var sounds: Sounds
+    private var brandColor = 0
 
     private var bridge: BridgeHandler? = null
     private var bridgeAtDocumentStart = false
@@ -136,6 +143,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         config = ConfigStore.get(this).config
         profile = config.profile(intent.getStringExtra(EXTRA_PROFILE_ID)) ?: run {
             Toast.makeText(this, "Profil nicht gefunden", Toast.LENGTH_LONG).show()
@@ -143,14 +151,15 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             return
         }
         setContentView(R.layout.activity_browser)
-        applySystemInsets(findViewById(R.id.root))
         toolbar = findViewById(R.id.toolbar)
         titleView = findViewById(R.id.title)
+        subtitleView = findViewById(R.id.subtitle)
         progress = findViewById(R.id.progress)
         backButton = findViewById(R.id.back)
-        forwardButton = findViewById(R.id.forward)
         scanButton = findViewById(R.id.scan)
         keyboardButton = findViewById(R.id.keyboard)
+        applyBranding()
+        applyInsets()
 
         scanner = ScannerManager(this, ::onScan)
         sounds = Sounds(this, config)
@@ -175,6 +184,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             loadStart()
         }
         updateScannerState()
+        updateNavigation()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -239,6 +249,51 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         toolbar.isVisible = !profile.kiosk.hideToolbar
     }
 
+    /** Profile/brand color behind toolbar and status bar; title shows the profile until a page loads. */
+    private fun applyBranding() {
+        brandColor = Brand.color(this, config, profile)
+        val onColor = Brand.onColor(brandColor)
+        findViewById<View>(R.id.root).setBackgroundColor(brandColor)
+        Brand.applySystemBars(this, brandColor)
+        titleView.setTextColor(onColor)
+        subtitleView.setTextColor(Brand.onColorSecondary(brandColor))
+        listOf<ImageButton>(backButton, scanButton, keyboardButton, findViewById(R.id.menu)).forEach {
+            it.imageTintList = ColorStateList.valueOf(onColor)
+        }
+        progress.setIndicatorColor(if (Brand.isLight(brandColor)) Brand.darker(brandColor, 0.4f) else brandColor)
+        titleView.text = profile.name
+        showAddress(profile.startUrl)
+    }
+
+    /** Toolbar extends under the status bar; content stays clear of navigation bar and keyboard. */
+    private fun applyInsets() {
+        val root = findViewById<View>(R.id.root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            toolbar.updatePadding(top = bars.top)
+            root.updatePadding(
+                left = bars.left,
+                right = bars.right,
+                top = if (toolbar.isVisible) 0 else bars.top,
+                bottom = maxOf(bars.bottom, ime.bottom),
+            )
+            insets
+        }
+    }
+
+    private fun showAddress(url: String) {
+        val secure = url.startsWith("https://", ignoreCase = true)
+        subtitleView.text = Brand.address(url)
+        val lock = if (secure) ContextCompat.getDrawable(this, R.drawable.ic_lock)?.mutate() else null
+        lock?.let {
+            val size = (12 * resources.displayMetrics.density).toInt()
+            it.setBounds(0, 0, size, size)
+            it.setTint(Brand.onColorSecondary(brandColor))
+        }
+        subtitleView.setCompoundDrawablesRelative(lock, null, null, null)
+    }
+
     private fun hideSystemBars() {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -248,9 +303,6 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private fun setupToolbar() {
         backButton.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
-        forwardButton.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
-        findViewById<View>(R.id.home).setOnClickListener { loadStart() }
-        findViewById<View>(R.id.reload).setOnClickListener { webView.reload() }
         findViewById<View>(R.id.menu).setOnClickListener { showMenu() }
         scanButton.isVisible = scanner.scanner !is NoScanner
         scanButton.setOnClickListener { scanner.softTrigger(null) }
@@ -293,9 +345,10 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     /** Viewport override and document-start injections; they check the URL themselves, so they match all origins. */
+    @SuppressLint("RequiresFeature") // guarded by isSupported()
     private fun installDocumentStartScript() {
         val script = documentStartScript ?: return
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+        if (isSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             WebViewCompat.addDocumentStartJavaScript(webView, script, setOf("*"))
             injectionsAtDocumentStart = true
         } else {
@@ -303,10 +356,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         }
     }
 
+    @SuppressLint("RequiresFeature") // guarded by isSupported()
     private fun installBridge() {
         val rules = UrlPolicy.bridgeOriginRules(profile)
         val handler = BridgeHandler(this, this)
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+        if (isSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             try {
                 WebViewCompat.addWebMessageListener(webView, BridgeHandler.JS_OBJECT_NAME, rules, handler)
                 bridge = handler
@@ -319,11 +373,14 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             handler.release()
             return
         }
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+        if (isSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             WebViewCompat.addDocumentStartJavaScript(webView, bridgeScript, rules)
             bridgeAtDocumentStart = true
         }
     }
+
+    private fun isSupported(feature: String) =
+        runCatching { WebViewFeature.isFeatureSupported(feature) }.getOrDefault(false)
 
     private fun clearDataIfConfigured() {
         if (profile.clearCacheOnStart) {
@@ -348,8 +405,6 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private fun updateNavigation() {
         backButton.isEnabled = webView.canGoBack()
         backButton.alpha = if (backButton.isEnabled) 1f else 0.4f
-        forwardButton.isEnabled = webView.canGoForward()
-        forwardButton.alpha = if (forwardButton.isEnabled) 1f else 0.4f
     }
 
     // region scanning
@@ -391,27 +446,30 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     // region menu & exit
 
-    private fun showMenu() {
+    @VisibleForTesting
+    internal fun showMenu() {
         val config = ConfigStore.get(this).config
-        val actions = mutableListOf<Pair<String, () -> Unit>>()
-        actions += (if (scannerWanted) "Scanner deaktivieren" else "Scanner aktivieren") to {
-            setScannerEnabledByPage(!scannerWanted)
-        }
-        if (profile.kiosk.hideToolbar) {
-            actions += "Startseite" to ::loadStart
-            actions += "Neu laden" to { webView.reload() }
-        }
-        if (config.profiles.size > 1 && !config.global.hideExit) actions += "Profil wechseln" to ::finish
-        actions += "Einstellungen" to { Dialogs.requireAdmin(this) { startActivity(Intent(this, AdminActivity::class.java)) } }
-        if (!config.global.hideExit) {
-            actions += "Beenden" to {
-                Dialogs.requirePassword(this, config.global.exitPasswordHash, "Exit-Passwort", ::exitApp)
+        val actions = buildList {
+            add(ActionSheet.Action("Startseite", R.drawable.ic_home) { loadStart() })
+            add(ActionSheet.Action("Neu laden", R.drawable.ic_refresh) { webView.reload() })
+            add(ActionSheet.Action("Vor", R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
+            add(ActionSheet.Action("Scanner", R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
+            if (keyboard.softKeyboardAvailable) {
+                add(ActionSheet.Action("Tastatur", R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
+            }
+            if (config.profiles.size > 1 && !config.global.hideExit) {
+                add(ActionSheet.Action("Profile", R.drawable.ic_swap) { finish() })
+            }
+            add(ActionSheet.Action("Einstellungen", R.drawable.ic_settings) {
+                Dialogs.requireAdmin(this@BrowserActivity) { startActivity(Intent(this@BrowserActivity, AdminActivity::class.java)) }
+            })
+            if (!config.global.hideExit) {
+                add(ActionSheet.Action("Beenden", R.drawable.ic_power) {
+                    Dialogs.requirePassword(this@BrowserActivity, config.global.exitPasswordHash, "Exit-Passwort", ::exitApp)
+                })
             }
         }
-        AlertDialog.Builder(this)
-            .setTitle(profile.name)
-            .setItems(actions.map { it.first }.toTypedArray()) { _, which -> actions[which].second() }
-            .show()
+        ActionSheet(this).show(profile.name, subtitleView.text.toString(), brandColor, actions)
     }
 
     private fun exitApp() {
@@ -427,7 +485,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private fun showStatus(title: String, message: String, url: String?) {
         failedUrl = url
         sounds.play(profile.sounds.error)
-        val html = StatusPage.render(this, config.content(profile.errorPages.template), title, message, url)
+        val html = StatusPage.render(this, config.content(profile.errorPages.template), title, message, url, "#%06X".format(0xFFFFFF and brandColor))
         webView.loadDataWithBaseURL(StatusPage.BASE_URL, html, "text/html", "utf-8", null)
     }
 
@@ -512,6 +570,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             updateScannerState()
             keyboard.onPageStarted()
             progress.isVisible = true
+            if (!url.startsWith(StatusPage.BASE_URL)) showAddress(url)
             updateNavigation()
         }
 
@@ -536,7 +595,15 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (!request.isForMainFrame) return
-            showStatus("Seite nicht erreichbar", error.description?.toString().orEmpty(), request.url.toString())
+            val (title, message) = when (error.errorCode) {
+                ERROR_HOST_LOOKUP -> "Server nicht gefunden" to "Die Adresse konnte nicht aufgelöst werden. Prüfe die WLAN-Verbindung."
+                ERROR_CONNECT -> "Keine Verbindung" to "Der Server ist nicht erreichbar."
+                ERROR_TIMEOUT -> "Zeitüberschreitung" to "Der Server hat nicht rechtzeitig geantwortet."
+                ERROR_FAILED_SSL_HANDSHAKE -> "Unsichere Verbindung" to "Die sichere Verbindung konnte nicht aufgebaut werden."
+                else -> "Seite nicht erreichbar" to "Die Seite konnte nicht geladen werden."
+            }
+            val detail = error.description?.toString()?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
+            showStatus(title, message + detail, request.url.toString())
         }
 
         override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
@@ -581,7 +648,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private inner class Chrome : WebChromeClient() {
 
         override fun onProgressChanged(view: WebView, newProgress: Int) {
-            progress.progress = newProgress
+            progress.setProgressCompat(newProgress, true)
         }
 
         override fun onReceivedTitle(view: WebView, title: String?) {

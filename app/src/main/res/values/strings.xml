@@ -2,14 +2,12 @@
 <resources>
     <string name="app_name">EnterpriseBrowser</string>
     <string name="action_back">Zurück</string>
-    <string name="action_forward">Vor</string>
-    <string name="action_home">Startseite</string>
-    <string name="action_reload">Neu laden</string>
     <string name="action_scan">Scannen</string>
     <string name="action_keyboard">Tastatur</string>
     <string name="action_menu">Menü</string>
     <string name="action_settings">Einstellungen</string>
-    <string name="no_profiles">Keine Profile konfiguriert.\nÜber das Menü oben rechts anlegen oder per MDM bereitstellen.</string>
+    <string name="no_profiles_title">Noch keine Profile</string>
+    <string name="no_profiles">Lege ein Profil in den Einstellungen an oder stelle eine Konfiguration per MDM bereit.</string>
 
     <string name="mc_config_json_title">Konfiguration (JSON)</string>
     <string name="mc_config_json_description">Komplette Konfiguration im EnterpriseBrowser-JSON-Format. Hat Vorrang vor Start-URL und Profilname.</string>

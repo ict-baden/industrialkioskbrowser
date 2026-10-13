@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "global": {
+    "adminPassword": "BITTE-AENDERN",
+    "branding": {
+      "title": "Logistikzentrum Nord",
+      "subtitle": "Schicht A · Halle 3",
+      "color": "#00796B"
+    }
+  },
+  "profiles": [
+    {
+      "id": "wareneingang",
+      "name": "Wareneingang",
+      "startUrl": "https://wms.example.com/wareneingang",
+      "allowList": ["example.com"],
+      "launchOnStartup": true
+    },
+    {
+      "id": "kommissionierung",
+      "name": "Kommissionierung",
+      "startUrl": "https://pick.example.com/app",
+      "color": "#1565C0",
+      "allowList": ["example.com"],
+      "kiosk": { "immersive": true }
+    },
+    {
+      "id": "versand",
+      "name": "Versand & Etiketten",
+      "startUrl": "https://shipping.example.com",
+      "color": "#F57C00",
+      "scanner": { "terminator": "tab" }
+    }
+  ]
+}

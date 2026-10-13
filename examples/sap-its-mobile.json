@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "global": {
+    "adminPassword": "BITTE-AENDERN",
+    "hideExit": false
+  },
+  "profiles": [
+    {
+      "id": "sap-mde",
+      "name": "SAP MDE",
+      "startUrl": "https://sap.example.com:9001/sap/zwm_mde_le?sap-language=de",
+      "allowList": ["sap.example.com"],
+      "launchOnStartup": true,
+      "clearCookiesOnStart": true,
+      "allowDownloads": false,
+      "viewport": {
+        "mode": "device",
+        "fitToScreen": false,
+        "textZoom": 100,
+        "pinchZoom": true
+      },
+      "keyboard": {
+        "soft": "system",
+        "showOnFocus": false,
+        "hotkeys": { "toggleKeyboard": "F12" }
+      },
+      "kiosk": {
+        "keepScreenOn": true,
+        "orientation": "portrait"
+      },
+      "scanner": {
+        "enabled": true,
+        "terminator": "enter"
+      }
+    }
+  ]
+}

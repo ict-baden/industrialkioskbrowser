@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "global": {
+    "adminPassword": "BITTE-AENDERN",
+    "exitPassword": "BITTE-AENDERN",
+    "hideExit": true
+  },
+  "profiles": [
+    {
+      "id": "terminal",
+      "name": "Lager-Terminal",
+      "startUrl": "https://wms.example.com/terminal",
+      "allowList": ["wms.example.com", "sso.example.com"],
+      "launchOnStartup": true,
+      "clearCacheOnStart": true,
+      "clearCookiesOnStart": true,
+      "allowDownloads": false,
+      "viewport": { "mode": "device", "fitToScreen": false, "pinchZoom": false },
+      "keyboard": {
+        "soft": "system",
+        "showOnFocus": false,
+        "backKey": "{BACK}",
+        "hotkeys": { "toggleKeyboard": "F12", "menu": "F11" }
+      },
+      "errorPages": { "showHttpErrors": true },
+      "kiosk": {
+        "hideToolbar": true,
+        "immersive": true,
+        "keepScreenOn": true,
+        "orientation": "portrait"
+      },
+      "scanner": { "enabled": true, "terminator": "enter" },
+      "sounds": { "scanOk": "none", "error": "error" }
+    }
+  ]
+}

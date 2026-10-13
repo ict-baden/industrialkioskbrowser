@@ -1,10 +1,24 @@
 # Konfiguration
 
-Die gesamte Konfiguration ist eine JSON-Datei. Sie kann in der App unter
-**Einstellungen** importiert/exportiert, per Barcode (QR) eingelesen oder über
-ein EMM/MDM verteilt werden.
+Die gesamte Konfiguration ist **eine JSON-Datei**. Sie wird per MDM verteilt
+([Verteilung](deployment.md)), in der App unter **Einstellungen** importiert/exportiert
+oder per QR-Code eingelesen. Fertige Vorlagen liegen in [`examples/`](../examples) –
+jede davon wird in den automatischen Tests gegen die App geprüft.
 
-## Format
+> 💡 Nur `startUrl` ist Pflicht. Alles andere hat sinnvolle Standardwerte – die
+> minimale Konfiguration ist [drei Zeilen lang](../examples/minimal.json).
+
+## Inhalt
+
+- [Überblick](#überblick)
+- [`global`](#global) – Passwörter, Kiosk, Branding
+- [Profile](#profile) – Start-URL, Allowlist, Grundeinstellungen
+- [`viewport`](#viewport) · [`keyboard`](#keyboard) · [`injections`](#injections) ·
+  [`errorPages` und `sounds`](#errorpages-und-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner)
+- [Ressourcen](#ressourcen)
+- [Design anpassen](#design-anpassen)
+
+## Überblick
 
 ```json
 {
@@ -12,13 +26,19 @@ ein EMM/MDM verteilt werden.
   "global": {
     "adminPassword": "geheim",
     "exitPassword": "auch-geheim",
-    "hideExit": false
+    "hideExit": false,
+    "branding": { "title": "Logistikzentrum Nord", "color": "#00796B", "logo": "res:logo.png" }
+  },
+  "resources": {
+    "logo.png": { "base64": "iVBORw0KGgo..." },
+    "fix.css":  { "text": "input { min-height: 44px; }" }
   },
   "profiles": [
     {
       "id": "lager",
       "name": "Lager",
       "startUrl": "https://wms.example.com/",
+      "color": "#1565C0",
       "allowList": ["example.com", "sso.example.org"],
       "launchOnStartup": true,
       "userAgent": "{default} WMS-Terminal",
@@ -26,66 +46,65 @@ ein EMM/MDM verteilt werden.
       "clearCookiesOnStart": false,
       "allowFileUpload": false,
       "allowDownloads": true,
-      "kiosk": {
-        "hideToolbar": false,
-        "immersive": false,
-        "keepScreenOn": true,
-        "orientation": "auto"
-      },
-      "scanner": {
-        "enabled": true,
-        "terminator": "enter",
-        "injectIntoFocusedField": true
-      }
+      "viewport":   { "mode": "device", "fitToScreen": false, "textZoom": 100, "pinchZoom": true },
+      "keyboard":   { "soft": "system", "showOnFocus": false, "hotkeys": { "toggleKeyboard": "F12" } },
+      "injections": [ { "match": { "url": "/pick/" }, "css": "res:fix.css" } ],
+      "errorPages": { "showHttpErrors": false },
+      "sounds":     { "scanOk": "none", "error": "error" },
+      "kiosk":      { "hideToolbar": false, "immersive": false, "keepScreenOn": true, "orientation": "auto" },
+      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true }
     }
   ]
 }
 ```
 
-### `global`
+Unbekannte Felder werden ignoriert, ungültige Werte führen zu einer klaren
+Fehlermeldung (Import-Dialog bzw. **Einstellungen → Letzter Provisionierungsfehler**).
+Jede Quelle ersetzt die Profilliste vollständig; nicht gesetzte Passwörter bleiben erhalten.
+
+## `global`
 
 | Feld | Bedeutung |
 |---|---|
-| `adminPassword` / `adminPasswordHash` | Schützt die Einstellungen. Klartext wird beim Import gehasht (PBKDF2); Exporte enthalten nur den Hash. Fehlt das Feld, bleibt das bisherige Passwort erhalten. |
+| `adminPassword` / `adminPasswordHash` | Schützt die Einstellungen. Klartext wird beim Import gehasht (PBKDF2); Exporte enthalten nur den Hash. |
 | `exitPassword` / `exitPasswordHash` | Wird beim Beenden abgefragt. |
 | `hideExit` | Blendet „Beenden“ und „Profil wechseln“ aus (Kiosk). |
+| `branding.title` | Titel der Startseite (Standard: „EnterpriseBrowser“) |
+| `branding.subtitle` | Untertitel (Standard: Gerätehersteller und -modell) |
+| `branding.color` | Markenfarbe `#RRGGBB` für Startseite, Toolbars und Fehlerseiten |
+| `branding.logo` | Logo als Ressource, z. B. `res:logo.png` (PNG/JPEG/WebP) |
 
-### Profile
+## Profile
 
 | Feld | Standard | Bedeutung |
 |---|---|---|
 | `id` | aus `name` | Eindeutige ID |
 | `name` | `startUrl` | Anzeigename |
-| `startUrl` | – | Pflicht, `http://` oder `https://` |
+| `startUrl` | – | **Pflicht**, `http://` oder `https://` |
+| `color` | Markenfarbe | Farbe von Profilkarte und Toolbar, `#RRGGBB` |
 | `allowList` | `[]` | Erlaubte Hosts inkl. Subdomains (`example.com` erlaubt auch `a.example.com`). Leer = alles erlaubt. Der Host der Start-URL ist immer erlaubt. Gilt für Navigationen im Hauptframe. |
 | `launchOnStartup` | `false` | Profil beim App-Start direkt öffnen |
-| `userAgent` | Standard | Eigener User-Agent, `{default}` wird durch den Standard-UA ersetzt |
-| `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Beim Öffnen des Profils löschen |
+| `userAgent` | Standard | Eigener User-Agent; `{default}` wird durch den Standard-UA ersetzt |
+| `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Beim Öffnen des Profils löschen (z. B. frische SAP-Sitzung) |
 | `allowFileUpload` | `false` | `<input type="file">` erlauben |
 | `allowDownloads` | `true` | Downloads über den Android-DownloadManager |
-| `kiosk.hideToolbar` | `false` | Toolbar ausblenden (Menü dann über die Zurück-Taste) |
-| `kiosk.immersive` | `false` | Status- und Navigationsleiste ausblenden |
-| `kiosk.keepScreenOn` | `true` | Display bleibt an |
-| `kiosk.orientation` | `auto` | `auto`, `portrait`, `landscape` |
-| `scanner.enabled` | `true` | Scanner beim Laden einer Seite aktiv |
-| `scanner.terminator` | `enter` | Nach dem Einfügen gesendete Tasten: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
-| `scanner.injectIntoFocusedField` | `true` | Scan in das fokussierte Eingabefeld einfügen |
 
-### `viewport`
+## `viewport`
 
 | Feld | Standard | Bedeutung |
 |---|---|---|
-| `mode` | `page` | `page`: Seite bestimmt per `<meta name="viewport">`. `device`: immer Gerätebreite. `fixed`: feste Layoutbreite `width`, auf den Bildschirm skaliert. |
-| `width` | `0` | Layoutbreite in CSS-Pixeln (Pflicht bei `fixed`, z. B. `320` für alte MDE-Masken) |
+| `mode` | `page` | `page`: die Seite bestimmt ihre Breite (wie Chrome). `device`: immer Gerätebreite – **so wie Velocity**. `fixed`: feste Layoutbreite `width`, auf den Bildschirm skaliert. |
+| `width` | `0` | Layoutbreite in CSS-Pixeln (nur bei `fixed`, Pflicht) |
 | `initialScale` | `0` | Startzoom in Prozent, `0` = automatisch |
-| `fitToScreen` | `true` | Zu breite Seiten beim Laden einpassen |
+| `fitToScreen` | `true` | Zu breite Seiten beim Laden einpassen (Velocity: aus) |
 | `textZoom` | `100` | Schriftgröße in Prozent (25–400) |
 | `pinchZoom` | `true` | Zoomen per Geste |
 | `metaOverride` | – | Ersetzt das Viewport-Meta-Tag der Seite, z. B. `width=device-width, initial-scale=1` |
 
-Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gelesen.
+> **Wie in Velocity:** `"viewport": { "mode": "device", "fitToScreen": false }`.
+> Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gelesen.
 
-### `keyboard`
+## `keyboard`
 
 ```json
 "keyboard": {
@@ -107,10 +126,10 @@ Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gele
 | Feld | Bedeutung |
 |---|---|
 | `soft` | `system` (Android-Tastatur) oder `none` (nie einblenden) |
-| `showOnFocus` | `false`: Tastatur erscheint nicht beim Antippen eines Feldes, nur über das Tastatur-Symbol in der Toolbar oder den Hotkey (wie Velocity) |
+| `showOnFocus` | `false`: Tastatur erscheint nicht beim Antippen eines Feldes, nur über das Tastatur-Symbol in der Toolbar oder den Hotkey – wie Velocity |
 | `showOnPageLoad` | Tastatur nach jedem Seitenladen einblenden |
 | `backKey` | Makro für die Zurück-Taste; `{BACK}` = zurück bzw. Menü |
-| `remap` | Hardware-Taste (`key`: Android-Name ohne `KEYCODE_`, z. B. `F1`, `BUTTON_L1`, `ENTER`, oder Zahl) → Makro. `system` reicht die Taste unverändert durch, leer verschluckt sie. |
+| `remap` | Hardware-Taste (`key`: Android-Name ohne `KEYCODE_`, z. B. `F1`, `BUTTON_L1`, `ENTER`, oder Zahl) → Makro. `system` reicht die Taste durch, leer verschluckt sie. |
 | `hotkeys` | Aktion → Taste. Aktionen: `toggleKeyboard`, `menu`, `home`, `reload`, `back`, `forward`, `scan` |
 | `longPressDigitsAsF` | Langes Drücken von 1–9/0 sendet F1–F10 |
 
@@ -122,14 +141,17 @@ Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gele
 `{NAVIGATE-FORWARD}`, `{NAVIGATE-STOP}`, `{NAVIGATE-HOME}`, `{NAVIGATE-REFRESH}`,
 `{SPECIAL:SCAN}`, `{MENU}`, `{KEYBOARD}`. Unbekannte Tokens werden als Text getippt.
 
-### `injections`
+## `injections`
+
+Eigenes CSS, JavaScript oder HTML in Seiten einfügen – etwa größere Eingabefelder
+für eine fremde Web-App oder ein Scan-Hook.
 
 ```json
 "injections": [
   { "match": { "url": "/sap/zwm_mde_le", "type": "contains" }, "when": "documentStart", "css": "res:sap.css" },
-  { "match": { "url": "^https://wms\.example\.com/pick", "type": "regex", "source": "id=\"pickForm\"" },
+  { "match": { "url": "^https://wms\\.example\\.com/pick", "type": "regex", "source": "id=\"pickForm\"" },
     "when": "pageLoaded", "js": "res:pick.js", "frames": "main" },
-  { "html": "<div class='banner'>TEST</div>", "position": "bodyStart" }
+  { "html": "<div class='banner'>TESTSYSTEM</div>", "position": "bodyStart" }
 ]
 ```
 
@@ -137,122 +159,85 @@ Version-1-Dateien mit `textZoom`/`pinchZoom` direkt im Profil werden weiter gele
 |---|---|
 | `match.url` / `match.type` | `contains` (Standard), `prefix`, `regex`; ohne `url` gilt die Injection für alle Seiten |
 | `match.source` | Nur einfügen, wenn der Seitenquelltext diesen Text enthält |
-| `when` | `documentStart` (vor dem ersten Rendern, kein Flackern) oder `pageLoaded` |
+| `when` | `documentStart` (vor dem ersten Rendern, kein Flackern – Standard) oder `pageLoaded` |
 | `frames` | `main` (Standard) oder `all` (nur bei `documentStart`) |
 | `css` / `js` / `html` | Inline-Inhalt oder `res:<name>`; `<script>` in HTML wird ausgeführt |
 | `position` | Für HTML: `bodyEnd` (Standard), `bodyStart`, `head` |
 
-### `errorPages` und `sounds`
+## `errorPages` und `sounds`
 
 ```json
 "errorPages": { "template": "res:error.html", "showHttpErrors": false },
 "sounds": { "scanOk": "none", "error": "tone:1400:200:1000:200" }
 ```
 
-`template` ist HTML mit `{{title}}`, `{{message}}`, `{{url}}`; der Link
-`ebrowser://retry` lädt neu. `showHttpErrors` ersetzt auch Server-Fehlerseiten
-(HTTP ≥ 400). Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]`
-oder `res:<name>` (Audiodatei). `error` ertönt bei Fehlerseiten und gesperrten
-Seiten.
+- `template` – eigenes HTML mit den Platzhaltern `{{title}}`, `{{message}}`, `{{url}}`
+  und `{{color}}` (Markenfarbe). Der Link `ebrowser://retry` lädt neu. Ohne Vorlage wird
+  die eingebaute Fehlerseite verwendet (siehe [Bild](images/screen-error.png)).
+- `showHttpErrors` – ersetzt auch Fehlerseiten des Servers (HTTP ≥ 400).
+- Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` oder `res:<name>`
+  (Audiodatei). `error` ertönt bei Fehlerseiten und gesperrten Seiten.
+
+## `kiosk`
+
+| Feld | Standard | Bedeutung |
+|---|---|---|
+| `hideToolbar` | `false` | Toolbar ausblenden (Menü dann über die Zurück-Taste bzw. den Hotkey) |
+| `immersive` | `false` | Status- und Navigationsleiste ausblenden |
+| `keepScreenOn` | `true` | Display bleibt an |
+| `orientation` | `auto` | `auto`, `portrait`, `landscape` |
+
+Für einen vollständigen Kiosk zusätzlich `global.hideExit` setzen und die App im MDM
+für **Lock Task** freigeben (Dedicated Device) – sie startet dann automatisch gesperrt.
+Vorlage: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
+
+## `scanner`
+
+| Feld | Standard | Bedeutung |
+|---|---|---|
+| `enabled` | `true` | Scanner beim Laden einer Seite aktiv |
+| `terminator` | `enter` | Nach dem Einfügen gesendete Tasten: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
+| `injectIntoFocusedField` | `true` | Scan in das fokussierte Eingabefeld schreiben |
+
+| Gerät | Anbindung |
+|---|---|
+| Zebra | DataWedge-Intent-API. Beim Start wird ein DataWedge-Profil „EnterpriseBrowser“ angelegt (Intent-Ausgabe an, Keystroke aus). Decoder-Einstellungen bleiben unangetastet und können in DataWedge/StageNow angepasst werden. |
+| Honeywell | Intent-API des Data Collection Service (Scanner wird mit Data-Intent beansprucht). |
+| Andere | Jede Scanner-App, die `io.github.pieewiee.enterprisebrowser.action.BARCODE` mit dem Barcode in einem Extra (`data`, `…data_string`, `…decode_string`, `barcode_string`) sendet. |
+
+Seiten können den Scanner per Meta-Tag steuern – siehe [Web-Integration](web-integration.md).
 
 ## Ressourcen
 
 ```json
 "resources": {
-  "sap.css": { "text": "input { min-height: 44px; font-size: 18px; }" },
+  "sap.css":  { "text": "input { min-height: 44px; font-size: 18px; }" },
   "logo.png": { "base64": "iVBORw0KGgo..." }
 }
 ```
 
-Ressourcen gelten für alle Profile. Sie werden mit `res:<name>` referenziert und
-sind für Seiten unter `https://appassets.androidplatform.net/res/<name>`
-erreichbar (z. B. Bilder in injiziertem CSS).
+Ressourcen gelten für alle Profile. Sie werden mit `res:<name>` referenziert und sind
+für Seiten unter `https://appassets.androidplatform.net/res/<name>` erreichbar
+(z. B. Bilder in injiziertem CSS). Namen dürfen Unterordner enthalten (`css/a.css`),
+aber kein `..`.
 
-## Verteilung
+## Design anpassen
 
-1. **Managed Configuration (EMM, z. B. Intune, Workspace ONE, SOTI, Zebra
-   StageNow/MX):**
-   - `config_json` – komplette Konfiguration (wie oben).
-   - Alternativ einfach: `start_url`, `profile_name`, `kiosk_mode`
-     (legt ein Profil `managed` an, das beim Start geöffnet wird).
-   - `admin_password` – setzt das Admin-Passwort.
-2. **Datei:** `enterprisebrowser.json` nach
-   `Android/data/io.github.pieewiee.enterprisebrowser/files/` oder (Zebra)
-   `/enterprise/usr/` legen. Wird beim Start bzw. bei Rückkehr in die
-   Profilliste übernommen, sobald sich Datei-Zeitstempel oder -Größe ändern.
-3. **Broadcast (StageNow Intent-CSP, adb):**
-   ```sh
-   adb shell am broadcast \
-     -a io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG \
-     -n io.github.pieewiee.enterprisebrowser/.provisioning.ConfigReceiver \
-     --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'
-   ```
-   Ist ein Admin-Passwort gesetzt, muss es als `--es admin_password …`
-   mitgeschickt werden.
-4. **QR-Code:** Einstellungen → „Per Barcode importieren“, QR-Code mit dem
-   JSON scannen.
+![Standard-Design und eigenes Branding](images/branding.png)
 
-Jede Quelle ersetzt die Profilliste vollständig; nicht gesetzte Passwörter
-bleiben erhalten.
+Drei Ebenen:
 
-## Kiosk / Lock Task
+1. **Branding** (`global.branding`) – Titel, Untertitel, Logo und Markenfarbe der
+   Startseite; die Farbe gilt auch für Einstellungen und Fehlerseiten.
+2. **Profilfarbe** (`profiles[].color`) – färbt Profilkarte, Toolbar und Menü der
+   jeweiligen Web-App, damit Mitarbeiter sofort sehen, wo sie sind.
+3. **Injections** – Feinschliff an der Web-App selbst (Schriftgrößen, Buttons, Banner).
 
-Ist die App per Device-Owner (EMM) für Lock Task freigegeben, startet sie
-automatisch im gesperrten Modus (`lockTaskMode="if_whitelisted"`). Zusammen
-mit `hideExit`, `kiosk.hideToolbar` und `kiosk.immersive` ergibt das einen
-vollständigen Kiosk.
+Ohne MDM lässt sich das Design auch direkt am Gerät setzen: **Einstellungen → Design**
+(Titel, Markenfarbe aus Palette oder Hex-Wert, Logo aus einer Bilddatei). Text- und
+Symbolfarben passen sich automatisch an – auch helle Markenfarben bleiben lesbar.
 
-## Scanner
-
-| Gerät | Anbindung |
-|---|---|
-| Zebra | DataWedge-Intent-API. Beim Start wird ein DataWedge-Profil „EnterpriseBrowser“ für die App angelegt (Intent-Ausgabe, Keystroke aus). Decoder-Einstellungen werden nicht überschrieben und können in DataWedge/StageNow angepasst werden. |
-| Honeywell | Intent-API des Data Collection Service (Scanner wird mit Data-Intent beansprucht). |
-| Andere | Jede Scanner-App, die einen Broadcast `io.github.pieewiee.enterprisebrowser.action.BARCODE` mit dem Barcode in einem Extra (`data`, `…data_string`, `…decode_string`, `barcode_string`) sendet. |
-
-Test ohne Scanner:
-
-```sh
-adb shell am broadcast -a io.github.pieewiee.enterprisebrowser.action.BARCODE \
-  -p io.github.pieewiee.enterprisebrowser --es data 4006381333931 --es symbology EAN13
-```
-
-### Steuerung per Meta-Tag
-
-```html
-<meta http-equiv="scanner" content="Disable">              <!-- Scanner auf dieser Seite aus -->
-<meta http-equiv="scanner" content="Enable,AutoTab">       <!-- an, nach Scan Tab senden -->
-<meta http-equiv="scanner" content="NoAuto">               <!-- keine Abschlusstaste -->
-<meta http-equiv="ScannerNavigate" content="https://wms.example.com/item?code=%s">
-<meta http-equiv="ScannerNavigate" content="javascript:lookup(%s)">
-```
-
-`content="…"` von `scanner` kann `Enable`, `Disable`, `AutoTab`, `AutoEnter`,
-`AutoTabAndEnter`, `AutoEnterAndTab` und `NoAuto` kombinieren. Bei
-`ScannerNavigate` wird `%s` URL-kodiert bzw. als JavaScript-String eingesetzt
-und der Scan nicht in ein Feld eingefügt.
-
-## JavaScript-API
-
-Auf erlaubten Hosts (Allowlist bzw. Host der Start-URL) steht
-`window.EnterpriseBrowser` zur Verfügung. Alle Methoden liefern Promises.
-
-```js
-EnterpriseBrowser.onScan(function (scan, event) {
-  // scan = { data, symbology, source, timestamp }
-  if (scan.data.startsWith('LOC-')) {
-    event.preventDefault();          // nicht ins Feld einfügen
-    openLocation(scan.data);
-  }
-});
-
-EnterpriseBrowser.scanner.trigger();         // Scan auslösen (Softtrigger)
-EnterpriseBrowser.scanner.disable();         // bis zum nächsten Seitenwechsel
-EnterpriseBrowser.beep('error');
-EnterpriseBrowser.vibrate(300);
-EnterpriseBrowser.toast('Gebucht');
-EnterpriseBrowser.deviceInfo().then(console.log);
-```
-
-Das DOM-Event `enterprisebrowser:scan` wird bei jedem Scan auf `window`
-ausgelöst, auch auf Seiten ohne Bridge-Zugriff.
+<p>
+  <img src="images/screen-color-picker.png" width="260" alt="Markenfarbe wählen">
+  <img src="images/screen-profile-editor.png" width="260" alt="Profil mit eigener Farbe">
+</p>

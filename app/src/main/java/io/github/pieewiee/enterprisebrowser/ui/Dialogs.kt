@@ -1,17 +1,21 @@
 package io.github.pieewiee.enterprisebrowser.ui
 
 import android.app.Activity
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import io.github.pieewiee.enterprisebrowser.R
 import io.github.pieewiee.enterprisebrowser.config.ConfigStore
 import io.github.pieewiee.enterprisebrowser.config.PasswordHasher
 
@@ -30,12 +34,13 @@ object Dialogs {
             onSuccess()
             return
         }
-        val input = passwordField(activity, "Passwort")
-        AlertDialog.Builder(activity)
+        val field = textField(activity, "Passwort", password = true)
+        MaterialAlertDialogBuilder(activity)
+            .setIcon(icon(activity, R.drawable.ic_lock))
             .setTitle(title)
-            .setView(padded(input))
-            .setPositiveButton("OK") { _, _ ->
-                if (PasswordHasher.verify(input.text.toString(), hash)) {
+            .setView(form(activity, field))
+            .setPositiveButton("Entsperren") { _, _ ->
+                if (PasswordHasher.verify(field.value, hash)) {
                     onSuccess()
                 } else {
                     Toast.makeText(activity, "Falsches Passwort", Toast.LENGTH_SHORT).show()
@@ -43,47 +48,65 @@ object Dialogs {
             }
             .setNegativeButton("Abbrechen", null)
             .show()
-        input.requestFocus()
+        field.editText?.requestFocus()
     }
 
     /** Asks for HTTP credentials; [onResult] receives `null` when cancelled. */
     fun credentials(activity: Activity, host: String, onResult: (Pair<String, String>?) -> Unit) {
-        val user = EditText(activity).apply { hint = "Benutzername"; isSingleLine = true }
-        val password = passwordField(activity, "Passwort")
-        val fields = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(user)
-            addView(password)
-        }
-        AlertDialog.Builder(activity)
-            .setTitle("Anmeldung für $host")
-            .setView(padded(fields))
-            .setPositiveButton("Anmelden") { _, _ -> onResult(user.text.toString() to password.text.toString()) }
-            .setNegativeButton("Abbrechen") { _, _ -> onResult(null) }
-            .setOnCancelListener { onResult(null) }
+        val user = textField(activity, "Benutzername")
+        val password = textField(activity, "Passwort", password = true)
+        var answered = false
+        MaterialAlertDialogBuilder(activity)
+            .setIcon(icon(activity, R.drawable.ic_key))
+            .setTitle("Anmeldung")
+            .setMessage(host)
+            .setView(form(activity, user, password))
+            .setPositiveButton("Anmelden") { _, _ ->
+                answered = true
+                onResult(user.value to password.value)
+            }
+            .setNegativeButton("Abbrechen", null)
+            .setOnDismissListener { if (!answered) onResult(null) }
             .show()
     }
 
-    fun passwordField(activity: Activity, hint: String) = EditText(activity).apply {
+    /** Icon tinted with the theme's primary color (the vector sources are white). */
+    fun icon(context: Context, @DrawableRes res: Int): Drawable? =
+        ContextCompat.getDrawable(context, res)?.mutate()?.apply {
+            setTint(MaterialColors.getColor(context, androidx.appcompat.R.attr.colorPrimary, Color.BLACK))
+        }
+
+    /** Outlined Material text field. */
+    fun textField(
+        context: Context,
+        hint: String,
+        value: String = "",
+        password: Boolean = false,
+        inputType: Int = InputType.TYPE_CLASS_TEXT,
+        helper: String? = null,
+    ) = TextInputLayout(context, null, com.google.android.material.R.attr.textInputOutlinedStyle).apply {
         this.hint = hint
-        isSingleLine = true
-        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        helper?.let { helperText = it }
+        if (password) endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
+        addView(TextInputEditText(this.context).apply {
+            setText(value)
+            isSingleLine = true
+            this.inputType = if (password) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD else inputType
+        })
     }
 
-    fun padded(view: View): View = FrameLayout(view.context).apply {
-        val padding = (20 * resources.displayMetrics.density).toInt()
-        setPadding(padding, padding / 2, padding, 0)
-        addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    /** Vertical form with dialog padding. */
+    fun form(context: Context, vararg views: View): View = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        val density = context.resources.displayMetrics.density
+        setPadding((24 * density).toInt(), (8 * density).toInt(), (24 * density).toInt(), 0)
+        views.forEach { view ->
+            addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (8 * density).toInt()
+            })
+        }
     }
 }
 
-/** Pads [view] so content stays clear of system bars, cutouts and the soft keyboard (edge-to-edge). */
-fun applySystemInsets(view: View) {
-    ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-        val bars = insets.getInsets(
-            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime(),
-        )
-        v.updatePadding(left = bars.left, top = bars.top, right = bars.right, bottom = bars.bottom)
-        WindowInsetsCompat.CONSUMED
-    }
-}
+/** Current text of a Material text field. */
+val TextInputLayout.value: String get() = editText?.text?.toString().orEmpty()
