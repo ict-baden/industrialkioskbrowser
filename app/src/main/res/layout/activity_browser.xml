@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/toolbar"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/toolbar"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/back"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_back"
+            android:src="@drawable/ic_back" />
+
+        <ImageButton
+            android:id="@+id/forward"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_forward"
+            android:src="@drawable/ic_forward" />
+
+        <ImageButton
+            android:id="@+id/home"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_home"
+            android:src="@drawable/ic_home" />
+
+        <ImageButton
+            android:id="@+id/reload"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_reload"
+            android:src="@drawable/ic_refresh" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:paddingHorizontal="8dp"
+            android:singleLine="true"
+            android:textColor="@android:color/white"
+            android:textSize="15sp" />
+
+        <ImageButton
+            android:id="@+id/scan"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_scan"
+            android:src="@drawable/ic_scan" />
+
+        <ImageButton
+            android:id="@+id/menu"
+            style="@style/ToolbarButton"
+            android:contentDescription="@string/action_menu"
+            android:src="@drawable/ic_menu" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="@android:color/white"
+        android:indeterminate="false"
+        android:max="100"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/webContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@android:color/white" />
+</LinearLayout>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="scanner" content="Enable,AutoEnter">
+<title>EnterpriseBrowser Demo</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: sans-serif; margin: 0; padding: 16px; background: Canvas; color: CanvasText; }
+  h1 { font-size: 1.3em; }
+  label { display: block; margin: 12px 0 4px; font-weight: bold; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 1.1em; }
+  button { margin: 4px 4px 4px 0; padding: 10px 14px; font-size: 1em; }
+  #log { font-family: monospace; font-size: .85em; white-space: pre-wrap; border: 1px solid #8884;
+         padding: 8px; min-height: 6em; margin-top: 12px; }
+</style>
+</head>
+<body>
+<h1>Scanner &amp; Bridge Demo</h1>
+<p>Barcode scannen, während ein Feld fokussiert ist: Der Wert wird eingefügt und mit Enter abgeschlossen
+  (<code>&lt;meta http-equiv="scanner" content="Enable,AutoEnter"&gt;</code>).</p>
+
+<form id="form">
+  <label for="article">Artikel</label>
+  <input id="article" name="article" autocomplete="off">
+  <label for="location">Lagerplatz</label>
+  <input id="location" name="location" autocomplete="off">
+  <button type="submit" tabindex="-1" style="position:absolute;left:-9999px">Senden</button>
+</form>
+
+<p>
+  <button id="trigger">Scan auslösen</button>
+  <button id="beep">Beep</button>
+  <button id="vibrate">Vibrieren</button>
+  <button id="info">Geräteinfo</button>
+</p>
+<label><input type="checkbox" id="intercept" style="width:auto"> Scans per JavaScript abfangen (nicht einfügen)</label>
+<div id="log"></div>
+
+<script>
+  var log = document.getElementById('log');
+  function write(text) { log.textContent = text + '\n' + log.textContent; }
+
+  document.getElementById('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    write('Formular abgeschickt: ' + new URLSearchParams(new FormData(e.target)).toString());
+    var fields = Array.from(e.target.elements);
+    var next = fields[fields.indexOf(document.activeElement) + 1];
+    if (next) next.focus();
+  });
+
+  window.addEventListener('enterprisebrowser:scan', function (e) {
+    write('Scan: ' + e.detail.data + ' (' + (e.detail.symbology || '?') + ', ' + e.detail.source + ')');
+    if (document.getElementById('intercept').checked) e.preventDefault();
+  });
+
+  var bridge = window.EnterpriseBrowser;
+  if (!bridge) write('window.EnterpriseBrowser ist nicht verfügbar (WebView zu alt?)');
+  function run(promise) { promise.then(function (r) { if (r) write(JSON.stringify(r)); }, function (e) { write('Fehler: ' + e.message); }); }
+  document.getElementById('trigger').onclick = function () { run(bridge.scanner.trigger()); };
+  document.getElementById('beep').onclick = function () { run(bridge.beep()); };
+  document.getElementById('vibrate').onclick = function () { run(bridge.vibrate(300)); };
+  document.getElementById('info').onclick = function () { run(bridge.deviceInfo()); };
+  document.getElementById('article').focus();
+</script>
+</body>
+</html>

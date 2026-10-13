@@ -19,3 +19,8 @@ local.properties
 Thumbs.db
 .idea/
 .vscode/
+
+# Kotlin / Android Studio
+.kotlin/
+*.iml
+captures/
