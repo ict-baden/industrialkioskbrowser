@@ -1,0 +1,21 @@
+# APKs and other binary packages stay local
+*.apk
+*.aab
+*.apks
+*.xapk
+
+# Local tooling (REA lives here but is not part of this repo)
+rea/
+
+# Build output and dependencies
+node_modules/
+dist/
+build/
+.gradle/
+local.properties
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
