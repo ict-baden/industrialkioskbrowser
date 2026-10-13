@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "profiles": [
+    {
+      "name": "Intranet",
+      "startUrl": "https://intranet.example.com/",
+      "launchOnStartup": true
+    }
+  ]
+}

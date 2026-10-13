@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+    <restriction
+        android:key="config_json"
+        android:restrictionType="string"
+        android:title="@string/mc_config_json_title"
+        android:description="@string/mc_config_json_description" />
+    <restriction
+        android:key="profile_name"
+        android:restrictionType="string"
+        android:title="@string/mc_profile_name_title"
+        android:description="@string/mc_profile_name_description" />
+    <restriction
+        android:key="start_url"
+        android:restrictionType="string"
+        android:title="@string/mc_start_url_title"
+        android:description="@string/mc_start_url_description" />
+    <restriction
+        android:key="kiosk_mode"
+        android:defaultValue="false"
+        android:restrictionType="bool"
+        android:title="@string/mc_kiosk_mode_title"
+        android:description="@string/mc_kiosk_mode_description" />
+    <restriction
+        android:key="admin_password"
+        android:restrictionType="string"
+        android:title="@string/mc_admin_password_title"
+        android:description="@string/mc_admin_password_description" />
+</restrictions>
