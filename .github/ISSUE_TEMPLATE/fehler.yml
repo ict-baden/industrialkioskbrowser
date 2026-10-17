@@ -1,0 +1,53 @@
+name: Fehler melden / Bug report
+description: Etwas funktioniert nicht wie beschrieben. / Something does not work as documented.
+labels: [fehler]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke! Bitte keine Passwörter, internen Hostnamen oder Kundendaten einfügen – dieses Issue ist öffentlich.
+        Thanks! Please do not paste passwords, internal host names or customer data – this issue is public.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Einstellungen → Info. / Settings → Info.
+      placeholder: 1.0.0-ci.12
+    validations:
+      required: true
+  - type: dropdown
+    id: variante
+    attributes:
+      label: Variante / Package
+      options: ["APK aus dem Release / APK from a release", "per MDM (SOTI, Intune, StageNow …)", "aus dem Quellcode / from source"]
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Gerät und Android-Version / Device and Android version
+      placeholder: Zebra TC22, Android 14
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen / Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Erwartet und tatsächlich / Expected and actual
+    validations:
+      required: true
+  - type: textarea
+    id: geraet
+    attributes:
+      label: App, in die getippt wird, Scanner (DataWedge …), Konfiguration / Target app, scanner, configuration
+  - type: textarea
+    id: protokoll
+    attributes:
+      label: Konfiguration (Export) oder logcat, anonymisiert / Configuration export or logcat, anonymised
+      render: text

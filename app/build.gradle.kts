@@ -7,20 +7,42 @@ plugins {
 }
 
 android {
-    namespace = "io.github.pieewiee.enterprisebrowser"
+    namespace = "de.ictbaden.enterprisebrowser"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "io.github.pieewiee.enterprisebrowser"
+        applicationId = "de.ictbaden.enterprisebrowser"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.3.1"
+        // The CI passes -PversionCode (run number) and -PversionName (e.g. 0.4.0-ci.12).
+        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 5
+        versionName = findProperty("versionName") as String? ?: "0.4.0"
+        buildConfigField("String", "COMMIT", "\"${System.getenv("GITHUB_SHA")?.take(7) ?: "local"}\"")
+    }
+
+    // Licence texts as assets (richtlinien/07): the same files as in the repo root.
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/notices"))
+
+    // Release key from the CI secrets (richtlinien/05-signieren.md); without it the release APK stays unsigned.
+    val keystore = System.getenv("ANDROID_KEYSTORE_FILE")
+    signingConfigs {
+        if (keystore != null) {
+            create("release") {
+                storeFile = file(keystore)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = false
+            if (keystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -66,3 +88,9 @@ dependencies {
     testImplementation("androidx.test:core-ktx:1.7.0")
     testImplementation("androidx.test.ext:junit-ktx:1.3.0")
 }
+
+val copyNotices by tasks.registering(Copy::class) {
+    from(rootProject.file("LICENSE"), rootProject.file("THIRD-PARTY-NOTICES.txt"))
+    into(layout.buildDirectory.dir("generated/notices"))
+}
+tasks.named("preBuild") { dependsOn(copyNotices) }

@@ -11,7 +11,7 @@ transport differs.
 | [Broadcast intent](#broadcast-intent-stagenow-adb) | Zebra StageNow (Intent CSP), scripts, adb | extra `config` |
 | [QR code](#qr-code) | single devices, testing | JSON inside the QR code |
 
-Package name: **`io.github.pieewiee.enterprisebrowser`**
+Package name: **`de.ictbaden.enterprisebrowser`**
 
 ## Managed configuration (all EMMs)
 
@@ -71,8 +71,8 @@ configurations shows the schema automatically.
 - **Install the app:** AppMgr CSP with the APK.
 - **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/enterprisebrowser.json`.
 - **Configuration via intent:** Intent CSP, *send broadcast* with
-  action `io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG`,
-  package `io.github.pieewiee.enterprisebrowser` and string extra `config` (JSON).
+  action `de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG`,
+  package `de.ictbaden.enterprisebrowser` and string extra `config` (JSON).
   If an admin password is already set, also send the string extra `admin_password`.
 - **Scanner:** on first start the app creates a DataWedge profile "EnterpriseBrowser".
   Decoders (symbologies, lengths, illumination …) can then be tuned with the DataWedge
@@ -82,7 +82,7 @@ configurations shows the schema automatically.
 
 The app reads `enterprisebrowser.json` from
 
-1. `Android/data/io.github.pieewiee.enterprisebrowser/files/` (app folder; exists after
+1. `Android/data/de.ictbaden.enterprisebrowser/files/` (app folder; exists after
    the app has been started once)
 2. `/enterprise/usr/` (Zebra, persistent)
 
@@ -91,15 +91,15 @@ you return to the profile list.
 
 ```bash
 adb push examples/sap-its-mobile.json \
-  /sdcard/Android/data/io.github.pieewiee.enterprisebrowser/files/enterprisebrowser.json
+  /sdcard/Android/data/de.ictbaden.enterprisebrowser/files/enterprisebrowser.json
 ```
 
 ## Broadcast intent (StageNow, adb)
 
 ```bash
 adb shell am broadcast \
-  -a io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG \
-  -n io.github.pieewiee.enterprisebrowser/.provisioning.ConfigReceiver \
+  -a de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG \
+  -n de.ictbaden.enterprisebrowser/.provisioning.ConfigReceiver \
   --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'
 ```
 
