@@ -412,7 +412,10 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private fun onScan(scan: ScanResult) {
         val template = pagePolicy.navigateTemplate
         if (template != null) {
-            val target = ScanScripts.applyTemplate(template, scan.data)
+            val filled = ScanScripts.applyTemplate(template, scan.data)
+            // Relative targets ("/item?code=%s") are resolved against the current page.
+            val target = if (filled.startsWith("javascript:", ignoreCase = true)) filled
+            else runCatching { java.net.URI(webView.url).resolve(filled).toString() }.getOrDefault(filled)
             when {
                 target.startsWith("javascript:", ignoreCase = true) ->
                     webView.evaluateJavascript(target.substringAfter(':'), null)
@@ -549,8 +552,16 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private inner class Client : WebViewClient() {
 
-        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
-            assetLoader.shouldInterceptRequest(request.url)
+        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+            // shouldOverrideUrlLoading is not called for POST (form submit): stop those here, before they
+            // reach the server. A 204 response makes the WebView stay on the current page.
+            val web = request.url.scheme == "http" || request.url.scheme == "https" // not the data: URL of the error page
+            if (request.isForMainFrame && web && !UrlPolicy.isAllowed(request.url.toString(), profile)) {
+                view.post { blocked(request.url) }
+                return WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), null)
+            }
+            return assetLoader.shouldInterceptRequest(request.url)
+        }
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val url = request.url.toString()
@@ -559,9 +570,13 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 return true
             }
             if (!request.isForMainFrame || UrlPolicy.isAllowed(url, profile)) return false
-            toast("Page not allowed: ${request.url.host ?: url}")
-            sounds.play(profile.sounds.error)
+            blocked(request.url)
             return true
+        }
+
+        private fun blocked(url: Uri) {
+            toast("Page not allowed: ${url.host ?: url}")
+            sounds.play(profile.sounds.error)
         }
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
@@ -595,6 +610,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (!request.isForMainFrame) return
+            // A navigation stopped in shouldInterceptRequest (not allowed) stays on the current page.
+            if (!UrlPolicy.isAllowed(request.url.toString(), profile)) return
             val (title, message) = when (error.errorCode) {
                 ERROR_HOST_LOOKUP -> "Server not found" to "The address could not be resolved. Check the Wi-Fi connection."
                 ERROR_CONNECT -> "No connection" to "The server cannot be reached."

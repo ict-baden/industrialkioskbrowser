@@ -127,7 +127,7 @@ passwords that are not set keep their current value.
 | Field | Meaning |
 |---|---|
 | `soft` | `system` (Android keyboard) or `none` (never shown) |
-| `showOnFocus` | `false`: the keyboard does not appear when tapping a field, only via the keyboard button in the toolbar or the hotkey |
+| `showOnFocus` | Default `true`. `false`: the keyboard does not appear when tapping a field, only via the keyboard button in the toolbar or the hotkey |
 | `showOnPageLoad` | Show the keyboard after every page load |
 | `backKey` | Macro for the back key; `{BACK}` = go back or open the menu |
 | `remap` | Hardware key (`key`: Android name without `KEYCODE_`, e.g. `F1`, `BUTTON_L1`, `ENTER`, or a number) → macro. `system` passes the key through, empty swallows it. |

@@ -61,7 +61,7 @@ They apply to the current page:
 
 - `scanner` combines `Enable`/`Resume`, `Disable`/`Suspend`, `AutoTab`, `AutoEnter`,
   `AutoTabAndEnter`, `AutoEnterAndTab`, `NoAuto` (comma-separated).
-- `ScannerNavigate`: `%s` is URL-encoded for URLs and inserted as a JavaScript string
+- `ScannerNavigate`: relative targets (`/item?code=%s`) are resolved against the current page; the allow list applies. `%s` is URL-encoded for URLs and inserted as a JavaScript string
   (including quotes) for `javascript:`. The scan is then not typed into a field.
 - `name="…"` works the same as `http-equiv="…"`.
 
