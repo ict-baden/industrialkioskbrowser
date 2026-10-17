@@ -57,14 +57,16 @@ object InjectionScripts {
         }
         return """(function (content) {
   if (window !== window.top) return;
+  // The page's own viewport tag is parsed after ours and would win: set every viewport tag.
   function apply() {
-    var meta = document.querySelector('meta[name="viewport"]');
-    if (!meta) {
-      meta = document.createElement('meta');
+    var metas = document.querySelectorAll('meta[name="viewport"]');
+    if (!metas.length) {
+      var meta = document.createElement('meta');
       meta.name = 'viewport';
       (document.head || document.documentElement).appendChild(meta);
+      metas = [meta];
     }
-    if (meta.content !== content) meta.content = content;
+    for (var i = 0; i < metas.length; i++) if (metas[i].content !== content) metas[i].content = content;
   }
   apply();
   document.addEventListener('DOMContentLoaded', apply);

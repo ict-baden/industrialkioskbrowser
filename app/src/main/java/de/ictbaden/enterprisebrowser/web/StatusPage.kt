@@ -13,11 +13,13 @@ object StatusPage {
     fun render(context: Context, template: String?, title: String, message: String, url: String?, color: String = "#0D47A1"): String =
         fill(template ?: context.assets.open("status.html").bufferedReader().use { it.readText() }, title, message, url, color)
 
+    // Plain replace, no regex: Android's ICU regex rejects an unescaped "}" that the JVM accepts,
+    // so every error page crashed on the device while the unit tests passed.
     fun fill(template: String, title: String, message: String, url: String?, color: String = "#0D47A1"): String = template
-        .replace(Regex("\\{\\{color}}", RegexOption.IGNORE_CASE), Regex.escapeReplacement(escape(color)))
-        .replace(Regex("\\{\\{title}}", RegexOption.IGNORE_CASE), Regex.escapeReplacement(escape(title)))
-        .replace(Regex("\\{\\{message}}", RegexOption.IGNORE_CASE), Regex.escapeReplacement(escape(message)))
-        .replace(Regex("\\{\\{url}}", RegexOption.IGNORE_CASE), Regex.escapeReplacement(escape(url.orEmpty())))
+        .replace("{{color}}", escape(color), ignoreCase = true)
+        .replace("{{title}}", escape(title), ignoreCase = true)
+        .replace("{{message}}", escape(message), ignoreCase = true)
+        .replace("{{url}}", escape(url.orEmpty()), ignoreCase = true)
 
     private fun escape(text: String) = buildString(text.length) {
         for (c in text) {

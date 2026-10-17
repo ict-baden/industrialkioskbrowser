@@ -34,31 +34,35 @@ class Sounds(private val context: Context, private val config: AppConfig) {
     private fun tones(tones: List<Pair<Int, Int>>) = thread(name = "tone") {
         val samples = tones.flatMap { (hz, ms) -> sine(hz, ms).asIterable() + ShortArray(SAMPLE_RATE * 30 / 1000).asIterable() }
             .toShortArray()
-        val track = AudioTrack.Builder()
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build(),
-            )
-            .setAudioFormat(
-                AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setSampleRate(SAMPLE_RATE)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .build(),
-            )
-            .setTransferMode(AudioTrack.MODE_STATIC)
-            .setBufferSizeInBytes(samples.size * 2)
-            .build()
+        // Creating the track can fail too (audio policy, no free tracks): never let a tone crash the app.
+        var track: AudioTrack? = null
         try {
-            track.write(samples, 0, samples.size)
+            val minBuffer = AudioTrack.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+            track = AudioTrack.Builder()
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build(),
+                )
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(SAMPLE_RATE)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .build(),
+                )
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .setBufferSizeInBytes(maxOf(minBuffer, 4096))
+                .build()
             track.play()
-            Thread.sleep(samples.size * 1000L / SAMPLE_RATE + 50)
+            track.write(samples, 0, samples.size) // blocks until the samples are queued
+            Thread.sleep(minBuffer * 1000L / (SAMPLE_RATE * 2) + 50) // let the tail play out
+            track.stop()
         } catch (e: Exception) {
             Log.w(TAG, "Tone playback failed", e)
         } finally {
-            track.release()
+            track?.release()
         }
     }
 
