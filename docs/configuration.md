@@ -127,7 +127,7 @@ passwords that are not set keep their current value.
 | Field | Meaning |
 |---|---|
 | `soft` | `system` (Android keyboard) or `none` (never shown) |
-| `showOnFocus` | `false`: the keyboard does not appear when tapping a field, only via the keyboard button in the toolbar or the hotkey |
+| `showOnFocus` | Default `true`. `false`: the keyboard does not appear when tapping a field, only via the keyboard button in the toolbar or the hotkey |
 | `showOnPageLoad` | Show the keyboard after every page load |
 | `backKey` | Macro for the back key; `{BACK}` = go back or open the menu |
 | `remap` | Hardware key (`key`: Android name without `KEYCODE_`, e.g. `F1`, `BUTTON_L1`, `ENTER`, or a number) → macro. `system` passes the key through, empty swallows it. |
@@ -204,7 +204,7 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 |---|---|
 | Zebra | DataWedge intent API. On start a DataWedge profile "EnterpriseBrowser" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. |
 | Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
-| Others | Any scanner app that broadcasts `io.github.pieewiee.enterprisebrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
+| Others | Any scanner app that broadcasts `de.ictbaden.enterprisebrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 
