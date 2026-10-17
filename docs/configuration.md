@@ -204,7 +204,7 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 |---|---|
 | Zebra | DataWedge intent API. On start a DataWedge profile "EnterpriseBrowser" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. |
 | Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
-| Others | Any scanner app that broadcasts `io.github.pieewiee.enterprisebrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
+| Others | Any scanner app that broadcasts `de.ictbaden.enterprisebrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 

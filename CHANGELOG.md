@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **New package name `de.ictbaden.enterprisebrowser`** (previously `io.github.pieewiee.enterprisebrowser`), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
+- The broadcast actions change accordingly: `de.ictbaden.enterprisebrowser.action.BARCODE` and `…action.INSTALL_CONFIG`. Update scanner apps or StageNow/MDM profiles that send them.
+- Debug builds are called `de.ictbaden.enterprisebrowser.debug` and can be installed next to the release.
+- Release APKs are signed by the CI with the ICT-Baden key and published under fixed links (release `latest`) with checksums.
+- Licence: MIT, © ICT-Baden.
+
 ## 0.3.1
 
 - App, documentation, examples and screenshots are now in **English**.
