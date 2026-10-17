@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bezahlter Support / Paid support
+    url: https://github.com/ict-baden/enterprisebrowser/blob/main/SUPPORT.md
+    about: Verbindliche Hilfe mit Reaktionszeiten, vertraulich, auch in Ihrer Umgebung. / Guaranteed response times, confidential.
+  - name: Sicherheitslücke melden / Report a vulnerability
+    url: https://github.com/ict-baden/enterprisebrowser/security/advisories/new
+    about: Bitte nicht als öffentliches Issue. / Please do not open a public issue.

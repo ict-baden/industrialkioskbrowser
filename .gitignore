@@ -27,3 +27,7 @@ captures/
 
 # Local notes (not part of the repository)
 notes/
+
+# Signing keys never go into the repo (richtlinien/05-signieren.md)
+*.jks
+*.keystore
