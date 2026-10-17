@@ -110,8 +110,8 @@ if (window.EnterpriseBrowser) {
 ## Testing without a scanner
 
 ```bash
-adb shell am broadcast -a io.github.pieewiee.enterprisebrowser.action.BARCODE \
-  -p io.github.pieewiee.enterprisebrowser --es data 4006381333931 --es symbology EAN13
+adb shell am broadcast -a de.ictbaden.enterprisebrowser.action.BARCODE \
+  -p de.ictbaden.enterprisebrowser --es data 4006381333931 --es symbology EAN13
 ```
 
 Remote debugging with Chrome DevTools (`chrome://inspect`) is enabled in debug builds.

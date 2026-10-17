@@ -1,0 +1,19 @@
+name: Wunsch / Feature request
+description: Eine Idee, was das Werkzeug zusätzlich können sollte. / An idea for something new.
+labels: [wunsch]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem soll gelöst werden? / What problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: vorschlag
+    attributes:
+      label: Vorschlag / Proposal
+  - type: textarea
+    id: heute
+    attributes:
+      label: Wie machen Sie es heute? / How do you do it today?
+      description: Z. B. welches andere Werkzeug. / E.g. which other tool.

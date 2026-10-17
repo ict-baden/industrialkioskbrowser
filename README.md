@@ -4,7 +4,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 8.0+">
-  <img src="https://img.shields.io/badge/Version-0.3.1-0D47A1" alt="Version 0.3.1">
+  <a href="https://github.com/ict-baden/enterprisebrowser/releases/tag/latest"><img src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest"></a>
+  <img src="https://img.shields.io/badge/Licence-MIT-blue" alt="Licence: MIT">
+  <a href="https://github.com/ict-baden/enterprisebrowser/actions/workflows/build.yml"><img src="https://github.com/ict-baden/enterprisebrowser/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/Zebra-DataWedge-000000" alt="Zebra DataWedge">
   <img src="https://img.shields.io/badge/Honeywell-Intent%20API-E4002B" alt="Honeywell">
   <img src="https://img.shields.io/badge/MDM-Managed%20Config-00796B" alt="Managed configuration">
@@ -55,7 +57,7 @@
 **1. Install the app** – download the APK from the [releases](../../releases/latest) and distribute it with your MDM, or install it over USB:
 
 ```bash
-adb install -r EnterpriseBrowser-0.3.1.apk
+adb install -r EnterpriseBrowser.apk   # from https://github.com/ict-baden/enterprisebrowser/releases/tag/latest
 ```
 
 **2. Pick a configuration** – ready-made templates in [`examples/`](examples):
@@ -72,7 +74,7 @@ adb install -r EnterpriseBrowser-0.3.1.apk
 (start the app once so the folder exists):
 
 ```bash
-adb push examples/minimal.json /sdcard/Android/data/io.github.pieewiee.enterprisebrowser/files/enterprisebrowser.json
+adb push examples/minimal.json /sdcard/Android/data/de.ictbaden.enterprisebrowser/files/enterprisebrowser.json
 ```
 
 All options, including step by step for **SOTI MobiControl**: [Deployment](docs/deployment.md).
@@ -80,8 +82,8 @@ All options, including step by step for **SOTI MobiControl**: [Deployment](docs/
 **4. Test** – open the built-in profile "Demo & scanner test" and scan, or without a scanner:
 
 ```bash
-adb shell am broadcast -a io.github.pieewiee.enterprisebrowser.action.BARCODE \
-  -p io.github.pieewiee.enterprisebrowser --es data 4006381333931 --es symbology EAN13
+adb shell am broadcast -a de.ictbaden.enterprisebrowser.action.BARCODE \
+  -p de.ictbaden.enterprisebrowser --es data 4006381333931 --es symbology EAN13
 ```
 
 ## 🎨 Custom design
@@ -167,7 +169,7 @@ The screenshots in this documentation are rendered straight from the UI code
 (Robolectric/Roborazzi, web content with Chromium) – see [`tools/screenshots`](tools/screenshots).
 
 ```
-app/src/main/java/io/github/pieewiee/enterprisebrowser/
+app/src/main/java/de/ictbaden/enterprisebrowser/
   config/        profile model, JSON format, storage, password hashing
   web/           BrowserActivity, URL policy, scan delivery, JS bridge, keyboard, injections
   scanner/       DataWedge, Honeywell, generic intent
@@ -183,3 +185,19 @@ docs/            documentation and images
 - [Deployment](docs/deployment.md) – SOTI MobiControl, Intune, Workspace ONE, StageNow, adb, QR
 - [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
 - [Changelog](CHANGELOG.md)
+
+## Limits, honestly
+
+- **Package changed** from `io.github.pieewiee.enterprisebrowser` to `de.ictbaden.enterprisebrowser`: Android treats it as a new app, see the [changelog](CHANGELOG.md).
+- User interface in **English** only.
+
+---
+
+<sub>
+EnterpriseBrowser is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
+Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
+Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
+Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
+<a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/impressum">Impressum</a>
+</sub>

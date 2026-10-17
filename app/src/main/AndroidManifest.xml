@@ -57,7 +57,8 @@
             android:name=".provisioning.ConfigReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="io.github.pieewiee.enterprisebrowser.action.INSTALL_CONFIG" />
+                <!-- Platzhalter für den Paketnamen: im Debug-Build ….debug, passend zu context.packageName im ConfigReceiver -->
+                <action android:name="${applicationId}.action.INSTALL_CONFIG" />
             </intent-filter>
         </receiver>
     </application>
