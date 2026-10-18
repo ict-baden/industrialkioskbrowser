@@ -82,7 +82,7 @@ jobs:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
         run: echo "$ANDROID_KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
 
-      - name: APK bauen und signieren
+      - name: APK und App Bundle bauen und signieren
         if: env.SIGN == 'true'
         env:
           ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/release.jks
@@ -91,11 +91,14 @@ jobs:
           # PKCS12-Keystores haben ein gemeinsames Passwort für Store und Schlüssel; eigenes Secret nur, falls abweichend
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          ./gradlew assembleRelease --console=plain -PversionName=${{ steps.version.outputs.version }} -PversionCode=${{ steps.version.outputs.code }}
+          ./gradlew assembleRelease bundleRelease --console=plain -PversionName=${{ steps.version.outputs.version }} -PversionCode=${{ steps.version.outputs.code }}
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk "dist/$APP${{ steps.version.outputs.suffix }}.apk"
+          # Das App Bundle ist für Google Play (mit unserem Schlüssel als Upload-Schlüssel, siehe docs/play-store.md)
+          cp app/build/outputs/bundle/release/app-release.aab "dist/$APP${{ steps.version.outputs.suffix }}.aab"
           # Prüfen, dass wirklich mit dem Release-Schlüssel signiert wurde
           "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "dist/$APP${{ steps.version.outputs.suffix }}.apk" | head -3
+          jarsigner -verify "dist/$APP${{ steps.version.outputs.suffix }}.aab" | grep -q "jar verified" || { echo "::error::App Bundle ist nicht signiert"; exit 1; }
           rm "$RUNNER_TEMP/release.jks"
 
       - name: Ohne Schlüssel nichts veröffentlichen
@@ -105,7 +108,7 @@ jobs:
       - name: Prüfsummen
         if: env.SIGN == 'true'
         working-directory: dist
-        run: sha256sum *.apk | tee SHA256SUMS.txt
+        run: sha256sum *.apk *.aab | tee SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v7
         if: env.SIGN == 'true'

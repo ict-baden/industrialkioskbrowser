@@ -187,13 +187,8 @@ docs/            documentation and images
 - [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
 - [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
 - [Error codes](docs/error-codes.md) – `EB-0001` … with causes
+- [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
 - [Changelog](CHANGELOG.md)
-
-## Limits, honestly
-
-- **Package changed** from `io.github.pieewiee.enterprisebrowser` to `de.ictbaden.enterprisebrowser`: Android treats it as a new app, see the [changelog](CHANGELOG.md).
-- User interface in English, German, Spanish, French and Chinese (simplified). The translations were made with machine help and still need a review by native speakers.
-- The built-in demo page and the documentation are in English.
 
 ---
 

@@ -1,0 +1,34 @@
+EnterpriseBrowser lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se limita a las aplicaciones permitidas y toda la configuración llega desde su MDM.
+
+ESCANEO DE CÓDIGOS DE BARRAS
+• Funciona con Zebra DataWedge, escáneres Honeywell y cualquier aplicación de escaneo que envíe un intent
+• El código se escribe en el campo activo como con un teclado, con Tab o Intro si se desea
+• Las páginas web también pueden recibir los escaneos como evento JavaScript y controlar el escaneo por página
+
+PERFILES
+• Varias aplicaciones web en un dispositivo, cada una con su dirección de inicio, hosts permitidos, colores y ajustes
+• Un toque en la pantalla de inicio abre la aplicación web, o se inicia automáticamente
+
+MODO QUIOSCO
+• Ocultar la barra de herramientas y las barras del sistema, ocultar la salida o protegerla con contraseña
+• Solo se pueden abrir los hosts permitidos; todo lo demás se bloquea antes de cargarse
+• Modo de bloqueo de tareas en dispositivos gestionados
+
+CONFIGURACIÓN CENTRAL
+• Configuración gestionada desde su MDM (por ejemplo SOTI MobiControl, Microsoft Intune, Workspace ONE)
+• Archivo de configuración, intent de difusión (StageNow) o código QR
+• Los ajustes en el dispositivo están protegidos con una contraseña de administrador
+
+PARA APLICACIONES WEB
+• Añada su propio CSS, JavaScript o HTML a aplicaciones web de terceros, según la dirección
+• Reasignación de teclas físicas, teclas rápidas y macros como {F1} o {TAB}
+• Páginas de error claras con códigos de error, en el color de su marca
+
+SU DISEÑO
+• Su título, su logotipo y el color de su marca, por configuración o directamente en la aplicación
+
+PRIVACIDAD
+• Sin cuenta, sin publicidad, sin seguimiento. EnterpriseBrowser no envía datos a ICT-Baden.
+• La aplicación solo se conecta a las direcciones web que usted configure.
+
+Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT-Baden. Hay contratos de soporte disponibles.

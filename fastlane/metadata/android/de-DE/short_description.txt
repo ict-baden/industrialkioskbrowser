@@ -1,0 +1,1 @@
+Kiosk-Browser für robuste Android-Geräte: Barcode-Scan, Kiosk-Modus, MDM.
