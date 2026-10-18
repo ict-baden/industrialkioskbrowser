@@ -243,3 +243,42 @@ label_font = font("Roboto-Medium.ttf", 34)
 bd.text((200 + left.width // 2, 1000), "Default", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
 bd.text((1600 - 200 - right.width // 2, 1000), "Custom branding via configuration", font=label_font, fill=(68, 71, 78, 255), anchor="mm")
 save(B.convert("RGB"), "branding.png", width=1200)
+
+
+# --------------------------------------------------------------------------- Google Play listing
+# Graphics for the store listing (fastlane layout, also read by the Play Console upload):
+# feature graphic 1024 x 500 and phone screenshots 1080 x 1920 (Play rejects sides more than 2:1).
+PLAY_GRADIENT = [(9, 36, 92), (13, 71, 161), (0, 121, 107)]
+PLAY_GLOW = (120, 180, 255)
+PLAY_SCREENS = [
+    ("launcher", "All your web apps\non one start screen"),
+    ("browser", "Scans land straight\nin the web form"),
+    ("menu", "Large controls,\nmade for gloves"),
+    ("error", "Clear error pages\nin your colors"),
+    ("launcher-branded", "Your logo,\nyour brand color"),
+    ("settings", "Locked settings\nfor administrators"),
+]
+
+play = repo / "fastlane" / "metadata" / "android" / "en-US" / "images"
+(play / "phoneScreenshots").mkdir(parents=True, exist_ok=True)
+crop_h = round(W * 500 / 1024)
+feature = hero.crop((0, (H - crop_h) // 2, W, (H - crop_h) // 2 + crop_h)).convert("RGB")
+feature.resize((1024, 500), Image.LANCZOS).save(play / "featureGraphic.png", optimize=True)
+
+for old in (play / "phoneScreenshots").glob("*.png"):
+    old.unlink()
+for i, (name, caption) in enumerate(PLAY_SCREENS, 1):
+    shot = gradient((1080, 1920), PLAY_GRADIENT).convert("RGBA")
+    glow(shot, (900, 300), 500, PLAY_GLOW, 60)
+    draw = ImageDraw.Draw(shot)
+    draw.multiline_text((540, 190), caption, font=font("Roboto-Bold.ttf", 68), fill=(255, 255, 255, 255),
+                        anchor="mm", align="center", spacing=14)
+    dev = phone(name, 1600)
+    shot.alpha_composite(dev, ((1080 - dev.width) // 2, 340))
+    shot.convert("RGB").save(play / "phoneScreenshots" / f"{i}_{name}.png", optimize=True)
+# Hi-res icon: Play rounds the corners itself, so the artwork has to fill the whole square.
+src = Image.open(repo / "app" / "src" / "main" / "ic_launcher-playstore.png").convert("RGBA")
+icon = Image.new("RGBA", src.size, (13, 71, 161, 255))
+icon.alpha_composite(src)
+icon.convert("RGB").save(play / "icon.png", optimize=True)
+print("play store graphics written")
