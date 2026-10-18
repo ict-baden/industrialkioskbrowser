@@ -9,6 +9,8 @@
 - **Settings → Info** now shows data and privacy, licence, third-party licences, source code, support, website and
   legal notice; new page [Data and privacy](docs/data-and-privacy.md).
 - Long single words in the menu are hyphenated instead of being cut in the middle.
+- Prepared for Google Play: the CI also builds a signed App Bundle (`.aab`), store texts in five languages and store
+  graphics in `fastlane/`, Play Console answers in [docs/play-store.md](docs/play-store.md).
 
 ## 0.5.0
 

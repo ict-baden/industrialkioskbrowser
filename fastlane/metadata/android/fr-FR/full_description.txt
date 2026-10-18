@@ -1,0 +1,34 @@
+EnterpriseBrowser fait tourner vos applications web sur des appareils Android durcis  entrepôt, production, logistique. Les scans arrivent directement dans le formulaire web, l’appareil reste limité aux applications autorisées et toute la configuration vient de votre MDM.
+
+SCAN DE CODES-BARRES
+• Compatible avec Zebra DataWedge, les scanners Honeywell et toute application de scan qui envoie un intent
+• Le code est saisi dans le champ actif comme au clavier, avec Tab ou Entrée si souhaité
+• Les pages web peuvent aussi recevoir les scans sous forme d’événement JavaScript et piloter le scan page par page
+
+PROFILS
+• Plusieurs applications web sur un appareil, chacune avec son adresse de départ, ses hôtes autorisés, ses couleurs et ses réglages
+• Un appui sur l’écran d’accueil ouvre l’application web, ou elle démarre automatiquement
+
+MODE KIOSQUE
+• Masquer la barre d’outils et les barres système, masquer la sortie ou la protéger par mot de passe
+• Seuls les hôtes autorisés s’ouvrent  tout le reste est bloqué avant le chargement
+• Mode tâche verrouillée sur les appareils gérés
+
+CONFIGURATION CENTRALISÉE
+• Configuration gérée depuis votre MDM (par exemple SOTI MobiControl, Microsoft Intune, Workspace ONE)
+• Fichier de configuration, intent de diffusion (StageNow) ou code QR
+• Les réglages sur l’appareil sont protégés par un mot de passe administrateur
+
+POUR LES APPLICATIONS WEB
+• Ajoutez votre propre CSS, JavaScript ou HTML à des applications web tierces, selon l’adresse
+• Réaffectation des touches physiques, raccourcis et macros comme {F1} ou {TAB}
+• Pages d’erreur claires avec codes d’erreur, aux couleurs de votre marque
+
+VOTRE DESIGN
+• Votre titre, votre logo et la couleur de votre marque, par configuration ou directement dans l’application
+
+CONFIDENTIALITÉ
+• Pas de compte, pas de publicité, pas de suivi. EnterpriseBrowser n’envoie aucune donnée à ICT-Baden.
+• L’application se connecte uniquement aux adresses web que vous configurez.
+
+Interface en anglais, allemand, espagnol, français et chinois. Gratuit et open source (licence MIT), par ICT-Baden. Des contrats de support sont disponibles.
