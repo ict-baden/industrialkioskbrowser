@@ -11,27 +11,27 @@ Alle Teile sind in die APK einkompiliert (classes.dex und Ressourcen).
    Source: https://developer.android.com/jetpack/androidx (https://android.googlesource.com/platform/frameworks/support)
    Copyright The Android Open Source Project
    Licence: Apache-2.0 (section A)
-   Versions: activity 1.11.0, activity-ktx 1.11.0, annotation 1.8.1, annotation-experimental 1.4.1,
-   appcompat 1.7.1, appcompat-resources 1.7.1, cardview 1.0.0, collection 1.4.2, concurrent-futures 1.1.0,
-   constraintlayout 2.1.0, constraintlayout-core 1.0.0, coordinatorlayout 1.1.0, arch core-common 2.2.0,
-   arch core-runtime 2.2.0, core 1.17.0, core-ktx 1.17.0, core-viewtree 1.0.0, cursoradapter 1.0.0,
-   customview 1.1.0, drawerlayout 1.1.1, dynamicanimation 1.1.0, emoji2 1.3.0, emoji2-views-helper 1.3.0,
-   fragment 1.5.4, graphics-shapes 1.0.1, interpolator 1.0.0, lifecycle 2.6.2, loader 1.0.0,
-   profileinstaller 1.4.0, recyclerview 1.2.1, resourceinspection-annotation 1.0.1, savedstate 1.2.1,
-   savedstate-ktx 1.2.1, startup-runtime 1.1.1, tracing 1.2.0, transition 1.5.0, vectordrawable 1.1.0,
+   Versions: activity 1.11.0, activity-ktx 1.11.0, annotation 1.10.0, annotation-experimental 1.4.1,
+   appcompat 1.8.0, appcompat-resources 1.8.0, cardview 1.0.0, collection 1.4.2, concurrent-futures 1.1.0,
+   constraintlayout 2.2.1, constraintlayout-core 1.1.1, coordinatorlayout 1.1.0, arch core-common 2.2.0,
+   arch core-runtime 2.2.0, core 1.19.1, core-ktx 1.19.1, core-splashscreen 1.2.0, core-viewtree 1.0.0, cursoradapter 1.0.0,
+   customview 1.2.0, drawerlayout 1.1.1, dynamicanimation 1.1.0, emoji2 1.3.0, emoji2-views-helper 1.3.0,
+   fragment 1.5.4, graphics-shapes 1.0.1, interpolator 1.0.0, lifecycle 2.10.0, loader 1.0.0,
+   profileinstaller 1.4.0, recyclerview 1.2.1, resourceinspection-annotation 1.0.1, savedstate 1.4.0,
+   savedstate-ktx 1.4.0, startup-runtime 1.1.1, tracing 1.2.0, transition 1.5.0, vectordrawable 1.1.0,
    vectordrawable-animated 1.1.0, versionedparcelable 1.1.1, viewpager 1.0.0, viewpager2 1.0.0
 
-2. Material Components for Android 1.13.0 - start screen, dialogs, bottom sheet, settings
+2. Material Components for Android 1.14.0 - start screen, dialogs, bottom sheet, settings
    Source: https://github.com/material-components/material-components-android
    Copyright The Android Open Source Project
    Licence: Apache-2.0 (section A)
 
-3. Kotlin standard library 2.2.20
+3. Kotlin standard library 2.4.21
    Source: https://github.com/JetBrains/kotlin
    Copyright 2010-2025 JetBrains s.r.o. and Kotlin Programming Language contributors
    Licence: Apache-2.0 (section A)
 
-4. kotlinx.coroutines 1.8.1 (core, android) - used by AndroidX
+4. kotlinx.coroutines 1.9.0 (core, android) - used by AndroidX
    Source: https://github.com/Kotlin/kotlinx.coroutines
    Copyright 2016-2024 JetBrains s.r.o. and contributors
    Licence: Apache-2.0 (section A)
@@ -46,7 +46,12 @@ Alle Teile sind in die APK einkompiliert (classes.dex und Ressourcen).
    Copyright The Guava Authors, The Error Prone Authors
    Licence: Apache-2.0 (section A)
 
-7. JSpecify 1.0.0 - nullness annotations, used by AndroidX
+7. kotlinx.serialization 1.7.3 (core) - used by AndroidX
+   Source: https://github.com/Kotlin/kotlinx.serialization
+   Copyright 2017-2024 JetBrains s.r.o. and contributors
+   Licence: Apache-2.0 (section A)
+
+8. JSpecify 1.0.0 - nullness annotations, used by AndroidX
    Source: https://github.com/jspecify/jspecify
    Copyright 2022 The JSpecify Authors
    Licence: Apache-2.0 (section A)
