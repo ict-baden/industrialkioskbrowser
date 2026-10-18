@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">返回</string>
+    <string name="action_scan">扫描</string>
+    <string name="action_keyboard">键盘</string>
+    <string name="action_menu">菜单</string>
+    <string name="action_settings">设置</string>
+    <string name="action_home">主页</string>
+    <string name="action_reload">重新加载</string>
+    <string name="action_forward">前进</string>
+    <string name="action_scanner">扫描器</string>
+    <string name="action_profiles">配置文件</string>
+    <string name="action_exit">退出</string>
+
+    <string name="button_cancel">取消</string>
+    <string name="button_save">保存</string>
+    <string name="button_ok">确定</string>
+    <string name="button_delete">删除</string>
+    <string name="button_apply">应用</string>
+    <string name="button_change">更改</string>
+    <string name="button_remove">移除</string>
+    <string name="button_import">导入</string>
+    <string name="button_unlock">解锁</string>
+    <string name="button_sign_in">登录</string>
+
+    <string name="no_profiles_title">尚无配置文件</string>
+    <string name="no_profiles">请在设置中添加配置文件，或通过 MDM 分发配置。</string>
+    <string name="badge_autostart">自动启动</string>
+    <string name="badge_kiosk">信息亭</string>
+    <string name="badge_allow_list">允许列表</string>
+    <string name="badge_scanner_off">扫描器已关闭</string>
+    <string name="builtin_demo">内置演示</string>
+    <string name="demo_profile_name">演示和扫描器测试</string>
+    <string name="no_scanner">无硬件扫描器</string>
+
+    <string name="password">密码</string>
+    <string name="admin_password">管理员密码</string>
+    <string name="exit_password">退出密码</string>
+    <string name="wrong_password">密码错误</string>
+    <string name="sign_in">登录</string>
+    <string name="user_name">用户名</string>
+
+    <string name="message_with_code">%1$s（%2$s）</string>
+    <string name="profile_not_found">未找到配置文件</string>
+    <string name="page_not_allowed">不允许访问此页面：%1$s</string>
+    <string name="scan_target_not_allowed">不允许的扫描目标：%1$s</string>
+    <string name="downloads_disabled">下载已停用</string>
+    <string name="download_unsupported">不支持此类下载</string>
+    <string name="download_started">已开始下载：%1$s</string>
+
+    <string name="error_host_title">找不到服务器</string>
+    <string name="error_host_message">无法解析该地址。请检查 Wi-Fi 连接。</string>
+    <string name="error_connect_title">无连接</string>
+    <string name="error_connect_message">无法连接到服务器。</string>
+    <string name="error_timeout_title">超时</string>
+    <string name="error_timeout_message">服务器未及时响应。</string>
+    <string name="error_ssl_title">连接不安全</string>
+    <string name="error_ssl_message">无法建立安全连接。</string>
+    <string name="error_load_title">页面不可用</string>
+    <string name="error_load_message">无法加载该页面。</string>
+    <string name="error_http_title">错误 %1$d</string>
+    <string name="error_http_message">服务器拒绝了该请求。</string>
+    <string name="error_cert_untrusted">该证书并非由受信任的机构颁发。</string>
+    <string name="error_cert_expired">该证书已过期。</string>
+    <string name="error_cert_not_yet_valid">该证书尚未生效。</string>
+    <string name="error_cert_mismatch">该证书与服务器名称不符。</string>
+    <string name="error_cert_date">该证书的日期无效。</string>
+    <string name="error_cert_invalid">该证书无效。</string>
+    <string name="error_cert_message">%1$s 受信任的证书需通过 MDM 作为 CA 安装。</string>
+    <string name="error_retry">重试</string>
+    <string name="error_code">错误代码：%1$s</string>
+
+    <string name="section_profiles">配置文件</string>
+    <string name="section_design">外观</string>
+    <string name="section_configuration">配置</string>
+    <string name="section_security">安全</string>
+    <string name="section_info">信息</string>
+    <string name="add_profile">添加配置文件</string>
+    <string name="add_profile_summary">起始网址、信息亭和扫描器</string>
+    <string name="language">语言</string>
+    <string name="language_system">系统语言</string>
+    <string name="title">标题</string>
+    <string name="subtitle">副标题</string>
+    <string name="title_summary">留空 = EnterpriseBrowser</string>
+    <string name="subtitle_summary">留空 = 设备型号</string>
+    <string name="start_screen_title">起始屏幕标题</string>
+    <string name="brand_color">品牌颜色</string>
+    <string name="color_default">默认</string>
+    <string name="logo">徽标</string>
+    <string name="logo_custom">自定义徽标</string>
+    <string name="logo_default">默认徽标</string>
+    <string name="logo_invalid">图片无效或大于 1 MB</string>
+    <string name="color_hex">颜色（#RRGGBB）</string>
+    <string name="color_hex_summary">留空 = 默认颜色</string>
+    <string name="color_use_default">使用默认颜色</string>
+    <string name="color_invalid">颜色无效：%1$s</string>
+    <string name="import_file">从文件导入</string>
+    <string name="import_file_summary">加载 JSON 配置</string>
+    <string name="export_file">导出到文件</string>
+    <string name="export_file_summary">保存当前配置</string>
+    <string name="import_barcode">从条码导入</string>
+    <string name="import_barcode_summary">扫描包含 JSON 的二维码</string>
+    <string name="import_barcode_message">请现在扫描配置条码（包含 JSON 的二维码）。</string>
+    <string name="last_provisioning_error">上次部署错误</string>
+    <string name="password_not_set">未设置</string>
+    <string name="password_set">已设置</string>
+    <string name="kiosk_mode">信息亭模式</string>
+    <string name="kiosk_mode_summary">隐藏退出和配置文件切换</string>
+    <string name="version">版本</string>
+    <string name="scanner">扫描器</string>
+    <string name="config_file_for_emm">用于 EMM 的配置文件</string>
+    <string name="new_password">新密码</string>
+    <string name="new_password_summary">留空即可移除密码</string>
+    <string name="repeat_password">再次输入</string>
+    <string name="passwords_do_not_match">两次输入的密码不一致</string>
+    <string name="password_saved">密码已保存</string>
+    <string name="password_removed">密码已移除</string>
+    <string name="import_failed">导入失败</string>
+    <string name="import_confirm_title">导入配置？</string>
+    <plurals name="import_confirm_message">
+        <item quantity="other">%d 个配置文件。当前配置将被替换。</item>
+    </plurals>
+    <string name="config_imported">配置已导入</string>
+    <string name="config_exported">配置已导出</string>
+    <string name="export_failed">导出失败：%1$s</string>
+    <string name="read_failed">无法读取文件：%1$s</string>
+
+    <string name="new_profile">新建配置文件</string>
+    <string name="edit_profile">编辑配置文件</string>
+    <string name="profile_name">名称</string>
+    <string name="start_url">起始网址</string>
+    <string name="start_url_invalid">网址必须以 http:// 或 https:// 开头</string>
+    <string name="allowed_hosts">允许的主机</string>
+    <string name="allowed_hosts_summary">以逗号分隔，留空 = 允许所有网站</string>
+    <string name="profile_color">配置文件颜色</string>
+    <string name="profile_color_default">与品牌颜色相同</string>
+    <string name="open_on_start">应用启动时打开</string>
+    <string name="hide_toolbar">隐藏工具栏</string>
+    <string name="full_screen">全屏</string>
+    <string name="keep_screen_on">保持屏幕常亮</string>
+    <string name="scanner_enabled">启用扫描器</string>
+    <string name="send_after_scan">扫描后发送</string>
+    <string name="terminator_none">无按键</string>
+    <string name="delete_profile_title">删除配置文件？</string>
+    <string name="delete_profile_message">“%1$s”将从此设备中移除。</string>
+
+    <string name="about_privacy">数据与隐私</string>
+    <string name="about_privacy_summary">本软件不会向 ICT-Baden 发送任何数据。</string>
+    <string name="about_licence">许可证</string>
+    <string name="about_third_party">第三方许可证</string>
+    <string name="about_source">源代码</string>
+    <string name="about_support">帮助与支持</string>
+    <string name="about_support_summary">通过 GitHub 免费获取，签订支持合同可获得保障</string>
+    <string name="about_website">网站</string>
+    <string name="about_impressum">法律声明</string>
+    <string name="no_browser">没有可用的浏览器</string>
+
+    <string name="mc_config_json_title">配置（JSON）</string>
+    <string name="mc_config_json_description">EnterpriseBrowser JSON 格式的完整配置。优先于起始网址和配置文件名称。</string>
+    <string name="mc_profile_name_title">配置文件名称</string>
+    <string name="mc_profile_name_description">受管理配置文件的名称（仅与起始网址一起使用）。</string>
+    <string name="mc_start_url_title">起始网址</string>
+    <string name="mc_start_url_description">创建一个在应用启动时打开的受管理配置文件。</string>
+    <string name="mc_kiosk_mode_title">信息亭模式</string>
+    <string name="mc_kiosk_mode_description">隐藏工具栏和系统栏，隐藏退出。</string>
+    <string name="mc_admin_password_title">管理员密码</string>
+    <string name="mc_admin_password_description">保护应用设置。</string>
+</resources>

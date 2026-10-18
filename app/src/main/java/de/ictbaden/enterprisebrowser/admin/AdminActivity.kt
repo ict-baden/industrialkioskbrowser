@@ -1,5 +1,7 @@
 package de.ictbaden.enterprisebrowser.admin
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -20,6 +22,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +47,7 @@ import de.ictbaden.enterprisebrowser.config.AppConfig
 import de.ictbaden.enterprisebrowser.config.ConfigException
 import de.ictbaden.enterprisebrowser.config.ConfigJson
 import de.ictbaden.enterprisebrowser.config.ConfigStore
+import de.ictbaden.enterprisebrowser.config.Languages
 import de.ictbaden.enterprisebrowser.config.PasswordHasher
 import de.ictbaden.enterprisebrowser.config.Profile
 import de.ictbaden.enterprisebrowser.config.Resource
@@ -51,9 +55,11 @@ import de.ictbaden.enterprisebrowser.config.ScanTerminator
 import de.ictbaden.enterprisebrowser.provisioning.Provisioning
 import de.ictbaden.enterprisebrowser.scanner.ScanResult
 import de.ictbaden.enterprisebrowser.scanner.ScannerManager
+import de.ictbaden.enterprisebrowser.ui.AppLanguage
 import de.ictbaden.enterprisebrowser.ui.Brand
 import de.ictbaden.enterprisebrowser.ui.Dialogs
 import de.ictbaden.enterprisebrowser.ui.value
+import de.ictbaden.enterprisebrowser.web.ErrorCodes
 
 /** Admin screen (behind the admin password): profiles, design, import/export, security. */
 class AdminActivity : AppCompatActivity() {
@@ -73,7 +79,8 @@ class AdminActivity : AppCompatActivity() {
         uri ?: return@registerForActivityResult
         runCatching {
             contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(ConfigJson.write(store.config)) }
-        }.onSuccess { toast("Configuration exported") }.onFailure { toast("Export failed: ${it.message}") }
+        }.onSuccess { toast(getString(R.string.config_exported)) }
+            .onFailure { toast(withCode(getString(R.string.export_failed, it.message.orEmpty()), ErrorCodes.EXPORT_FAILED)) }
     }
 
     private val pickLogo = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -84,7 +91,7 @@ class AdminActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         toolbar = MaterialToolbar(this).apply {
-            title = "Settings"
+            title = getString(R.string.action_settings)
             navigationIcon = ContextCompat.getDrawable(this@AdminActivity, R.drawable.ic_back)
             setNavigationContentDescription(R.string.action_back)
             setNavigationOnClickListener { finish() }
@@ -130,71 +137,123 @@ class AdminActivity : AppCompatActivity() {
         Brand.applySystemBars(this, brandColor)
         content.removeAllViews()
 
-        section("Profiles")
+        section(R.string.section_profiles)
         card(
             config.profiles.map(::profileRow) +
-                row(R.drawable.ic_add, "Add profile", "Start URL, kiosk and scanner") { editProfile(null) },
+                row(R.drawable.ic_add, getString(R.string.add_profile), getString(R.string.add_profile_summary)) { editProfile(null) },
         )
 
         val branding = config.global.branding
-        section("Design")
+        section(R.string.section_design)
         card(
             listOf(
-                row(R.drawable.ic_title, "Title", branding.title ?: getString(R.string.app_name)) { editTitle() },
-                row(R.drawable.ic_palette, "Brand color", branding.color ?: "Default", trailing = swatch(brandColor, 28)) {
-                    pickColor("Brand color", branding.color) { color ->
+                row(R.drawable.ic_globe, getString(R.string.language), languageName(config.global.language)) { pickLanguage() },
+                row(R.drawable.ic_title, getString(R.string.title), branding.title ?: getString(R.string.app_name)) { editTitle() },
+                row(R.drawable.ic_palette, getString(R.string.brand_color), branding.color ?: getString(R.string.color_default), trailing = swatch(brandColor, 28)) {
+                    pickColor(getString(R.string.brand_color), branding.color) { color ->
                         store.update { it.copy(global = it.global.copy(branding = it.global.branding.copy(color = color))) }
                         render()
                     }
                 },
-                row(R.drawable.ic_image, "Logo", if (branding.logo != null) "Custom logo" else "Default logo", trailing = logoPreview(config)) {
+                row(R.drawable.ic_image, getString(R.string.logo), getString(if (branding.logo != null) R.string.logo_custom else R.string.logo_default), trailing = logoPreview(config)) {
                     editLogo()
                 },
             ),
         )
 
-        section("Configuration")
+        section(R.string.section_configuration)
         card(
             listOfNotNull(
-                row(R.drawable.ic_upload, "Import from file", "Load a JSON configuration") {
+                row(R.drawable.ic_upload, getString(R.string.import_file), getString(R.string.import_file_summary)) {
                     importFile.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
                 },
-                row(R.drawable.ic_download, "Export to file", "Save the current configuration") {
+                row(R.drawable.ic_download, getString(R.string.export_file), getString(R.string.export_file_summary)) {
                     exportFile.launch("enterprisebrowser.json")
                 },
-                row(R.drawable.ic_qr, "Import from barcode", "Scan a QR code containing JSON") { startBarcodeImport() },
-                Provisioning.lastError(this)?.let { row(R.drawable.ic_info, "Last provisioning error", it, onClick = null) },
+                row(R.drawable.ic_qr, getString(R.string.import_barcode), getString(R.string.import_barcode_summary)) { startBarcodeImport() },
+                Provisioning.lastError(this)?.let {
+                    row(R.drawable.ic_info, getString(R.string.last_provisioning_error), withCode(it, ErrorCodes.PROVISIONING), onClick = null)
+                },
             ),
         )
 
-        section("Security")
+        section(R.string.section_security)
         card(
             listOf(
-                row(R.drawable.ic_key, "Admin password", if (config.global.adminPasswordHash == null) "Not set" else "Set") {
-                    changePassword("Admin password") { hash -> store.update { it.copy(global = it.global.copy(adminPasswordHash = hash)) } }
+                row(R.drawable.ic_key, getString(R.string.admin_password), passwordState(config.global.adminPasswordHash)) {
+                    changePassword(getString(R.string.admin_password)) { hash -> store.update { it.copy(global = it.global.copy(adminPasswordHash = hash)) } }
                 },
-                row(R.drawable.ic_power, "Exit password", if (config.global.exitPasswordHash == null) "Not set" else "Set") {
-                    changePassword("Exit password") { hash -> store.update { it.copy(global = it.global.copy(exitPasswordHash = hash)) } }
+                row(R.drawable.ic_power, getString(R.string.exit_password), passwordState(config.global.exitPasswordHash)) {
+                    changePassword(getString(R.string.exit_password)) { hash -> store.update { it.copy(global = it.global.copy(exitPasswordHash = hash)) } }
                 },
-                switchRow(R.drawable.ic_shield, "Kiosk mode", "Hide exit and profile switching", config.global.hideExit) { checked ->
+                switchRow(R.drawable.ic_shield, getString(R.string.kiosk_mode), getString(R.string.kiosk_mode_summary), config.global.hideExit) { checked ->
                     store.update { it.copy(global = it.global.copy(hideExit = checked)) }
                 },
             ),
         )
 
-        section("Info")
+        section(R.string.section_info)
         card(
             listOf(
-                row(R.drawable.ic_info, "Version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", onClick = null),
-                row(R.drawable.ic_scan, "Scanner", scanner.scanner.name, onClick = null),
+                row(R.drawable.ic_info, getString(R.string.version), "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", onClick = null),
+                row(R.drawable.ic_scan, getString(R.string.scanner), ScannerManager.displayName(this), onClick = null),
                 row(
                     R.drawable.ic_download,
-                    "Configuration file for EMM",
+                    getString(R.string.config_file_for_emm),
                     "Android/data/$packageName/files/${Provisioning.CONFIG_FILE_NAME}",
                     onClick = null,
                 ),
+                // About block required by ict-baden/richtlinien 07.
+                row(R.drawable.ic_shield, getString(R.string.about_privacy), getString(R.string.about_privacy_summary)) {
+                    openLink("$SOURCE/blob/main/docs/data-and-privacy.md")
+                },
+                row(R.drawable.ic_info, getString(R.string.about_licence), getString(R.string.about_licence_summary)) {
+                    showText(getString(R.string.about_licence), "LICENSE")
+                },
+                row(R.drawable.ic_info, getString(R.string.about_third_party), "AndroidX, Material Components, Kotlin") {
+                    showText(getString(R.string.about_third_party), "THIRD-PARTY-NOTICES.txt")
+                },
+                row(R.drawable.ic_globe, getString(R.string.about_source), SOURCE) { openLink(SOURCE) },
+                row(R.drawable.ic_info, getString(R.string.about_support), getString(R.string.about_support_summary)) {
+                    openLink("$SOURCE/blob/main/SUPPORT.md")
+                },
+                row(R.drawable.ic_globe, getString(R.string.about_website), WEBSITE) { openLink(WEBSITE) },
+                row(R.drawable.ic_globe, getString(R.string.about_impressum), IMPRESSUM) { openLink(IMPRESSUM) },
             ),
         )
+    }
+
+    private fun languageName(language: String) = AppLanguage.NAMES[language] ?: getString(R.string.language_system)
+
+    /** Language of this device; stored in `global.language` like every other setting. */
+    private fun pickLanguage() {
+        val options = listOf(Languages.AUTO) + Languages.SUPPORTED
+        val current = options.indexOf(store.config.global.language).coerceAtLeast(0)
+        MaterialAlertDialogBuilder(this)
+            .setIcon(Dialogs.icon(this, R.drawable.ic_globe))
+            .setTitle(R.string.language)
+            .setSingleChoiceItems(options.map(::languageName).toTypedArray(), current) { dialog, which ->
+                dialog.dismiss()
+                store.update { it.copy(global = it.global.copy(language = options[which])) }
+                AppLanguage.apply(options[which]) // recreates the open screens in the new language
+            }
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
+    }
+
+    /** Fixed https links only; locked-down devices often have no browser, then the address is shown. */
+    private fun openLink(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (_: ActivityNotFoundException) {
+            MaterialAlertDialogBuilder(this).setTitle(R.string.no_browser).setMessage(url).setPositiveButton(R.string.button_ok, null).show()
+        }
+    }
+
+    /** Licence texts bundled as assets by the build (see app/build.gradle.kts). */
+    private fun showText(title: String, asset: String) {
+        val text = assets.open(asset).bufferedReader().use { it.readText() }
+        MaterialAlertDialogBuilder(this).setTitle(title).setMessage(text).setPositiveButton(R.string.button_ok, null).show()
     }
 
     // region profiles
@@ -203,32 +262,33 @@ class AdminActivity : AppCompatActivity() {
     internal fun editProfile(existing: Profile?) {
         val profile = existing ?: Profile(id = "", name = "", startUrl = "https://")
         var color = profile.color
-        val name = Dialogs.textField(this, "Name", profile.name)
-        val url = Dialogs.textField(this, "Start URL", profile.startUrl, inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
+        val name = Dialogs.textField(this, getString(R.string.profile_name), profile.name)
+        val url = Dialogs.textField(this, getString(R.string.start_url), profile.startUrl, inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         val allowList = Dialogs.textField(
             this,
-            "Allowed hosts",
+            getString(R.string.allowed_hosts),
             profile.allowList.joinToString(", "),
-            helper = "Comma-separated, empty = all sites allowed",
+            helper = getString(R.string.allowed_hosts_summary),
         )
         val colorSwatch = swatch(Brand.parse(color) ?: brandColor, 24)
         lateinit var colorRow: LinearLayout
-        colorRow = row(R.drawable.ic_palette, "Profile color", color ?: "Same as brand color", trailing = colorSwatch) {
-            pickColor("Profile color", color) { picked ->
+        colorRow = row(R.drawable.ic_palette, getString(R.string.profile_color), color ?: getString(R.string.profile_color_default), trailing = colorSwatch) {
+            pickColor(getString(R.string.profile_color), color) { picked ->
                 color = picked
-                colorRow.findViewWithTag<TextView>(SUBTITLE_TAG).text = picked ?: "Same as brand color"
+                colorRow.findViewWithTag<TextView>(SUBTITLE_TAG).text = picked ?: getString(R.string.profile_color_default)
                 colorSwatch.imageTintList = ColorStateList.valueOf(Brand.parse(picked) ?: brandColor)
             }
         }
         colorRow.setPadding(0, dp(8), 0, dp(8))
-        val launchOnStartup = switch("Open on app start", profile.launchOnStartup)
-        val hideToolbar = switch("Hide toolbar", profile.kiosk.hideToolbar)
-        val immersive = switch("Full screen", profile.kiosk.immersive)
-        val keepScreenOn = switch("Keep screen on", profile.kiosk.keepScreenOn)
-        val scannerEnabled = switch("Scanner enabled", profile.scanner.enabled)
-        val terminatorLabels = listOf("No key", "Tab", "Enter", "Tab + Enter", "Enter + Tab")
+        val launchOnStartup = switch(getString(R.string.open_on_start), profile.launchOnStartup)
+        val hideToolbar = switch(getString(R.string.hide_toolbar), profile.kiosk.hideToolbar)
+        val immersive = switch(getString(R.string.full_screen), profile.kiosk.immersive)
+        val keepScreenOn = switch(getString(R.string.keep_screen_on), profile.kiosk.keepScreenOn)
+        val scannerEnabled = switch(getString(R.string.scanner_enabled), profile.scanner.enabled)
+        // Key names stay as printed on keyboards; only "no key" is translated.
+        val terminatorLabels = listOf(getString(R.string.terminator_none), "Tab", "Enter", "Tab + Enter", "Enter + Tab")
         val terminator = TextInputLayout(this, null, com.google.android.material.R.attr.textInputOutlinedExposedDropdownMenuStyle).apply {
-            hint = "Send after scan"
+            hint = getString(R.string.send_after_scan)
             addView(MaterialAutoCompleteTextView(context).apply {
                 inputType = InputType.TYPE_NULL
                 setSimpleItems(terminatorLabels.toTypedArray())
@@ -237,15 +297,15 @@ class AdminActivity : AppCompatActivity() {
         }
         val form = Dialogs.form(this, name, url, allowList, colorRow, launchOnStartup, hideToolbar, immersive, keepScreenOn, scannerEnabled, terminator)
         val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle(if (existing == null) "New profile" else "Edit profile")
+            .setTitle(if (existing == null) R.string.new_profile else R.string.edit_profile)
             .setView(ScrollView(this).apply { addView(form) })
-            .setPositiveButton("Save", null)
-            .setNegativeButton("Cancel", null)
+            .setPositiveButton(R.string.button_save, null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val startUrl = url.value.trim()
             if (!startUrl.matches(Regex("^https?://[^/\\s]+.*", RegexOption.IGNORE_CASE))) {
-                url.error = "URL must start with http:// or https://"
+                url.error = getString(R.string.start_url_invalid)
                 return@setOnClickListener
             }
             val displayName = name.value.trim().ifEmpty { Brand.host(startUrl) }
@@ -283,13 +343,13 @@ class AdminActivity : AppCompatActivity() {
     private fun confirmDelete(profile: Profile) {
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_delete))
-            .setTitle("Delete profile?")
-            .setMessage("\"${profile.name}\" will be removed from this device.")
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle(R.string.delete_profile_title)
+            .setMessage(getString(R.string.delete_profile_message, profile.name))
+            .setPositiveButton(R.string.button_delete) { _, _ ->
                 store.update { it.remove(profile.id) }
                 render()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
@@ -307,13 +367,13 @@ class AdminActivity : AppCompatActivity() {
 
     private fun editTitle() {
         val branding = store.config.global.branding
-        val title = Dialogs.textField(this, "Title", branding.title.orEmpty(), helper = "Empty = EnterpriseBrowser")
-        val subtitle = Dialogs.textField(this, "Subtitle", branding.subtitle.orEmpty(), helper = "Empty = device model")
+        val title = Dialogs.textField(this, getString(R.string.title), branding.title.orEmpty(), helper = getString(R.string.title_summary))
+        val subtitle = Dialogs.textField(this, getString(R.string.subtitle), branding.subtitle.orEmpty(), helper = getString(R.string.subtitle_summary))
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_title))
-            .setTitle("Start screen title")
+            .setTitle(R.string.start_screen_title)
             .setView(Dialogs.form(this, title, subtitle))
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton(R.string.button_save) { _, _ ->
                 store.update {
                     it.copy(
                         global = it.global.copy(
@@ -326,14 +386,14 @@ class AdminActivity : AppCompatActivity() {
                 }
                 render()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
     /** Swatch palette plus hex input; [onPicked] receives `null` for "default". */
     @VisibleForTesting
     internal fun pickColor(title: String, current: String?, onPicked: (String?) -> Unit) {
-        val hex = Dialogs.textField(this, "Color (#RRGGBB)", current.orEmpty(), helper = "Empty = default color")
+        val hex = Dialogs.textField(this, getString(R.string.color_hex), current.orEmpty(), helper = getString(R.string.color_hex_summary))
         val marks = mutableMapOf<String, ImageView>()
         fun select(color: String?) {
             marks.forEach { (key, mark) -> mark.visibility = if (key.equals(color, ignoreCase = true)) View.VISIBLE else View.INVISIBLE }
@@ -370,7 +430,7 @@ class AdminActivity : AppCompatActivity() {
         }
         select(current)
         val reset = MaterialButton(this, null, androidx.appcompat.R.attr.borderlessButtonStyle).apply {
-            text = "Use default color"
+            text = getString(R.string.color_use_default)
             setOnClickListener {
                 hex.editText?.setText("")
                 select(null)
@@ -380,15 +440,15 @@ class AdminActivity : AppCompatActivity() {
             .setIcon(Dialogs.icon(this, R.drawable.ic_palette))
             .setTitle(title)
             .setView(Dialogs.form(this, grid, hex, reset))
-            .setPositiveButton("Apply") { _, _ ->
+            .setPositiveButton(R.string.button_apply) { _, _ ->
                 val value = hex.value.trim().uppercase()
                 when {
                     value.isEmpty() -> onPicked(null)
                     value.matches(Regex("#[0-9A-F]{6}")) -> onPicked(value)
-                    else -> toast("Invalid color: $value")
+                    else -> toast(getString(R.string.color_invalid, value))
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
@@ -399,9 +459,9 @@ class AdminActivity : AppCompatActivity() {
         }
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_image))
-            .setTitle("Logo")
-            .setPositiveButton("Change") { _, _ -> pickLogo.launch(arrayOf("image/png", "image/jpeg", "image/webp")) }
-            .setNeutralButton("Remove") { _, _ ->
+            .setTitle(R.string.logo)
+            .setPositiveButton(R.string.button_change) { _, _ -> pickLogo.launch(arrayOf("image/png", "image/jpeg", "image/webp")) }
+            .setNeutralButton(R.string.button_remove) { _, _ ->
                 store.update { config ->
                     config.copy(
                         resources = config.resources - LOGO_RESOURCE,
@@ -410,14 +470,14 @@ class AdminActivity : AppCompatActivity() {
                 }
                 render()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
     private fun importLogo(uri: Uri) {
         val bytes = runCatching { contentResolver.openInputStream(uri)!!.use { it.readBytes() } }.getOrNull()
         if (bytes == null || bytes.size > MAX_LOGO_BYTES || BitmapFactory.decodeByteArray(bytes, 0, bytes.size) == null) {
-            toast("Invalid image or larger than 1 MB")
+            toast(getString(R.string.logo_invalid))
             return
         }
         store.update { config ->
@@ -434,22 +494,22 @@ class AdminActivity : AppCompatActivity() {
     // region import, export, passwords
 
     private fun changePassword(title: String, save: (String?) -> Unit) {
-        val first = Dialogs.textField(this, "New password", password = true, helper = "Leave empty to remove the password")
-        val second = Dialogs.textField(this, "Repeat", password = true)
+        val first = Dialogs.textField(this, getString(R.string.new_password), password = true, helper = getString(R.string.new_password_summary))
+        val second = Dialogs.textField(this, getString(R.string.repeat_password), password = true)
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_key))
             .setTitle(title)
             .setView(Dialogs.form(this, first, second))
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton(R.string.button_save) { _, _ ->
                 val password = first.value
                 when {
-                    password != second.value -> toast("Passwords do not match")
-                    password.isEmpty() -> save(null).also { toast("$title removed") }
-                    else -> save(PasswordHasher.hash(password)).also { toast("$title saved") }
+                    password != second.value -> toast(getString(R.string.passwords_do_not_match))
+                    password.isEmpty() -> save(null).also { toast(getString(R.string.password_removed)) }
+                    else -> save(PasswordHasher.hash(password)).also { toast(getString(R.string.password_saved)) }
                 }
                 render()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
@@ -457,9 +517,9 @@ class AdminActivity : AppCompatActivity() {
         scanner.enabled = true
         barcodeImportDialog = MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_qr))
-            .setTitle("Import from barcode")
-            .setMessage("Scan the configuration barcode (QR code containing JSON) now.")
-            .setNegativeButton("Cancel", null)
+            .setTitle(R.string.import_barcode)
+            .setMessage(R.string.import_barcode_message)
+            .setNegativeButton(R.string.button_cancel, null)
             .setOnDismissListener {
                 scanner.enabled = false
                 barcodeImportDialog = null
@@ -480,35 +540,37 @@ class AdminActivity : AppCompatActivity() {
         } catch (e: ConfigException) {
             MaterialAlertDialogBuilder(this)
                 .setIcon(Dialogs.icon(this, R.drawable.ic_info))
-                .setTitle("Import failed")
-                .setMessage(e.message)
-                .setPositiveButton("OK", null)
+                .setTitle(R.string.import_failed)
+                // The detail names JSON fields, so it stays English; the code identifies the message.
+                .setMessage(withCode(e.message.orEmpty(), ErrorCodes.IMPORT_INVALID))
+                .setPositiveButton(R.string.button_ok, null)
                 .show()
             return
         }
         MaterialAlertDialogBuilder(this)
             .setIcon(Dialogs.icon(this, R.drawable.ic_upload))
-            .setTitle("Import configuration?")
-            .setMessage("${imported.profiles.size} profile(s). The current configuration will be replaced.")
-            .setPositiveButton("Import") { _, _ ->
+            .setTitle(R.string.import_confirm_title)
+            .setMessage(resources.getQuantityString(R.plurals.import_confirm_message, imported.profiles.size, imported.profiles.size))
+            .setPositiveButton(R.string.button_import) { _, _ ->
                 store.import(imported)
-                toast("Configuration imported")
+                AppLanguage.apply(store.config.global.language)
+                toast(getString(R.string.config_imported))
                 render()
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
     }
 
     private fun readText(uri: Uri): String? = runCatching {
         contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }
-    }.onFailure { toast("Could not read the file: ${it.message}") }.getOrNull()
+    }.onFailure { toast(withCode(getString(R.string.read_failed, it.message.orEmpty()), ErrorCodes.FILE_UNREADABLE)) }.getOrNull()
 
     // endregion
 
     // region view helpers
 
-    private fun section(title: String) = content.addView(TextView(this).apply {
-        text = title
+    private fun section(@StringRes title: Int) = content.addView(TextView(this).apply {
+        setText(title)
         setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge)
         setTextColor(accent())
         setPadding(dp(8), dp(24), dp(8), dp(8))
@@ -563,7 +625,7 @@ class AdminActivity : AppCompatActivity() {
             setImageResource(R.drawable.ic_delete)
             imageTintList = ColorStateList.valueOf(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant))
             setBackgroundResource(ripple(borderless = true))
-            contentDescription = "Delete"
+            contentDescription = getString(R.string.button_delete)
             setOnClickListener { confirmDelete(profile) }
         }
         return LinearLayout(this).apply {
@@ -581,7 +643,7 @@ class AdminActivity : AppCompatActivity() {
                 setTextColor(Brand.onColor(color))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             }, LinearLayout.LayoutParams(dp(40), dp(40)))
-            addView(texts(profile.name, Brand.address(profile.startUrl)), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+            addView(texts(profile.name, Brand.address(this@AdminActivity, profile.startUrl)), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                 marginStart = dp(16)
             })
             addView(delete, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -657,10 +719,17 @@ class AdminActivity : AppCompatActivity() {
 
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
+    private fun withCode(message: String, code: String) = getString(R.string.message_with_code, message, code)
+
+    private fun passwordState(hash: String?) = getString(if (hash == null) R.string.password_not_set else R.string.password_set)
+
     // endregion
 
     companion object {
         private const val LOGO_RESOURCE = "branding-logo"
+        private const val SOURCE = "https://github.com/ict-baden/enterprisebrowser"
+        private const val WEBSITE = "https://ict-baden.de"
+        private const val IMPRESSUM = "https://ict-baden.de/impressum"
         private const val SUBTITLE_TAG = "subtitle"
         private const val MAX_LOGO_BYTES = 1024 * 1024
         private val PALETTE = listOf(

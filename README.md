@@ -6,6 +6,7 @@
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 8.0+">
   <a href="https://github.com/ict-baden/enterprisebrowser/releases/tag/latest"><img src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest"></a>
   <img src="https://img.shields.io/badge/Licence-MIT-blue" alt="Licence: MIT">
+  <img src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280" alt="User interface in English, German, Spanish, French and Chinese">
   <a href="https://github.com/ict-baden/enterprisebrowser/actions/workflows/build.yml"><img src="https://github.com/ict-baden/enterprisebrowser/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/Zebra-DataWedge-000000" alt="Zebra DataWedge">
   <img src="https://img.shields.io/badge/Honeywell-Intent%20API-E4002B" alt="Honeywell">
@@ -184,12 +185,15 @@ docs/            documentation and images
 - [Configuration](docs/configuration.md) – every setting with examples
 - [Deployment](docs/deployment.md) – SOTI MobiControl, Intune, Workspace ONE, StageNow, adb, QR
 - [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
+- [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
+- [Error codes](docs/error-codes.md) – `EB-0001` … with causes
 - [Changelog](CHANGELOG.md)
 
 ## Limits, honestly
 
 - **Package changed** from `io.github.pieewiee.enterprisebrowser` to `de.ictbaden.enterprisebrowser`: Android treats it as a new app, see the [changelog](CHANGELOG.md).
-- User interface in **English** only.
+- User interface in English, German, Spanish, French and Chinese (simplified). The translations were made with machine help and still need a review by native speakers.
+- The built-in demo page and the documentation are in English.
 
 ---
 
