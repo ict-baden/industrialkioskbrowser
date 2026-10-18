@@ -13,7 +13,10 @@ import de.ictbaden.enterprisebrowser.config.PasswordHasher
 /**
  * Installs a configuration sent as broadcast (e.g. by StageNow or an EMM intent action):
  * `adb shell am broadcast -a <package>.action.INSTALL_CONFIG --es config '<json>'`.
- * Once an admin password is set, the broadcast must carry it in `admin_password`.
+ * Any app on the device can send this broadcast, and Android does not tell us which one did.
+ * So it is only accepted with the admin password (`admin_password`), or – while no password is
+ * set – on a device managed by an EMM ([Provisioning.isManaged]). Otherwise a store install
+ * could be redirected to a foreign start URL by any other app.
  */
 class ConfigReceiver : BroadcastReceiver() {
 
@@ -22,7 +25,11 @@ class ConfigReceiver : BroadcastReceiver() {
         val store = ConfigStore.get(context)
         val adminHash = store.config.global.adminPasswordHash
         if (adminHash != null && !PasswordHasher.verify(intent.getStringExtra(EXTRA_ADMIN_PASSWORD).orEmpty(), adminHash)) {
-            reply(RESULT_DENIED, "admin_password is missing or wrong")
+            deny(context, "admin_password is missing or wrong")
+            return
+        }
+        if (adminHash == null && !Provisioning.isManaged(context)) {
+            deny(context, "Refused: no admin password set and the device is not managed by an EMM. Set an admin password or use a configuration file or managed configuration.")
             return
         }
         val json = intent.getStringExtra(EXTRA_CONFIG)
@@ -32,10 +39,16 @@ class ConfigReceiver : BroadcastReceiver() {
         }
         try {
             val imported = store.import(ConfigJson.parse(json))
+            Provisioning.reportError(context, "INSTALL_CONFIG", null)
             reply(Activity.RESULT_OK, "${imported.profiles.size} profile(s) installed")
         } catch (e: ConfigException) {
             reply(RESULT_INVALID, e.message ?: "Invalid configuration")
         }
+    }
+
+    private fun deny(context: Context, message: String) {
+        Provisioning.reportError(context, "INSTALL_CONFIG", message)
+        reply(RESULT_DENIED, message)
     }
 
     private fun reply(code: Int, message: String) {

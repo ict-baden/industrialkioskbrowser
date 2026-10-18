@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Security: configuration broadcasts (`INSTALL_CONFIG`) are only accepted with the admin password, or – while
+  no password is set – on devices managed by an EMM.** Before, any app on an unmanaged device could replace the
+  configuration (e.g. the start URL). **Action needed** if you configure unmanaged devices by broadcast (StageNow
+  without EMM, adb): set an admin password first and send it as `admin_password`, or use the configuration file
+  (`/enterprise/usr/enterprisebrowser.json`). Refused broadcasts are shown under Settings → Configuration.
+
 - **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
   device language; `global.language` or **Settings → Design → Language** set it per device.
 - Error messages and error pages show a code such as `EB-0001` ([list](docs/error-codes.md)), so support can identify

@@ -48,7 +48,7 @@ On the device, the browser exchanges broadcasts with scanner services and the MD
 |---|---|
 | sends | DataWedge or Honeywell API calls (profile, soft trigger) |
 | receives | Scans from DataWedge, Honeywell or `<package>.action.BARCODE` |
-| receives | `<package>.action.INSTALL_CONFIG` – requires the admin password once one is set |
+| receives | `<package>.action.INSTALL_CONFIG` – only with the admin password, or on an EMM-managed device while no password is set |
 
 ## Deleting everything
 
