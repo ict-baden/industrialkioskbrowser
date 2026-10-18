@@ -2,13 +2,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("io.github.takahirom.roborazzi")
 }
 
 android {
     namespace = "de.ictbaden.enterprisebrowser"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.ictbaden.enterprisebrowser"
@@ -19,9 +18,6 @@ android {
         versionName = findProperty("versionName") as String? ?: "0.5.0"
         buildConfigField("String", "COMMIT", "\"${System.getenv("GITHUB_SHA")?.take(7) ?: "local"}\"")
     }
-
-    // Licence texts as assets (richtlinien/07): the same files as in the repo root.
-    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/notices"))
 
     // Release key from the CI secrets (richtlinien/05-signieren.md); without it the release APK stays unsigned.
     val keystore = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -73,24 +69,43 @@ kotlin {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.activity:activity-ktx:1.11.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.webkit:webkit:1.14.0")
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation("com.google.android.material:material:1.14.0")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.json:json:20250517")
-    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("org.json:json:20260814")
+    testImplementation("org.robolectric:robolectric:4.17")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.76.0")
     testImplementation("androidx.test:core-ktx:1.7.0")
     testImplementation("androidx.test.ext:junit-ktx:1.3.0")
 }
 
-val copyNotices by tasks.registering(Copy::class) {
-    from(rootProject.file("LICENSE"), rootProject.file("THIRD-PARTY-NOTICES.txt"))
-    into(layout.buildDirectory.dir("generated/notices"))
+// Licence texts for the Info section (richtlinien/07): the repo-root files, added to the APK assets.
+// AGP 9 only accepts generated asset folders through the variant API.
+abstract class CopyNotices : DefaultTask() {
+    @get:InputFiles
+    abstract val notices: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val dir = outputDir.get().asFile
+        dir.deleteRecursively()
+        notices.forEach { it.copyTo(File(dir, it.name)) }
+    }
 }
-tasks.named("preBuild") { dependsOn(copyNotices) }
+
+val copyNotices = tasks.register<CopyNotices>("copyNotices") {
+    notices.from(rootProject.file("LICENSE"), rootProject.file("THIRD-PARTY-NOTICES.txt"))
+}
+
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(copyNotices, CopyNotices::outputDir) }
+}
