@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.text.Layout
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -110,6 +111,8 @@ class ActionSheet(private val context: Context) {
             text = action.label
             gravity = Gravity.CENTER
             maxLines = 2
+            // Long single words ("Configuración", "Einstellungen") are hyphenated instead of cut mid-word.
+            hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NORMAL
             setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium)
             setPadding(0, dp(6), 0, 0)
         })
