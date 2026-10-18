@@ -146,7 +146,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         enableEdgeToEdge()
         config = ConfigStore.get(this).config
         profile = config.profile(intent.getStringExtra(EXTRA_PROFILE_ID)) ?: run {
-            Toast.makeText(this, "Profile not found", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, withCode(getString(R.string.profile_not_found), ErrorCodes.PROFILE_NOT_FOUND), Toast.LENGTH_LONG).show()
             finish()
             return
         }
@@ -284,7 +284,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private fun showAddress(url: String) {
         val secure = url.startsWith("https://", ignoreCase = true)
-        subtitleView.text = Brand.address(url)
+        subtitleView.text = Brand.address(this, url)
         val lock = if (secure) ContextCompat.getDrawable(this, R.drawable.ic_lock)?.mutate() else null
         lock?.let {
             val size = (12 * resources.displayMetrics.density).toInt()
@@ -420,7 +420,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 target.startsWith("javascript:", ignoreCase = true) ->
                     webView.evaluateJavascript(target.substringAfter(':'), null)
                 UrlPolicy.isAllowed(target, profile) -> webView.loadUrl(target)
-                else -> toast("Target not allowed: $target")
+                else -> toast(withCode(getString(R.string.scan_target_not_allowed, target), ErrorCodes.SCAN_TARGET_NOT_ALLOWED))
             }
             return
         }
@@ -453,22 +453,22 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     internal fun showMenu() {
         val config = ConfigStore.get(this).config
         val actions = buildList {
-            add(ActionSheet.Action("Home", R.drawable.ic_home) { loadStart() })
-            add(ActionSheet.Action("Reload", R.drawable.ic_refresh) { webView.reload() })
-            add(ActionSheet.Action("Forward", R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
-            add(ActionSheet.Action("Scanner", R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
+            add(ActionSheet.Action(getString(R.string.action_home), R.drawable.ic_home) { loadStart() })
+            add(ActionSheet.Action(getString(R.string.action_reload), R.drawable.ic_refresh) { webView.reload() })
+            add(ActionSheet.Action(getString(R.string.action_forward), R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
+            add(ActionSheet.Action(getString(R.string.action_scanner), R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
             if (keyboard.softKeyboardAvailable) {
-                add(ActionSheet.Action("Keyboard", R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
+                add(ActionSheet.Action(getString(R.string.action_keyboard), R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
             }
             if (config.profiles.size > 1 && !config.global.hideExit) {
-                add(ActionSheet.Action("Profiles", R.drawable.ic_swap) { finish() })
+                add(ActionSheet.Action(getString(R.string.action_profiles), R.drawable.ic_swap) { finish() })
             }
-            add(ActionSheet.Action("Settings", R.drawable.ic_settings) {
+            add(ActionSheet.Action(getString(R.string.action_settings), R.drawable.ic_settings) {
                 Dialogs.requireAdmin(this@BrowserActivity) { startActivity(Intent(this@BrowserActivity, AdminActivity::class.java)) }
             })
             if (!config.global.hideExit) {
-                add(ActionSheet.Action("Exit", R.drawable.ic_power) {
-                    Dialogs.requirePassword(this@BrowserActivity, config.global.exitPasswordHash, "Exit password", ::exitApp)
+                add(ActionSheet.Action(getString(R.string.action_exit), R.drawable.ic_power) {
+                    Dialogs.requirePassword(this@BrowserActivity, config.global.exitPasswordHash, getString(R.string.exit_password), ::exitApp)
                 })
             }
         }
@@ -485,20 +485,22 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     // endregion
 
-    private fun showStatus(title: String, message: String, url: String?) {
+    private fun showStatus(title: String, message: String, url: String?, code: String) {
         failedUrl = url
         sounds.play(profile.sounds.error)
-        val html = StatusPage.render(this, config.content(profile.errorPages.template), title, message, url, "#%06X".format(0xFFFFFF and brandColor))
+        val html = StatusPage.render(
+            this, config.content(profile.errorPages.template), title, message, url, "#%06X".format(0xFFFFFF and brandColor), code,
+        )
         webView.loadDataWithBaseURL(StatusPage.BASE_URL, html, "text/html", "utf-8", null)
     }
 
     private fun download(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
         if (!profile.allowDownloads) {
-            toast("Downloads are disabled")
+            toast(withCode(getString(R.string.downloads_disabled), ErrorCodes.DOWNLOADS_DISABLED))
             return
         }
         if (!URLUtil.isNetworkUrl(url)) {
-            toast("This download type is not supported")
+            toast(withCode(getString(R.string.download_unsupported), ErrorCodes.DOWNLOAD_UNSUPPORTED))
             return
         }
         val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
@@ -510,7 +512,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
         CookieManager.getInstance().getCookie(url)?.let { request.addRequestHeader("Cookie", it) }
         getSystemService(DownloadManager::class.java).enqueue(request)
-        toast("Download started: $fileName")
+        toast(getString(R.string.download_started, fileName))
     }
 
     private fun chooseClientCertificate(request: ClientCertRequest) {
@@ -550,6 +552,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
+    private fun withCode(message: String, code: String) = getString(R.string.message_with_code, message, code)
+
     private inner class Client : WebViewClient() {
 
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
@@ -575,7 +579,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         }
 
         private fun blocked(url: Uri) {
-            toast("Page not allowed: ${url.host ?: url}")
+            toast(withCode(getString(R.string.page_not_allowed, url.host ?: url.toString()), ErrorCodes.PAGE_NOT_ALLOWED))
             sounds.play(profile.sounds.error)
         }
 
@@ -612,37 +616,47 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             if (!request.isForMainFrame) return
             // A navigation stopped in shouldInterceptRequest (not allowed) stays on the current page.
             if (!UrlPolicy.isAllowed(request.url.toString(), profile)) return
-            val (title, message) = when (error.errorCode) {
-                ERROR_HOST_LOOKUP -> "Server not found" to "The address could not be resolved. Check the Wi-Fi connection."
-                ERROR_CONNECT -> "No connection" to "The server cannot be reached."
-                ERROR_TIMEOUT -> "Timeout" to "The server did not respond in time."
-                ERROR_FAILED_SSL_HANDSHAKE -> "Insecure connection" to "The secure connection could not be established."
-                else -> "Page not available" to "The page could not be loaded."
+            val (title, message, code) = when (error.errorCode) {
+                ERROR_HOST_LOOKUP -> Triple(R.string.error_host_title, R.string.error_host_message, ErrorCodes.HOST_NOT_FOUND)
+                ERROR_CONNECT -> Triple(R.string.error_connect_title, R.string.error_connect_message, ErrorCodes.NO_CONNECTION)
+                ERROR_TIMEOUT -> Triple(R.string.error_timeout_title, R.string.error_timeout_message, ErrorCodes.TIMEOUT)
+                ERROR_FAILED_SSL_HANDSHAKE -> Triple(R.string.error_ssl_title, R.string.error_ssl_message, ErrorCodes.SSL_HANDSHAKE)
+                else -> Triple(R.string.error_load_title, R.string.error_load_message, ErrorCodes.PAGE_NOT_AVAILABLE)
             }
-            val detail = error.description?.toString()?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
-            showStatus(title, message + detail, request.url.toString())
+            // The WebView's technical reason (net::ERR_…) stays untranslated, in brackets.
+            val detail = error.description?.toString()?.takeIf { it.isNotBlank() }
+            val text = detail?.let { getString(R.string.message_with_code, getString(message), it) } ?: getString(message)
+            showStatus(getString(title), text, request.url.toString(), code)
         }
 
         override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
             if (!profile.errorPages.showHttpErrors || !request.isForMainFrame || errorResponse.statusCode < 400) return
+            val reason = errorResponse.reasonPhrase?.takeIf { it.isNotBlank() }
+            val message = getString(R.string.error_http_message)
             showStatus(
-                "Error ${errorResponse.statusCode}",
-                errorResponse.reasonPhrase?.takeIf { it.isNotBlank() } ?: "The server rejected the request.",
+                getString(R.string.error_http_title, errorResponse.statusCode),
+                reason?.let { getString(R.string.message_with_code, message, it) } ?: message,
                 request.url.toString(),
+                ErrorCodes.HTTP_ERROR,
             )
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
             handler.cancel()
             val reason = when (error.primaryError) {
-                SslError.SSL_UNTRUSTED -> "The certificate is not issued by a trusted authority."
-                SslError.SSL_EXPIRED -> "The certificate has expired."
-                SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
-                SslError.SSL_IDMISMATCH -> "The certificate does not match the server name."
-                SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
-                else -> "The certificate is invalid."
+                SslError.SSL_UNTRUSTED -> R.string.error_cert_untrusted
+                SslError.SSL_EXPIRED -> R.string.error_cert_expired
+                SslError.SSL_NOTYETVALID -> R.string.error_cert_not_yet_valid
+                SslError.SSL_IDMISMATCH -> R.string.error_cert_mismatch
+                SslError.SSL_DATE_INVALID -> R.string.error_cert_date
+                else -> R.string.error_cert_invalid
             }
-            showStatus("Insecure connection", "$reason Trusted certificates are installed as a CA through the MDM.", error.url)
+            showStatus(
+                getString(R.string.error_ssl_title),
+                getString(R.string.error_cert_message, getString(reason)),
+                error.url,
+                ErrorCodes.CERTIFICATE,
+            )
         }
 
         override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String?) {
