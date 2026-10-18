@@ -24,7 +24,7 @@ object Dialogs {
     fun requireAdmin(activity: Activity, onSuccess: () -> Unit) = requirePassword(
         activity,
         ConfigStore.get(activity).config.global.adminPasswordHash,
-        "Admin password",
+        activity.getString(R.string.admin_password),
         onSuccess,
     )
 
@@ -34,38 +34,38 @@ object Dialogs {
             onSuccess()
             return
         }
-        val field = textField(activity, "Password", password = true)
+        val field = textField(activity, activity.getString(R.string.password), password = true)
         MaterialAlertDialogBuilder(activity)
             .setIcon(icon(activity, R.drawable.ic_lock))
             .setTitle(title)
             .setView(form(activity, field))
-            .setPositiveButton("Unlock") { _, _ ->
+            .setPositiveButton(R.string.button_unlock) { _, _ ->
                 if (PasswordHasher.verify(field.value, hash)) {
                     onSuccess()
                 } else {
-                    Toast.makeText(activity, "Wrong password", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, R.string.wrong_password, Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
         field.editText?.requestFocus()
     }
 
     /** Asks for HTTP credentials; [onResult] receives `null` when cancelled. */
     fun credentials(activity: Activity, host: String, onResult: (Pair<String, String>?) -> Unit) {
-        val user = textField(activity, "User name")
-        val password = textField(activity, "Password", password = true)
+        val user = textField(activity, activity.getString(R.string.user_name))
+        val password = textField(activity, activity.getString(R.string.password), password = true)
         var answered = false
         MaterialAlertDialogBuilder(activity)
             .setIcon(icon(activity, R.drawable.ic_key))
-            .setTitle("Sign in")
+            .setTitle(R.string.sign_in)
             .setMessage(host)
             .setView(form(activity, user, password))
-            .setPositiveButton("Sign in") { _, _ ->
+            .setPositiveButton(R.string.button_sign_in) { _, _ ->
                 answered = true
                 onResult(user.value to password.value)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .setOnDismissListener { if (!answered) onResult(null) }
             .show()
     }

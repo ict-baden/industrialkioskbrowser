@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.settings).setOnClickListener(openSettings)
         findViewById<View>(R.id.emptySettings).setOnClickListener(openSettings)
         findViewById<TextView>(R.id.footer).text =
-            "EnterpriseBrowser ${BuildConfig.VERSION_NAME} · ${ScannerManager.create(this).name}"
+            getString(R.string.footer, getString(R.string.app_name), BuildConfig.VERSION_NAME, ScannerManager.displayName(this))
         onBackPressedDispatcher.addCallback(this) {
             if (!ConfigStore.get(this@MainActivity).config.global.hideExit) finish()
         }
@@ -107,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refresh() {
         val config = ConfigStore.get(this).config
+        AppLanguage.apply(config.global.language) // a new configuration may set another language
         applyBranding(config)
         adapter.submit(config, config.profiles)
         empty.isVisible = config.profiles.isEmpty()
@@ -159,9 +160,9 @@ class MainActivity : AppCompatActivity() {
             holder.avatar.backgroundTintList = ColorStateList.valueOf(color)
             holder.avatar.setTextColor(Brand.onColor(color))
             holder.name.text = profile.name
-            holder.url.text = Brand.address(profile.startUrl)
+            holder.url.text = Brand.address(holder.itemView.context, profile.startUrl)
             holder.badges.removeAllViews()
-            badges(profile).forEach { holder.badges.addView(badge(context, it, color)) }
+            badges(profile).forEach { holder.badges.addView(badge(context, context.getString(it), color)) }
             holder.badges.isVisible = holder.badges.isNotEmpty()
             holder.itemView.setOnClickListener { onClick(profile) }
         }
@@ -169,10 +170,10 @@ class MainActivity : AppCompatActivity() {
         override fun getItemCount() = items.size
 
         private fun badges(profile: Profile) = buildList {
-            if (profile.launchOnStartup) add("Autostart")
-            if (profile.kiosk.hideToolbar || profile.kiosk.immersive) add("Kiosk")
-            if (profile.allowList.isNotEmpty()) add("Allowlist")
-            if (!profile.scanner.enabled) add("Scanner off")
+            if (profile.launchOnStartup) add(R.string.badge_autostart)
+            if (profile.kiosk.hideToolbar || profile.kiosk.immersive) add(R.string.badge_kiosk)
+            if (profile.allowList.isNotEmpty()) add(R.string.badge_allow_list)
+            if (!profile.scanner.enabled) add(R.string.badge_scanner_off)
         }
 
         private fun badge(context: Context, label: String, color: Int) = TextView(context).apply {
