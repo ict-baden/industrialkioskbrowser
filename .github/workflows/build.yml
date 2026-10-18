@@ -65,9 +65,12 @@ jobs:
 
       - name: Testergebnisse
         if: always()
+        # Nur zur Diagnose: ein volles Artefakt-Kontingent darf den Build nicht abbrechen
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: Testergebnisse
+          retention-days: 7
           path: |
             app/build/reports/tests/
             app/build/reports/lint-results-debug.html
@@ -106,8 +109,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         if: env.SIGN == 'true'
+        # Die APK liegt ohnehin im Release; ein volles Kontingent darf das Release nicht verhindern
+        continue-on-error: true
         with:
           name: ${{ env.APP }}-${{ steps.version.outputs.version }}
+          retention-days: 7
           path: dist/*
           if-no-files-found: error
 
