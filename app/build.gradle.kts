@@ -51,6 +51,14 @@ android {
         buildConfig = true
     }
 
+    // The language can be switched in the app and by the MDM (richtlinien/13): an app bundle from
+    // Play must therefore contain every language, not only the one of the device.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     testOptions {
         unitTests {
             isIncludeAndroidResources = true

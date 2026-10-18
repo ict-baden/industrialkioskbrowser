@@ -36,6 +36,9 @@ for key, value in {
     "message": "The address could not be resolved. Check the Wi-Fi connection. (net::ERR_NAME_NOT_RESOLVED)",
     "url": "https://wms.example.com/goods-receipt",
     "color": "#0D47A1",
+    "code": "Error code: EB-0001",
+    "retry": "Try again",
+    "lang": "en",
 }.items():
     status = status.replace("{{" + key + "}}", value)
 open(os.path.join(out, "status.html"), "w", encoding="utf-8").write(status)

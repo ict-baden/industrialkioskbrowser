@@ -1,0 +1,1 @@
+Kiosk browser for rugged Android devices: barcode scanning, kiosk mode, MDM.

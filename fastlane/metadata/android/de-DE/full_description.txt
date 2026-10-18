@@ -1,0 +1,34 @@
+EnterpriseBrowser bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät bleibt auf die erlaubten Anwendungen beschränkt, und die gesamte Konfiguration kommt aus Ihrem MDM.
+
+BARCODE-SCAN
+• Funktioniert mit Zebra DataWedge, Honeywell-Scannern und jeder Scanner-App, die einen Intent sendet
+• Der Scan wird wie mit einer Tastatur in das aktive Feld geschrieben, auf Wunsch mit Tab oder Enter
+• Webseiten können Scans auch als JavaScript-Ereignis empfangen und das Scannen pro Seite steuern
+
+PROFILE
+• Mehrere Web-Apps auf einem Gerät, jede mit eigener Startadresse, erlaubten Hosts, Farben und Einstellungen
+• Ein Tipp auf der Startseite öffnet die Web-App, oder sie startet automatisch
+
+KIOSK-MODUS
+• Symbolleiste und Systemleisten ausblenden, Beenden ausblenden oder mit Passwort schützen
+• Nur erlaubte Hosts lassen sich öffnen, alles andere wird vor dem Laden blockiert
+• Lock-Task-Modus auf verwalteten Geräten
+
+ZENTRALE KONFIGURATION
+• Managed Configuration aus Ihrem MDM (zum Beispiel SOTI MobiControl, Microsoft Intune, Workspace ONE)
+• Konfigurationsdatei, Broadcast-Intent (StageNow) oder QR-Code
+• Einstellungen auf dem Gerät sind durch ein Admin-Passwort geschützt
+
+FÜR WEB-APPS
+• Eigenes CSS, JavaScript oder HTML in fremde Web-Apps einfügen, passend zur Adresse
+• Hardwaretasten umbelegen, Hotkeys und Makros wie {F1} oder {TAB}
+• Verständliche Fehlerseiten mit Fehlercodes in Ihrer Markenfarbe
+
+IHR DESIGN
+• Eigener Titel, eigenes Logo und eigene Markenfarbe, per Konfiguration oder direkt in der App
+
+DATENSCHUTZ
+• Kein Konto, keine Werbung, kein Tracking. EnterpriseBrowser sendet keine Daten an ICT-Baden.
+• Die App verbindet sich nur mit den Webadressen, die Sie konfigurieren.
+
+Oberfläche auf Englisch, Deutsch, Spanisch, Französisch und Chinesisch. Kostenlos und Open Source (MIT-Lizenz), von ICT-Baden. Supportverträge sind erhältlich.
