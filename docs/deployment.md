@@ -72,8 +72,9 @@ configurations shows the schema automatically.
 - **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/enterprisebrowser.json`.
 - **Configuration via intent:** Intent CSP, *send broadcast* with
   action `de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG`,
-  package `de.ictbaden.enterprisebrowser` and string extra `config` (JSON).
-  If an admin password is already set, also send the string extra `admin_password`.
+  package `de.ictbaden.enterprisebrowser`, string extra `config` (JSON) and string extra
+  `admin_password` – see [Broadcast intent](#broadcast-intent-stagenow-adb) for when it is needed.
+  Without an EMM the configuration file above is the simpler way.
 - **Scanner:** on first start the app creates a DataWedge profile "EnterpriseBrowser".
   Decoders (symbologies, lengths, illumination …) can then be tuned with the DataWedge
   CSP or in the DataWedge app – the app does not overwrite them.
@@ -96,15 +97,26 @@ adb push examples/sap-its-mobile.json \
 
 ## Broadcast intent (StageNow, adb)
 
+Any app on the device can send this broadcast, and Android does not tell the browser which one
+did. So it is only accepted
+
+- with the admin password in the string extra `admin_password`, once a password is set, or
+- while no admin password is set: only on a device managed by an EMM (the app has a managed
+  configuration, or the device or work profile has an owner, i.e. Android Enterprise).
+
+On an unmanaged device without a password the broadcast is refused (shown under
+**Settings → Configuration**). Set an admin password first – in the app, in the configuration file
+or with the managed configuration key `admin_password` – or use the configuration file.
+
 ```bash
 adb shell am broadcast \
   -a de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG \
   -n de.ictbaden.enterprisebrowser/.provisioning.ConfigReceiver \
-  --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'
+  --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'   --es admin_password 'change-me'
 ```
 
-Result code (for ordered broadcasts): `-1` = installed, `2` = admin password missing or
-wrong, `3` = invalid configuration.
+Result code (for ordered broadcasts): `-1` = installed, `2` = refused (admin password
+missing or wrong, or unmanaged device without a password), `3` = invalid configuration.
 
 ## QR code
 
