@@ -69,6 +69,7 @@ passwords that are not set keep their current value.
 | `adminPassword` / `adminPasswordHash` | Protects the settings. Plain text is hashed on import (PBKDF2); exports only contain the hash. |
 | `exitPassword` / `exitPasswordHash` | Asked for when exiting. |
 | `hideExit` | Hides "Exit" and "Profiles" (kiosk). |
+| `language` | `auto` (default: the device language), `en`, `de`, `es`, `fr` or `zh-Hans`. Can also be changed in the app under **Settings → Design → Language**. |
 | `branding.title` | Title of the start screen (default: "EnterpriseBrowser") |
 | `branding.subtitle` | Subtitle (default: device manufacturer and model) |
 | `branding.color` | Brand color `#RRGGBB` for the start screen, toolbars and error pages |
@@ -172,8 +173,9 @@ third-party web app, or a scan hook.
 "sounds": { "scanOk": "none", "error": "tone:1400:200:1000:200" }
 ```
 
-- `template` – your own HTML with the placeholders `{{title}}`, `{{message}}`, `{{url}}`
-  and `{{color}}` (brand color). The link `ebrowser://retry` reloads. Without a template
+- `template` – your own HTML with the placeholders `{{title}}`, `{{message}}`, `{{url}}`,
+  `{{color}}` (brand color), `{{code}}` (translated "Error code: EB-…", see [error codes](error-codes.md)),
+  `{{retry}}` (label of the retry button) and `{{lang}}` (language tag for `<html lang>`). The link `ebrowser://retry` reloads. Without a template
   the built-in error page is used (see [image](images/screen-error.png)).
 - `showHttpErrors` – also replaces the server's error pages (HTTP ≥ 400).
 - Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` or `res:<name>`

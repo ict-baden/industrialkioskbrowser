@@ -45,6 +45,7 @@ object ConfigJson {
             putOpt("adminPasswordHash", config.global.adminPasswordHash)
             putOpt("exitPasswordHash", config.global.exitPasswordHash)
             put("hideExit", config.global.hideExit)
+            put("language", config.global.language)
             val branding = config.global.branding
             put("branding", JSONObject().apply {
                 putOpt("title", branding.title)
@@ -80,6 +81,7 @@ object ConfigJson {
             adminPasswordHash = passwordHash(json, "adminPassword"),
             exitPasswordHash = passwordHash(json, "exitPassword"),
             hideExit = json.optBoolean("hideExit", false),
+            language = language(json.optNonBlank("language")),
             branding = Branding(
                 title = branding.optNonBlank("title"),
                 subtitle = branding.optNonBlank("subtitle"),
@@ -87,6 +89,13 @@ object ConfigJson {
                 logo = logo,
             ),
         )
+    }
+
+    /** `auto` or a supported language tag, matched case-insensitively (`zh-hans` → `zh-Hans`). */
+    private fun language(value: String?): String {
+        value ?: return Languages.AUTO
+        return (listOf(Languages.AUTO) + Languages.SUPPORTED).firstOrNull { it.equals(value, ignoreCase = true) }
+            ?: throw ConfigException("global.language: unknown language \"$value\" (${Languages.AUTO}, ${Languages.SUPPORTED.joinToString()})")
     }
 
     /** Validates `#RRGGBB` (or `#AARRGGBB`) and normalizes it to upper case. */

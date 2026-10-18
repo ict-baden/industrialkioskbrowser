@@ -157,6 +157,15 @@ class ConfigJsonTest {
     }
 
     @Test
+    fun `language follows the device unless configured`() {
+        assertEquals(Languages.AUTO, ConfigJson.parse("{}").global.language)
+        val chinese = ConfigJson.parse("""{"global":{"language":"zh-hans"}}""")
+        assertEquals("zh-Hans", chinese.global.language)
+        assertEquals("zh-Hans", ConfigJson.parse(ConfigJson.write(chinese)).global.language)
+        assertRejected("""{"global":{"language":"tlh"}}""")
+    }
+
+    @Test
     fun `password hashes verify only the right password`() {
         val hash = PasswordHasher.hash("correct")
         assertTrue(PasswordHasher.verify("correct", hash))
