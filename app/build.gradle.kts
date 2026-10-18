@@ -2,13 +2,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("io.github.takahirom.roborazzi")
 }
 
 android {
     namespace = "de.ictbaden.enterprisebrowser"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.ictbaden.enterprisebrowser"
@@ -19,9 +18,6 @@ android {
         versionName = findProperty("versionName") as String? ?: "0.5.0"
         buildConfigField("String", "COMMIT", "\"${System.getenv("GITHUB_SHA")?.take(7) ?: "local"}\"")
     }
-
-    // Licence texts as assets (richtlinien/07): the same files as in the repo root.
-    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/notices"))
 
     // Release key from the CI secrets (richtlinien/05-signieren.md); without it the release APK stays unsigned.
     val keystore = System.getenv("ANDROID_KEYSTORE_FILE")
@@ -89,8 +85,27 @@ dependencies {
     testImplementation("androidx.test.ext:junit-ktx:1.3.0")
 }
 
-val copyNotices by tasks.registering(Copy::class) {
-    from(rootProject.file("LICENSE"), rootProject.file("THIRD-PARTY-NOTICES.txt"))
-    into(layout.buildDirectory.dir("generated/notices"))
+// Licence texts for the Info section (richtlinien/07): the repo-root files, added to the APK assets.
+// AGP 9 only accepts generated asset folders through the variant API.
+abstract class CopyNotices : DefaultTask() {
+    @get:InputFiles
+    abstract val notices: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val dir = outputDir.get().asFile
+        dir.deleteRecursively()
+        notices.forEach { it.copyTo(File(dir, it.name)) }
+    }
 }
-tasks.named("preBuild") { dependsOn(copyNotices) }
+
+val copyNotices = tasks.register<CopyNotices>("copyNotices") {
+    notices.from(rootProject.file("LICENSE"), rootProject.file("THIRD-PARTY-NOTICES.txt"))
+}
+
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(copyNotices, CopyNotices::outputDir) }
+}
