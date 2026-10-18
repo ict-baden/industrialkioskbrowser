@@ -11,7 +11,7 @@ Projekt von ICT-Baden. Es gelten die Richtlinien in [`ict-baden/richtlinien`](ht
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-JDK 17–21, Android SDK mit Compile-SDK 36.
+JDK 17–21, Android SDK mit Compile-SDK 37.
 
 ## Aufbau
 

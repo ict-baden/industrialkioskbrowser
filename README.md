@@ -159,7 +159,7 @@ flowchart LR
 
 ## 🛠️ Building
 
-Requirements: JDK 17–21, Android SDK (platform 36).
+Requirements: JDK 17–21, Android SDK (platform 37).
 
 ```bash
 ./gradlew testDebugUnitTest assembleDebug     # tests + APK
