@@ -33,11 +33,10 @@ Done once, by a person with access to the company accounts:
    organisation account does not need the 14-day closed test with 12 testers that new personal
    accounts need.
 2. **Package name** is final once the app exists in Play: `de.ictbaden.enterprisebrowser`.
-   It assumes that the domain `ict-baden.de` belongs to us (richtlinien/12, open point in
-   `richtlinien/OFFEN.md`).
-3. **Privacy policy URL** must be public. [data-and-privacy.md](data-and-privacy.md) is the
-   content; it needs a public address – either the repo is public, or the page goes on the
-   company website.
+   The domain `ict-baden.de` belongs to us (Till, 2026-10-19).
+3. **Privacy policy URL:** `https://ict-baden.de/datenschutz/enterprisebrowser/` (German and English,
+   source in `ict-baden/website`, `src/pages/datenschutz/[app].astro`). It must be online before
+   the app is submitted.
 4. **Contact details** for the store listing: e-mail (e.g. `support@ict-baden.de`), website.
 5. **Translations** of the app and of the store texts read by native speakers (richtlinien/13).
 
@@ -46,15 +45,20 @@ Done once, by a person with access to the company accounts:
 Play signs the apps it delivers with its *app signing key*; we upload with an *upload key*.
 The CI signs the App Bundle with our release key (secret `ANDROID_KEYSTORE`).
 
-Decide this **before the first upload**, it cannot be changed later:
+Decided (Till, 2026-10-19): **our release key is also the app signing key**, so Play and
+MDM/GitHub APKs carry the same signature and devices can switch between both sources.
 
-| Choice | Effect |
-|---|---|
-| **Our release key becomes the app signing key** (Console: *Use a different key* → export with Google's PEPK tool) | Play and MDM/GitHub APKs carry the same signature: devices can switch between both sources without reinstalling. Recommended. |
-| Google generates the app signing key, our key is the upload key (richtlinien/05) | Play-installed apps and our APKs have different signatures: a device with the MDM version cannot update from Play and vice versa. |
+At the first upload, in *Setup → App signing* (or when creating the first release):
 
-If Play asks for a separate upload key with the first choice, the CI needs a second keystore
-secret for the App Bundle – a small change in `.github/workflows/build.yml`.
+1. Choose *Use a different key* → *Export and upload a key from Java keystore*.
+2. Download Google's `pepk.jar` and the encryption key shown there, then run the command the
+   Console shows with our keystore (the file behind the `ANDROID_KEYSTORE` secret), alias and
+   password. It writes an encrypted ZIP; upload it.
+3. Upload key: if the Console offers it, keep our key as upload key too, then the CI-signed
+   `.aab` can be uploaded as it is. If it insists on a separate upload key, the CI needs a second
+   keystore secret for the App Bundle – a small change in `.github/workflows/build.yml`.
+
+This can only be done by someone with the keystore file and password; it cannot be changed later.
 
 ## Play Console answers
 
