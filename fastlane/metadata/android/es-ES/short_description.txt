@@ -1,0 +1,1 @@
+Navegador quiosco para Android robusto: escaneo de códigos, modo quiosco, MDM.
