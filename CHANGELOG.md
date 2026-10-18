@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
+  device language; `global.language` or **Settings → Design → Language** set it per device.
+- Error messages and error pages show a code such as `EB-0001` ([list](docs/error-codes.md)), so support can identify
+  them in any language. Custom error page templates get the placeholders `{{code}}`, `{{retry}}` and `{{lang}}`.
+- **Settings → Info** now shows data and privacy, licence, third-party licences, source code, support, website and
+  legal notice; new page [Data and privacy](docs/data-and-privacy.md).
+- Long single words in the menu are hyphenated instead of being cut in the middle.
+
 ## 0.5.0
 
 - **New package name `de.ictbaden.enterprisebrowser`** (previously `io.github.pieewiee.enterprisebrowser`), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
