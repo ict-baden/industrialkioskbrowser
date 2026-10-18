@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_back">Atrás</string>
+    <string name="action_scan">Escanear</string>
+    <string name="action_keyboard">Teclado</string>
+    <string name="action_menu">Menú</string>
+    <string name="action_settings">Configuración</string>
+    <string name="action_home">Inicio</string>
+    <string name="action_reload">Recargar</string>
+    <string name="action_forward">Adelante</string>
+    <string name="action_scanner">Escáner</string>
+    <string name="action_profiles">Perfiles</string>
+    <string name="action_exit">Salir</string>
+
+    <string name="button_cancel">Cancelar</string>
+    <string name="button_save">Guardar</string>
+    <string name="button_ok">Aceptar</string>
+    <string name="button_delete">Eliminar</string>
+    <string name="button_apply">Aplicar</string>
+    <string name="button_change">Cambiar</string>
+    <string name="button_remove">Quitar</string>
+    <string name="button_import">Importar</string>
+    <string name="button_unlock">Desbloquear</string>
+    <string name="button_sign_in">Iniciar sesión</string>
+
+    <string name="no_profiles_title">Todavía no hay perfiles</string>
+    <string name="no_profiles">Añada un perfil en la configuración o distribuya una configuración a través de su MDM.</string>
+    <string name="badge_autostart">Inicio automático</string>
+    <string name="badge_kiosk">Quiosco</string>
+    <string name="badge_allow_list">Lista permitida</string>
+    <string name="badge_scanner_off">Escáner desactivado</string>
+    <string name="builtin_demo">Demo integrada</string>
+    <string name="demo_profile_name">Demo y prueba del escáner</string>
+    <string name="no_scanner">Sin escáner de hardware</string>
+
+    <string name="password">Contraseña</string>
+    <string name="admin_password">Contraseña de administrador</string>
+    <string name="exit_password">Contraseña para salir</string>
+    <string name="wrong_password">Contraseña incorrecta</string>
+    <string name="sign_in">Iniciar sesión</string>
+    <string name="user_name">Nombre de usuario</string>
+
+    <string name="message_with_code">%1$s (%2$s)</string>
+    <string name="profile_not_found">No se encontró el perfil</string>
+    <string name="page_not_allowed">Página no permitida: %1$s</string>
+    <string name="scan_target_not_allowed">Destino del escaneo no permitido: %1$s</string>
+    <string name="downloads_disabled">Las descargas están desactivadas</string>
+    <string name="download_unsupported">Este tipo de descarga no es compatible</string>
+    <string name="download_started">Descarga iniciada: %1$s</string>
+
+    <string name="error_host_title">Servidor no encontrado</string>
+    <string name="error_host_message">No se pudo resolver la dirección. Compruebe la conexión wifi.</string>
+    <string name="error_connect_title">Sin conexión</string>
+    <string name="error_connect_message">No se puede acceder al servidor.</string>
+    <string name="error_timeout_title">Tiempo de espera agotado</string>
+    <string name="error_timeout_message">El servidor no respondió a tiempo.</string>
+    <string name="error_ssl_title">Conexión no segura</string>
+    <string name="error_ssl_message">No se pudo establecer la conexión segura.</string>
+    <string name="error_load_title">Página no disponible</string>
+    <string name="error_load_message">No se pudo cargar la página.</string>
+    <string name="error_http_title">Error %1$d</string>
+    <string name="error_http_message">El servidor rechazó la solicitud.</string>
+    <string name="error_cert_untrusted">El certificado no ha sido emitido por una autoridad de confianza.</string>
+    <string name="error_cert_expired">El certificado ha caducado.</string>
+    <string name="error_cert_not_yet_valid">El certificado todavía no es válido.</string>
+    <string name="error_cert_mismatch">El certificado no coincide con el nombre del servidor.</string>
+    <string name="error_cert_date">La fecha del certificado no es válida.</string>
+    <string name="error_cert_invalid">El certificado no es válido.</string>
+    <string name="error_cert_message">%1$s Los certificados de confianza se instalan como CA a través del MDM.</string>
+    <string name="error_retry">Reintentar</string>
+    <string name="error_code">Código de error: %1$s</string>
+
+    <string name="section_profiles">Perfiles</string>
+    <string name="section_design">Diseño</string>
+    <string name="section_configuration">Configuración</string>
+    <string name="section_security">Seguridad</string>
+    <string name="section_info">Información</string>
+    <string name="add_profile">Añadir perfil</string>
+    <string name="add_profile_summary">URL de inicio, quiosco y escáner</string>
+    <string name="language">Idioma</string>
+    <string name="language_system">Idioma del sistema</string>
+    <string name="title">Título</string>
+    <string name="subtitle">Subtítulo</string>
+    <string name="title_summary">Vacío = EnterpriseBrowser</string>
+    <string name="subtitle_summary">Vacío = modelo del dispositivo</string>
+    <string name="start_screen_title">Título de la pantalla de inicio</string>
+    <string name="brand_color">Color de marca</string>
+    <string name="color_default">Predeterminado</string>
+    <string name="logo">Logotipo</string>
+    <string name="logo_custom">Logotipo propio</string>
+    <string name="logo_default">Logotipo predeterminado</string>
+    <string name="logo_invalid">Imagen no válida o mayor de 1 MB</string>
+    <string name="color_hex">Color (#RRGGBB)</string>
+    <string name="color_hex_summary">Vacío = color predeterminado</string>
+    <string name="color_use_default">Usar el color predeterminado</string>
+    <string name="color_invalid">Color no válido: %1$s</string>
+    <string name="import_file">Importar desde archivo</string>
+    <string name="import_file_summary">Cargar una configuración JSON</string>
+    <string name="export_file">Exportar a archivo</string>
+    <string name="export_file_summary">Guardar la configuración actual</string>
+    <string name="import_barcode">Importar desde código de barras</string>
+    <string name="import_barcode_summary">Escanear un código QR con JSON</string>
+    <string name="import_barcode_message">Escanee ahora el código de barras de la configuración (código QR con JSON).</string>
+    <string name="last_provisioning_error">Último error de aprovisionamiento</string>
+    <string name="password_not_set">Sin definir</string>
+    <string name="password_set">Definida</string>
+    <string name="kiosk_mode">Modo quiosco</string>
+    <string name="kiosk_mode_summary">Ocultar salir y el cambio de perfil</string>
+    <string name="version">Versión</string>
+    <string name="scanner">Escáner</string>
+    <string name="config_file_for_emm">Archivo de configuración para el EMM</string>
+    <string name="new_password">Nueva contraseña</string>
+    <string name="new_password_summary">Déjela vacía para quitar la contraseña</string>
+    <string name="repeat_password">Repetir</string>
+    <string name="passwords_do_not_match">Las contraseñas no coinciden</string>
+    <string name="password_saved">Contraseña guardada</string>
+    <string name="password_removed">Contraseña quitada</string>
+    <string name="import_failed">Error en la importación</string>
+    <string name="import_confirm_title">¿Importar la configuración?</string>
+    <plurals name="import_confirm_message">
+        <item quantity="one">%d perfil. La configuración actual se sustituirá.</item>
+        <item quantity="many">%d perfiles. La configuración actual se sustituirá.</item>
+        <item quantity="other">%d perfiles. La configuración actual se sustituirá.</item>
+    </plurals>
+    <string name="config_imported">Configuración importada</string>
+    <string name="config_exported">Configuración exportada</string>
+    <string name="export_failed">Error en la exportación: %1$s</string>
+    <string name="read_failed">No se pudo leer el archivo: %1$s</string>
+
+    <string name="new_profile">Nuevo perfil</string>
+    <string name="edit_profile">Editar perfil</string>
+    <string name="profile_name">Nombre</string>
+    <string name="start_url">URL de inicio</string>
+    <string name="start_url_invalid">La URL debe empezar por http:// o https://</string>
+    <string name="allowed_hosts">Hosts permitidos</string>
+    <string name="allowed_hosts_summary">Separados por comas, vacío = todos los sitios permitidos</string>
+    <string name="profile_color">Color del perfil</string>
+    <string name="profile_color_default">Igual que el color de marca</string>
+    <string name="open_on_start">Abrir al iniciar la app</string>
+    <string name="hide_toolbar">Ocultar barra de herramientas</string>
+    <string name="full_screen">Pantalla completa</string>
+    <string name="keep_screen_on">Mantener la pantalla encendida</string>
+    <string name="scanner_enabled">Escáner activado</string>
+    <string name="send_after_scan">Enviar tras escanear</string>
+    <string name="terminator_none">Ninguna tecla</string>
+    <string name="delete_profile_title">¿Eliminar el perfil?</string>
+    <string name="delete_profile_message">«%1$s» se eliminará de este dispositivo.</string>
+
+    <string name="about_privacy">Datos y privacidad</string>
+    <string name="about_privacy_summary">Este software no envía datos a ICT-Baden.</string>
+    <string name="about_licence">Licencia</string>
+    <string name="about_third_party">Licencias de terceros</string>
+    <string name="about_source">Código fuente</string>
+    <string name="about_support">Ayuda y soporte</string>
+    <string name="about_support_summary">Gratis a través de GitHub, garantizado con un contrato de soporte</string>
+    <string name="about_website">Sitio web</string>
+    <string name="about_impressum">Aviso legal</string>
+    <string name="no_browser">No hay ningún navegador disponible</string>
+
+    <string name="mc_config_json_title">Configuración (JSON)</string>
+    <string name="mc_config_json_description">Configuración completa en el formato JSON de EnterpriseBrowser. Tiene prioridad sobre la URL de inicio y el nombre del perfil.</string>
+    <string name="mc_profile_name_title">Nombre del perfil</string>
+    <string name="mc_profile_name_description">Nombre del perfil gestionado (solo junto con la URL de inicio).</string>
+    <string name="mc_start_url_title">URL de inicio</string>
+    <string name="mc_start_url_description">Crea un perfil gestionado que se abre al iniciar la app.</string>
+    <string name="mc_kiosk_mode_title">Modo quiosco</string>
+    <string name="mc_kiosk_mode_description">Ocultar la barra de herramientas y las barras del sistema, ocultar salir.</string>
+    <string name="mc_admin_password_title">Contraseña de administrador</string>
+    <string name="mc_admin_password_description">Protege la configuración de la app.</string>
+</resources>
