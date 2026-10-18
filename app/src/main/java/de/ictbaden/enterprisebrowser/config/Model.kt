@@ -187,7 +187,15 @@ data class GlobalSettings(
     val exitPasswordHash: String? = null,
     val hideExit: Boolean = false,
     val branding: Branding = Branding(),
+    /** `auto` (follow the device) or one of [Languages.SUPPORTED]. */
+    val language: String = Languages.AUTO,
 )
+
+/** User interface languages (richtlinien/13-sprachen.md); tags as in `global.language`. */
+object Languages {
+    const val AUTO = "auto"
+    val SUPPORTED = listOf("en", "de", "es", "fr", "zh-Hans")
+}
 
 /** A file referenced as `res:<name>` and served at `https://appassets.androidplatform.net/res/<name>`. */
 class Resource(val bytes: ByteArray, val isText: Boolean) {
@@ -224,9 +232,10 @@ data class AppConfig(
         const val DEMO_PROFILE_ID = "demo"
         const val DEMO_URL = "https://appassets.androidplatform.net/assets/demo/index.html"
 
-        fun initial(): AppConfig = AppConfig(
+        /** Configuration before anything was set up; [demoName] comes from the translated resources. */
+        fun initial(demoName: String = "Demo & scanner test"): AppConfig = AppConfig(
             profiles = listOf(
-                Profile(id = DEMO_PROFILE_ID, name = "Demo & scanner test", startUrl = DEMO_URL),
+                Profile(id = DEMO_PROFILE_ID, name = demoName, startUrl = DEMO_URL),
             ),
         )
     }

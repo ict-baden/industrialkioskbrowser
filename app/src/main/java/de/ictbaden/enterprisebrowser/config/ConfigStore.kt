@@ -1,12 +1,13 @@
 package de.ictbaden.enterprisebrowser.config
 
 import android.content.Context
+import de.ictbaden.enterprisebrowser.R
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import java.io.File
 
 /** Process-wide holder of the persisted [AppConfig] (`files/config.json`). */
-class ConfigStore private constructor(private val file: File) {
+class ConfigStore private constructor(private val file: File, private val demoName: String) {
 
     @Volatile
     var config: AppConfig = load()
@@ -36,12 +37,12 @@ class ConfigStore private constructor(private val file: File) {
     }
 
     private fun load(): AppConfig {
-        if (!file.exists()) return AppConfig.initial()
+        if (!file.exists()) return AppConfig.initial(demoName)
         return try {
             ConfigJson.parse(file.readText())
         } catch (e: ConfigException) {
             Log.e(TAG, "Stored configuration is invalid, using defaults", e)
-            AppConfig.initial()
+            AppConfig.initial(demoName)
         }
     }
 
@@ -52,7 +53,10 @@ class ConfigStore private constructor(private val file: File) {
         private var instance: ConfigStore? = null
 
         fun get(context: Context): ConfigStore = instance ?: synchronized(this) {
-            instance ?: ConfigStore(File(context.applicationContext.filesDir, "config.json")).also { instance = it }
+            instance ?: ConfigStore(
+                File(context.applicationContext.filesDir, "config.json"),
+                context.getString(R.string.demo_profile_name),
+            ).also { instance = it }
         }
 
         /** Forgets the cached store so the next [get] reads the file again (tests). */

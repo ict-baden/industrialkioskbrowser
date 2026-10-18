@@ -3,6 +3,7 @@ package de.ictbaden.enterprisebrowser.scanner
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import de.ictbaden.enterprisebrowser.R
 
 /**
  * Owns the vendor scanner plus the generic intent receiver for one screen. Call [start] in
@@ -45,6 +46,10 @@ class ScannerManager(context: Context, private val onScan: (ScanResult) -> Unit)
 
     companion object {
         private const val TAG = "ScannerManager"
+
+        /** Scanner name for the user interface; "no scanner" is translated, product names are not. */
+        fun displayName(context: Context): String =
+            create(context).let { if (it is NoScanner) context.getString(R.string.no_scanner) else it.name }
 
         fun create(context: Context): BarcodeScanner {
             val manufacturer = Build.MANUFACTURER.lowercase()

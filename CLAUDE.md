@@ -34,5 +34,6 @@ JDK 17–21, Android SDK mit Compile-SDK 36.
 ## Regeln
 
 - Commit-Nachrichten auf Deutsch.
+- Kein Text fest im Code: jeden neuen Text in alle Sprachdateien eintragen (`values`, `values-de`, `values-es`, `values-fr`, `values-zh-rCN`), Fachbegriffe aus `ict-baden/richtlinien/sprachen/glossar.csv`. Unsichere Übersetzung: englischen Text eintragen, mit `TODO-übersetzen` markieren. Regeln in Richtlinie 13. Fehlermeldungen bekommen einen Code aus `web/ErrorCodes.kt` (nie eine Nummer wiederverwenden, `docs/error-codes.md` nachziehen).
 - Nach Arbeit an diesem Projekt: Logbuch in `ict-baden-projekte` ergänzen.
 - Vor jedem Release: Abschnitt „Unreleased“ im `CHANGELOG.md` pflegen.
