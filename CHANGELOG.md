@@ -7,6 +7,7 @@
   configuration (e.g. the start URL). **Action needed** if you configure unmanaged devices by broadcast (StageNow
   without EMM, adb): set an admin password first and send it as `admin_password`, or use the configuration file
   (`/enterprise/usr/enterprisebrowser.json`). Refused broadcasts are shown under Settings → Configuration.
+- An empty password (settings dialog or a broadcast without `admin_password`) no longer crashes the app on Android.
 
 - **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
   device language; `global.language` or **Settings → Design → Language** set it per device.
