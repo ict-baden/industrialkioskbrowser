@@ -20,6 +20,8 @@ object PasswordHasher {
     }
 
     fun verify(password: String, stored: String?): Boolean {
+        // Android's PBKDF2 throws on an empty password instead of returning a key.
+        if (password.isEmpty()) return false
         val parts = stored?.split('$') ?: return false
         if (parts.size != 4 || parts[0] != PREFIX) return false
         val iterations = parts[1].toIntOrNull()?.takeIf { it > 0 } ?: return false
