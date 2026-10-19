@@ -51,7 +51,7 @@
 | 🔒 **Kiosk** | Hide toolbar/system bars, hide exit or protect it with a password, lock task via device owner |
 | 📡 **Provisioning** | Managed configuration (SOTI, Intune, Workspace ONE …), configuration file, StageNow intent, QR code |
 | 🎨 **Custom design** | Title, logo, brand color and profile colors – via configuration or right in the app |
-| 🛡️ **Security** | Strict TLS checks, client certificates, passwords only stored as PBKDF2 hashes, JavaScript API only for allowed hosts |
+| 🛡️ **Security** | Strict TLS checks, client certificates, passwords only stored as PBKDF2 hashes, JavaScript API only for allowed hosts, configuration broadcasts only with the admin password or on EMM-managed devices |
 
 ## ⚡ Up and running in 5 minutes
 
