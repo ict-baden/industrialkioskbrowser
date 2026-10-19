@@ -52,6 +52,7 @@ class ConfigReceiverTest {
     @Test
     fun `accepts the broadcast with the admin password only`() {
         store.import(AppConfig.initial("Demo").copy(global = GlobalSettings(adminPasswordHash = PasswordHasher.hash("secret"))))
+        send()
         send(password = "wrong")
         assertNotEquals(EVIL_URL, store.config.profiles.first().startUrl)
         send(password = "secret")
