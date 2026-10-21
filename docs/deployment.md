@@ -39,8 +39,9 @@ The app ships a schema that every EMM with Android Enterprise support shows:
 | `kiosk_mode` | Bool | Toolbar and system bars hidden, exit hidden |
 | `admin_password` | String | Sets the admin password |
 
-The values are applied when the app starts and whenever you return to the profile list,
-as soon as they have changed. Errors (e.g. invalid JSON) are shown in the app under
+The values are applied when the app starts, whenever you return to the profile list and,
+while a profile is open, as soon as the MDM changes them. An open profile whose settings changed
+starts again with the new configuration. Errors (e.g. invalid JSON) are shown in the app under
 **Settings → Last provisioning error**.
 
 ## SOTI MobiControl
@@ -102,8 +103,8 @@ The app reads `pforte.json` from
 2. `/enterprise/usr/` (Zebra, persistent; writable only by MX/StageNow, the EMM agent or adb)
 
 A file is applied as soon as its timestamp or size changes – when the app starts, when you
-return to the profile list or to an open profile. An open profile whose settings changed
-starts again with the new configuration.
+return to the profile list or to an open profile, and within about five seconds while a profile
+is open. An open profile whose settings changed starts again with the new configuration.
 
 The app folder is checked like a broadcast, because before Android 11 any app with storage
 permission can write into it:
@@ -150,7 +151,7 @@ adb shell am broadcast \
 
 Result code (for ordered broadcasts): `-1` = installed, `2` = refused (admin password
 missing or wrong, locked after wrong passwords, or unmanaged device without a password),
-`3` = invalid configuration.
+`3` = invalid configuration. An open profile whose settings changed starts again right away.
 
 ## QR code
 

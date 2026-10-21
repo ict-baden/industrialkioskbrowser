@@ -4,10 +4,11 @@
 
 Independent reviews before each 0.x version (ICT-Baden guideline 09): reviewers who did not
 write the code check it, and the findings are cross-checked. This page lists the findings for
-0.6.0 and how each was handled.
+0.6.x and how each was handled.
 
 - [Review for 0.6.0](#review-for-060)
 - [Review of the 0.6.0 changes](#review-of-the-060-changes)
+- [Final check of 0.6.0 (fixed in 0.6.1)](#final-check-of-060-fixed-in-061)
 - [Accepted risks](#accepted-risks)
 
 ## Review for 0.6.0
@@ -45,7 +46,19 @@ A second reviewer checked the diff of the fixes above.
 | Back navigation relied on the history URL of the error page. | Error pages are also recognised by their `data:` URL. Still to be confirmed on a device. |
 | A clock that runs ahead could extend the lock. | Locks more than 15 minutes in the future are ignored. |
 | Password checks run on the main thread. | Iteration limit lowered to 600,000; the app's own hashes use 60,000. |
-| A tag release without signing key would become "Latest" without APK. | Such a release is not marked Latest; once signed, the note is removed and it becomes Latest. |
+| A tag release without signing key would become "Latest" without APK. | The release says at the top that the signed APK will follow; a run with the key adds APK and App Bundle and removes the note. *Corrected in 0.6.1:* `--latest=false` did not help, GitHub marks the only release Latest anyway – since 0.6.1 the release with the highest version is marked Latest on purpose. |
+
+## Final check of 0.6.0 (fixed in 0.6.1)
+
+A further review of the released 0.6.0, with a cross-check of each finding.
+
+| Finding | Resolution |
+|---|---|
+| Finding 5 above was only half fixed: an `INSTALL_CONFIG` broadcast or a configuration file reached an open profile only when the app came back to the front – on a kiosk that never leaves the browser, not at all. | Fixed: the configuration store notifies the open session, which restarts with the new configuration; configuration files are checked every five seconds while the browser is in front. Unit test `ConfigChangeTest`. |
+| Safe Browsing stays on, which means a connection to Google the app could switch off. | Accepted on purpose (protection against malware and phishing on unattended devices) and documented in [Data and privacy](data-and-privacy.md); an unproven sentence about switching it off by device policy was removed. |
+| Store texts said the device "stays locked to the apps you allow", but an empty allow list allows every host. | Fixed in all five languages. |
+| The README download badge and `adb` example pointed to a rolling build that does not exist before the signing key is set up. | They point to the latest release; [Limitations](limitations.md#releases-and-updates) states what is missing. |
+| The Play guide contained internal notes. | Removed. |
 
 ## Accepted risks
 

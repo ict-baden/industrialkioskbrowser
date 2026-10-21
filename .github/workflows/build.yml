@@ -22,12 +22,15 @@ env:
   APP: Pforte
   # Signieren nur mit dem Keystore aus den Secrets (siehe richtlinien/05-signieren.md) und nicht bei Pull Requests.
   # Ohne Schlüssel wird gebaut und getestet, aber keine APK veröffentlicht: Eine unsignierte APK lässt sich nicht installieren,
-  # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren.
+  # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren. Auch keine Debug-APK: Sie ist
+  # ein anderes Paket (….debug) mit WebView-Debugging, und Richtlinie 05 sieht für Android nur den Release-Schlüssel vor.
   SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ env.SIGN }}
     steps:
       - uses: actions/checkout@v7
 
@@ -54,6 +57,22 @@ jobs:
           echo "code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
           echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
           echo "Version: $v (Code $GITHUB_RUN_NUMBER), Signieren: $SIGN"
+
+      - name: Release-Text aus dem CHANGELOG (nur bei Tag v*)
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          # Abschnitt der Version (englisch), bei Vorabversionen ersatzweise „Unreleased“; relative Links auf den Stand des Tags
+          section() {
+            awk -v head="$1" 'index($0, "## ") == 1 { if (found) exit; found = index($0, head) == 1; next } found' CHANGELOG.md \
+              | perl -pe 's{\]\((?!https?://|#|mailto:)([^)]+)\)}{](https://github.com/$ENV{GITHUB_REPOSITORY}/blob/$ENV{GITHUB_REF_NAME}/$1)}g'
+          }
+          version="${GITHUB_REF_NAME#v}"
+          section "## [$version]" > "$RUNNER_TEMP/changes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/changes.md"; then
+            case "$version" in *-*) section "## Unreleased" > "$RUNNER_TEMP/changes.md";; esac
+          fi
+          grep -q '[^[:space:]]' "$RUNNER_TEMP/changes.md" || { echo "::error::CHANGELOG.md hat keinen Abschnitt [$version]"; exit 1; }
 
       - name: Tests und Lint
         run: ./gradlew testDebugUnitTest lintDebug --console=plain
@@ -135,29 +154,36 @@ jobs:
 
       - name: Release erstellen oder ergänzen (nur bei Tag v*)
         if: github.ref_type == 'tag'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           UNSIGNED_NOTE: '**The signed APK and App Bundle will be added here once the release signing key is set up.**'
         run: |
           if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-            # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
+            # Ohne Schlüssel steht das Release mit SBOM und Prüfsummen schon da, oben der Hinweis auf die fehlende APK.
+            # Nach dem Setzen der Secrets: gh workflow run build.yml --ref <tag>, dann kommen APK und App Bundle dazu.
+            { if [ "$SIGN" != true ]; then printf '%s\n\n' "$UNSIGNED_NOTE"; fi; cat "$RUNNER_TEMP/changes.md"; } > "$RUNNER_TEMP/notes.md"
+            # v1.0.0-rc1 und ähnliche: Vorabversion
             pre=""; case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
-            notes=""; latest=""
-            if [ "$SIGN" != true ]; then
-              # Ohne Schlüssel steht das Release mit SBOM und Prüfsummen schon da, aber nicht als „Latest“
-              # (releases/latest/download/… liefe sonst ins Leere). Nach dem Setzen der Secrets diesen Lauf
-              # neu starten, dann kommen APK und App Bundle dazu.
-              notes="$UNSIGNED_NOTE"; latest="--latest=false"
-            fi
-            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$APP $GITHUB_REF_NAME" --generate-notes --notes "$notes" $pre $latest
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$APP $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --latest=false $pre
           fi
           gh release upload "$GITHUB_REF_NAME" dist/* --clobber
           if [ "$SIGN" = true ]; then
-            # Nachgereichte Signatur: Hinweis entfernen, Release wird (außer Vorabversionen) „Latest“
-            gh release view "$GITHUB_REF_NAME" --json body --jq .body | grep -vF "$UNSIGNED_NOTE" > "$RUNNER_TEMP/notes.md" || true
-            case "$GITHUB_REF_NAME" in *-*) gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md";;
-              *) gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --latest;; esac
+            # Nachgereichte Signatur: Hinweis entfernen (nur wenn er da ist; scheitert das Lesen, bricht der Schritt ab)
+            body=$(gh release view "$GITHUB_REF_NAME" --json body --jq .body)
+            if [[ $body == *"$UNSIGNED_NOTE"* ]]; then
+              printf '%s\n' "$body" | { grep -vF "$UNSIGNED_NOTE" || true; } | sed '1{/^\r\?$/d}' > "$RUNNER_TEMP/notes.md"
+              gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"
+            fi
           fi
+          # „Latest“ wird das Release mit der höchsten Version, auch noch ohne APK: GitHub macht das neueste Release ohnehin
+          # dazu, und der Hinweis oben sagt, was fehlt. Ein nachgereichter Lauf eines älteren Tags ändert daran nichts.
+          case "$GITHUB_REF_NAME" in *-*) ;; *)
+            newest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName' \
+              | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -1)
+            if [ "$newest" = "$GITHUB_REF_NAME" ]; then gh release edit "$GITHUB_REF_NAME" --latest
+            else echo "::notice::$GITHUB_REF_NAME bleibt ohne „Latest“, höchste Version ist ${newest:-unbekannt}."; fi;;
+          esac
 
       - name: "Release 'latest' aktualisieren (main)"
         if: env.SIGN == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
@@ -174,3 +200,24 @@ jobs:
                    "- [$env:APP.cdx.json]($base/$env:APP.cdx.json): Stückliste (SBOM, CycloneDX)`n" +
                    "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen"
           ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ steps.version.outputs.version }}"
+
+  # Der erste signierte Lauf eines Tags (Secrets nachträglich gesetzt) stößt einen Build von main an, damit auch das
+  # rollierende „latest“ entsteht – sonst käme es erst mit dem nächsten Push auf main.
+  latest-anstossen:
+    needs: build
+    if: github.ref_type == 'tag' && needs.build.outputs.signed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: "Build von main anstoßen, falls 'latest' fehlt"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view latest -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "'latest' gibt es schon."
+          else
+            gh workflow run build.yml -R "$GITHUB_REPOSITORY" --ref main
+            echo "::notice::Build von main angestoßen, er legt das Release 'latest' an."
+          fi

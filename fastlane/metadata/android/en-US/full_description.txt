@@ -1,4 +1,4 @@
-Pforte runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device stays locked to the apps you allow, and the whole configuration comes from your MDM.
+Pforte runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device can be limited to the web apps you allow, and the whole configuration comes from your MDM.
 
 BARCODE SCANNING
 • Works with Zebra DataWedge, Honeywell scanners and any scanner app that sends an intent
@@ -11,7 +11,7 @@ PROFILES
 
 KIOSK MODE
 • Hide the toolbar and system bars, hide or password-protect the exit
-• Allow list per profile: only those hosts can be opened, everything else is blocked before it loads
+• Allow list per profile: only those hosts can be opened, everything else is blocked before it loads (without a list every host is allowed)
 • Lock task mode when the device is managed
 
 CENTRAL CONFIGURATION

@@ -39,7 +39,7 @@ Configuration and browser data are excluded from Android backup and device trans
 | Connection | When |
 |---|---|
 | The web apps of your profiles | When a profile is opened, and to the hosts its pages navigate to. With an `allowList` only those hosts; with an empty `allowList` any host. |
-| Google Safe Browsing (by the Android System WebView) | While pages load, the WebView compares shortened hashes of the addresses with a list from Google to warn about malware and phishing. This is a feature of Android, left on for security; the app adds nothing to it. It can be turned off for all apps by device policy. |
+| Google Safe Browsing (by the Android System WebView) | While pages load, the WebView compares shortened hashes of the addresses with a list from Google to warn about malware and phishing. This is a feature of Android that Pforte deliberately leaves on; the app adds nothing to it. |
 | Links in *Settings → Info* (source code, support, website, legal notice) | Only when you tap them; they open in the device's browser. |
 
 Nothing else from the app itself. Debug builds additionally allow remote debugging with Chrome DevTools over USB.
