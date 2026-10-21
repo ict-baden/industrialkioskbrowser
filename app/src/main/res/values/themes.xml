@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.EnterpriseBrowser" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.IndustrialKioskBrowser" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_primary</item>
         <item name="colorOnPrimary">@color/md_on_primary</item>
         <item name="colorPrimaryContainer">@color/md_primary_container</item>
@@ -38,10 +38,10 @@
     </style>
 
     <!-- Android 12+ style splash screen (backported by core-splashscreen). -->
-    <style name="Theme.EnterpriseBrowser.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.IndustrialKioskBrowser.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
-        <item name="postSplashScreenTheme">@style/Theme.EnterpriseBrowser</item>
+        <item name="postSplashScreenTheme">@style/Theme.IndustrialKioskBrowser</item>
     </style>
 
     <style name="ToolbarButton">

@@ -2,7 +2,7 @@
 
 Usage: python tools/screenshots/compose.py <repo> <web-dir>
 Inputs: app/build/screenshots (Roborazzi) and <web-dir>/{demo,status}.png (render_web.mjs).
-Fonts: Roboto from FONTS_DIR (default C:/Windows/Fonts/).
+Fonts: Roboto from FONTS_DIR (default C:/Windows/Fonts/; macOS e.g. ~/Library/Fonts).
 """
 import os
 import pathlib
@@ -217,8 +217,13 @@ hero.alpha_composite(front, (1135, 80))
 
 text_layer = Image.new("RGBA", hero.size, (0, 0, 0, 0))
 draw = ImageDraw.Draw(text_layer)
-draw.text((110, 300), "EnterpriseBrowser", font=font("Roboto-Black.ttf", 96), fill=(255, 255, 255, 255))
-draw.text((114, 420), "The kiosk browser for Zebra & Honeywell", font=font("Roboto-Medium.ttf", 44), fill=(255, 255, 255, 230))
+# Title as large as possible without running under the phones (they start at x = 980)
+title = "Industrial Kiosk Browser"
+size = 96
+while size > 40 and draw.textlength(title, font=font("Roboto-Black.ttf", size)) > 830:
+    size -= 2
+draw.text((110, 300 + (96 - size) // 2), title, font=font("Roboto-Black.ttf", size), fill=(255, 255, 255, 255))
+draw.text((114, 420), "The kiosk browser for rugged Android devices", font=font("Roboto-Medium.ttf", 44), fill=(255, 255, 255, 230))
 draw.text((114, 486), "Scanner · Kiosk · MDM provisioning · JavaScript API", font=font("Roboto-Regular.ttf", 32), fill=(255, 255, 255, 175))
 hero.alpha_composite(text_layer)
 x = 114
