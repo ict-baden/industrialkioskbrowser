@@ -17,6 +17,8 @@ import android.net.Uri
 import android.net.http.SslError
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.security.KeyChain
 import android.util.Log
 import android.view.KeyEvent
@@ -56,6 +58,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewCompat
@@ -145,11 +148,31 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun softTrigger(start: Boolean?) = scanner.softTrigger(start)
 
-    /** A new managed configuration from the MDM, applied while the browser is in front. */
+    /** A new managed configuration from the MDM, applied while the browser is in front; [configListener] restarts. */
     private val restrictionsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Provisioning.applyAll(context)
-            restartIfConfigChanged()
+        }
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    // Only while in front: a paused session checks in onResume, a restart from the background would push it to the front.
+    private val configCheck = Runnable { if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) restartIfConfigChanged() }
+
+    /**
+     * Registered while the browser is in front: a configuration broadcast, a configuration file or the MDM
+     * changed the store. The check runs afterwards on the UI thread, outside the store's lock.
+     */
+    private val configListener: (AppConfig) -> Unit = {
+        mainHandler.removeCallbacks(configCheck)
+        mainHandler.post(configCheck)
+    }
+
+    /** Configuration files have no change broadcast: they are looked at every few seconds while the browser is in front. */
+    private val fileCheck = object : Runnable {
+        override fun run() {
+            Provisioning.applyFiles(this@BrowserActivity)
+            mainHandler.postDelayed(this, FILE_CHECK_INTERVAL_MS)
         }
     }
 
@@ -234,8 +257,10 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             IntentFilter(Intent.ACTION_APPLICATION_RESTRICTIONS_CHANGED),
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+        ConfigStore.get(this).addListener(configListener)
         Provisioning.applyAll(this)
         if (restartIfConfigChanged()) return
+        mainHandler.postDelayed(fileCheck, FILE_CHECK_INTERVAL_MS)
         webView.onResume()
         scanner.start()
         if (profile.kiosk.immersive) hideSystemBars()
@@ -243,6 +268,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun onPause() {
         unregisterReceiver(restrictionsReceiver)
+        ConfigStore.get(this).removeListener(configListener)
+        mainHandler.removeCallbacks(configCheck)
+        mainHandler.removeCallbacks(fileCheck)
         scanner.stop()
         webView.onPause()
         CookieManager.getInstance().flush()
@@ -779,6 +807,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     companion object {
         const val EXTRA_PROFILE_ID = "profile_id"
         private const val TAG = "BrowserActivity"
+        private const val FILE_CHECK_INTERVAL_MS = 5_000L
         private const val KEY_DELAY_MS = 50L
     }
 }

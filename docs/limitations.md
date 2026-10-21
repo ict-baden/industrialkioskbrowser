@@ -12,7 +12,7 @@
 
 | What | Status |
 |---|---|
-| Zebra HC20, Android 15, DataWedge | Tested on the device (0.5.0; the 0.6.0 changes only in unit tests) |
+| Zebra HC20, Android 15, DataWedge | Tested on the device (0.5.0; the 0.6.x changes only in unit tests) |
 | Other Zebra models (TC2x, TC5x, MC9x …) | Untested; same DataWedge intent API, expected to work |
 | Honeywell (Data Collection Service) | **Untested on hardware** – implemented from the documented intent API |
 | Other Android devices | Run as a plain kiosk browser; scans only from a scanner app that sends the generic broadcast |
@@ -66,5 +66,6 @@ still pending. The documentation is in English.
   there is no in-place update, and the old app keeps its data until it is uninstalled. See
   [Deployment](deployment.md) for the switch.
 - Release APKs are signed by the CI. Until the signing key of the new package name is set up,
-  releases contain the SBOM and checksums but no APK.
+  releases contain the SBOM and checksums but no APK (the release says so at the top), and there
+  is no rolling `latest` build of `main` yet.
 - The app does not update itself; updates come from the EMM or Google Play.

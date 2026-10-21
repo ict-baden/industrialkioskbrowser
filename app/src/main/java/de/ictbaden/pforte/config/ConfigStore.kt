@@ -5,6 +5,7 @@ import de.ictbaden.pforte.R
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import java.io.File
+import java.util.concurrent.CopyOnWriteArraySet
 
 /** Process-wide holder of the persisted [AppConfig] (`files/config.json`). */
 class ConfigStore private constructor(private val file: File, private val demoName: String) {
@@ -12,6 +13,20 @@ class ConfigStore private constructor(private val file: File, private val demoNa
     @Volatile
     var config: AppConfig = load()
         private set
+
+    private val listeners = CopyOnWriteArraySet<(AppConfig) -> Unit>()
+
+    /**
+     * [listener] is called after every saved change, on the thread that made it (settings, broadcast
+     * receiver, provisioning) and while the store is still locked: hand the work over, don't update from it.
+     */
+    fun addListener(listener: (AppConfig) -> Unit) {
+        listeners += listener
+    }
+
+    fun removeListener(listener: (AppConfig) -> Unit) {
+        listeners -= listener
+    }
 
     @Synchronized
     fun update(transform: (AppConfig) -> AppConfig): AppConfig {
@@ -23,6 +38,7 @@ class ConfigStore private constructor(private val file: File, private val demoNa
             check(tmp.renameTo(file)) { "Could not save the configuration" }
         }
         config = updated
+        listeners.forEach { it(updated) }
         return updated
     }
 

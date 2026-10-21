@@ -35,6 +35,11 @@ object Provisioning {
 
     fun applyAll(context: Context) {
         applyManagedConfig(context)
+        applyFiles(context)
+    }
+
+    /** Only the configuration files; an unchanged file costs a `stat`, so an open session checks them regularly. */
+    fun applyFiles(context: Context) {
         appFolderFile(context)?.let { applyConfigFile(context, it, trusted = false) }
         applyConfigFile(context, enterpriseFile, trusted = true)
     }

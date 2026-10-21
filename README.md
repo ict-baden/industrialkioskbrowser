@@ -4,7 +4,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 8.0+">
-  <a href="https://github.com/ict-baden/pforte/releases/tag/latest"><img src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest"></a>
+  <a href="https://github.com/ict-baden/pforte/releases/latest"><img src="https://img.shields.io/badge/Download-latest%20release-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest release"></a>
   <img src="https://img.shields.io/badge/Licence-MIT-blue" alt="Licence: MIT">
   <img src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280" alt="User interface in English, German, Spanish, French and Chinese">
   <a href="https://github.com/ict-baden/pforte/actions/workflows/build.yml"><img src="https://github.com/ict-baden/pforte/actions/workflows/build.yml/badge.svg" alt="Build"></a>
@@ -62,11 +62,13 @@
 
 ## ⚡ Up and running in 5 minutes
 
-**1. Install the app** – download the APK from the [releases](../../releases/latest) and distribute it with your MDM, or install it over USB:
+**1. Install the app** – download `Pforte-<version>.apk` from the [latest release](../../releases/latest) and distribute it with your MDM, or install it over USB:
 
 ```bash
-adb install -r Pforte.apk   # from https://github.com/ict-baden/pforte/releases/tag/latest
+adb install -r Pforte-<version>.apk
 ```
+
+Release APKs are signed by the CI – the current state is under [Limitations](docs/limitations.md#releases-and-updates).
 
 **2. Pick a configuration** – ready-made templates in [`examples/`](examples):
 
@@ -208,7 +210,7 @@ docs/            documentation and images
 - [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
 - [Error codes](docs/error-codes.md) – `PFT-0001` … with causes
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
-- [Security review](docs/security-review.md) – independent review before 0.6.0 and what was fixed
+- [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
 - [Changelog](CHANGELOG.md)
 

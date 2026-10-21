@@ -1,4 +1,4 @@
-Pforte bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät bleibt auf die erlaubten Anwendungen beschränkt, und die gesamte Konfiguration kommt aus Ihrem MDM.
+Pforte bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät lässt sich auf die erlaubten Web-Apps beschränken, und die gesamte Konfiguration kommt aus Ihrem MDM.
 
 BARCODE-SCAN
 • Funktioniert mit Zebra DataWedge, Honeywell-Scannern und jeder Scanner-App, die einen Intent sendet
@@ -11,7 +11,7 @@ PROFILE
 
 KIOSK-MODUS
 • Symbolleiste und Systemleisten ausblenden, Beenden ausblenden oder mit Passwort schützen
-• Erlaubte Hosts pro Profil: nur diese lassen sich öffnen, alles andere wird vor dem Laden blockiert
+• Erlaubte Hosts pro Profil: nur diese lassen sich öffnen, alles andere wird vor dem Laden blockiert (ohne Liste sind alle Hosts erlaubt)
 • Lock-Task-Modus auf verwalteten Geräten
 
 ZENTRALE KONFIGURATION

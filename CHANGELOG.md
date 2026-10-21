@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [0.6.1] – 2026-10-21
+
+### Fixed
+
+- **A new configuration reaches an open profile right away**, as 0.6.0 promised: an `INSTALL_CONFIG` broadcast
+  restarts the session immediately, a configuration file (app folder or `/enterprise/usr/`) within about five
+  seconds. Before, both only took effect when the app came back to the front (the MDM already worked).
+- Store texts no longer say the device *stays* locked to the allowed apps: it *can* be limited to them, and
+  without an allow list every host is allowed.
+
+### Changed
+
+- Release notes are taken from this changelog. A release built before the signing key is set up is marked
+  *Latest* and says at the top that the signed APK will follow.
+- The download badge and the install steps in the README point to the latest release.
+
 ## [0.6.0] – 2026-10-21
 
 ### Changed
