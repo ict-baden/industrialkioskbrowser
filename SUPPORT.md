@@ -1,12 +1,12 @@
 # Hilfe und Support / Help and support
 
-EnterpriseBrowser ist kostenlos und Open Source. Für Hilfe gibt es zwei Wege.
-EnterpriseBrowser is free and open source. There are two ways to get help.
+Pforte ist kostenlos und Open Source. Für Hilfe gibt es zwei Wege.
+Pforte is free and open source. There are two ways to get help.
 
 ## Kostenlos: GitHub / Free: GitHub
 
-- **Fehler und Wünsche:** [Issue anlegen](https://github.com/ict-baden/enterprisebrowser/issues/new/choose)
-- **Fragen:** [Discussions](https://github.com/ict-baden/enterprisebrowser/discussions)
+- **Fehler und Wünsche:** [Issue anlegen](https://github.com/ict-baden/pforte/issues/new/choose)
+- **Fragen:** [Discussions](https://github.com/ict-baden/pforte/discussions)
 
 Wir lesen alles, können aber keine Reaktionszeit zusagen. Alles dort ist öffentlich – bitte keine internen Daten.
 We read everything but cannot promise response times. Everything there is public.
