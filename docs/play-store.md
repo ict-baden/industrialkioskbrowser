@@ -2,7 +2,7 @@
 
 # Google Play
 
-How EnterpriseBrowser gets into Google Play, and what to answer in the Play Console.
+How Industrial Kiosk Browser gets into Google Play, and what to answer in the Play Console.
 
 - [What is in the repo](#what-is-in-the-repo)
 - [Before the first upload](#before-the-first-upload)
@@ -16,7 +16,7 @@ How EnterpriseBrowser gets into Google Play, and what to answer in the Play Cons
 |---|---|
 | `fastlane/metadata/android/<locale>/` | Title, short and full description in `en-US`, `de-DE`, `es-ES`, `fr-FR`, `zh-CN` (limits: 30, 80, 4000 characters) |
 | `fastlane/metadata/android/en-US/images/` | Hi-res icon 512 × 512, feature graphic 1024 × 500, six phone screenshots 1080 × 1920. Play shows them for every language. |
-| Release `vX.Y.Z` | `EnterpriseBrowser-X.Y.Z.aab` – the App Bundle for Play, signed by the CI |
+| Release `vX.Y.Z` | `IndustrialKioskBrowser-X.Y.Z.aab` – the App Bundle for Play, signed by the CI |
 
 The folder layout is the one of [fastlane supply](https://docs.fastlane.tools/actions/supply/),
 so the texts can later be uploaded automatically. Until then, copy them into the Play Console.
@@ -32,11 +32,10 @@ Done once, by a person with access to the company accounts:
 1. **Developer account** as an organisation (ICT-Baden GmbH, needs a D-U-N-S number). An
    organisation account does not need the 14-day closed test with 12 testers that new personal
    accounts need.
-2. **Package name** is final once the app exists in Play: `de.ictbaden.enterprisebrowser`.
-   The domain `ict-baden.de` belongs to us (Till, 2026-10-19).
-3. **Privacy policy URL:** `https://ict-baden.de/datenschutz/enterprisebrowser/` (German and English,
-   source in `ict-baden/website`, `src/pages/datenschutz/[app].astro`). It must be online before
-   the app is submitted.
+2. **Package name** is final once the app exists in Play: `de.ictbaden.industrialkioskbrowser`.
+   The domain `ict-baden.de` belongs to ICT-Baden.
+3. **Privacy policy URL:** `https://ict-baden.de/datenschutz/industrial-kiosk-browser/` (German and English). It
+   must be online before the app is submitted.
 4. **Contact details** for the store listing: e-mail (e.g. `support@ict-baden.de`), website.
 5. **Translations** of the app and of the store texts read by native speakers (richtlinien/13).
 
@@ -45,7 +44,7 @@ Done once, by a person with access to the company accounts:
 Play signs the apps it delivers with its *app signing key*; we upload with an *upload key*.
 The CI signs the App Bundle with our release key (secret `ANDROID_KEYSTORE`).
 
-Decided (Till, 2026-10-19): **our release key is also the app signing key**, so Play and
+Decision: **our release key is also the app signing key**, so Play and
 MDM/GitHub APKs carry the same signature and devices can switch between both sources.
 
 At the first upload, in *Setup → App signing* (or when creating the first release):
@@ -84,8 +83,9 @@ the administrator usually limits it to an allow list.
 - *Does the app collect or share user data?* **No.** The app has no servers of its own and
   sends nothing to ICT-Baden (no telemetry, no crash reports, no account). Like any browser it
   transmits what the user enters into a web page to that web page's server – the servers the
-  device owner configures as start URL and allow list. Re-check this answer against the current
-  Play definitions before submitting.
+  device owner configures as start URL and allow list (an empty allow list allows every host).
+  Google Safe Browsing in the Android System WebView stays on (a function of Android, not of the
+  app). Re-check this answer against the current Play definitions before submitting.
 - Encryption in transit: the configured web apps decide (HTTPS recommended; the app enforces
   strict TLS checks).
 - Data deletion: no account, nothing to delete on our side; *Clear storage* removes everything

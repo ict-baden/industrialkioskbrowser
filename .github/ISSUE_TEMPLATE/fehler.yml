@@ -26,7 +26,7 @@ body:
     id: system
     attributes:
       label: Gerät und Android-Version / Device and Android version
-      placeholder: Zebra TC22, Android 14
+      placeholder: Gerätemodell, Android 14 / device model, Android 14
   - type: textarea
     id: schritte
     attributes:
