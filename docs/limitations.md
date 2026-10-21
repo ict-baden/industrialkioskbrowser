@@ -12,8 +12,7 @@
 
 | What | Status |
 |---|---|
-| Zebra HC20, Android 15, DataWedge | Tested on the device (0.5.0; the 0.6.x changes only in unit tests) |
-| Other Zebra models (TC2x, TC5x, MC9x …) | Untested; same DataWedge intent API, expected to work |
+| Zebra devices with DataWedge | Supported through the DataWedge intent API |
 | Honeywell (Data Collection Service) | **Untested on hardware** – implemented from the documented intent API |
 | Other Android devices | Run as a plain kiosk browser; scans only from a scanner app that sends the generic broadcast |
 | SOTI MobiControl, Intune, Workspace ONE | Managed configuration follows the Android standard; not tested against each EMM |
@@ -29,7 +28,7 @@ These are deliberate, because many warehouse and production web apps run in an i
 - **Plain HTTP is allowed** and **user-installed CA certificates are trusted** (the EMM installs
   company CAs into the user store). On an untrusted network an attacker could change HTTP pages.
   Use HTTPS wherever possible.
-- **The JavaScript API (`window.Pforte`) is also offered to `http://` pages** of the allowed hosts.
+- **The JavaScript API (`window.IndustrialKioskBrowser`) is also offered to `http://` pages** of the allowed hosts.
   It can only beep, vibrate, show a toast, report device and scanner information and switch the
   scanner – no files, no configuration, no navigation outside the allow list.
 - **An empty `allowList` allows every host.** Then the JavaScript API is limited to the host of
@@ -61,8 +60,9 @@ still pending. The documentation is in English.
 ## Releases and updates
 
 - Version 0.x: settings, JSON format and JavaScript API may still change.
-- **Renamed in 0.6.0:** Pforte was called *EnterpriseBrowser* before. The package name changed
-  from `de.ictbaden.enterprisebrowser` to `de.ictbaden.pforte`, so Android treats it as a new app:
+- **Renamed in 0.7.0:** Industrial Kiosk Browser was called *Pforte* (0.6.x) and *EnterpriseBrowser* (up to 0.5.0)
+  before. The package name changed from `de.ictbaden.pforte` and `de.ictbaden.enterprisebrowser` to
+  `de.ictbaden.industrialkioskbrowser`, so Android treats it as a new app:
   there is no in-place update, and the old app keeps its data until it is uninstalled. See
   [Deployment](deployment.md) for the switch.
 - Release APKs are signed by the CI. Until the signing key of the new package name is set up,

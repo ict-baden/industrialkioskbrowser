@@ -10,7 +10,7 @@
 
 ## Summary
 
-Pforte **sends no data to ICT-Baden**. There is no telemetry, no crash reporting,
+Industrial Kiosk Browser **sends no data to ICT-Baden**. There is no telemetry, no crash reporting,
 no update check and no account. The browser connects to the web apps you configure (the start
 URLs) and to the pages they lead to. With an `allowList` only those hosts can be opened;
 **with an empty `allowList` every host is allowed** – set one for kiosk devices.
@@ -39,7 +39,7 @@ Configuration and browser data are excluded from Android backup and device trans
 | Connection | When |
 |---|---|
 | The web apps of your profiles | When a profile is opened, and to the hosts its pages navigate to. With an `allowList` only those hosts; with an empty `allowList` any host. |
-| Google Safe Browsing (by the Android System WebView) | While pages load, the WebView compares shortened hashes of the addresses with a list from Google to warn about malware and phishing. This is a feature of Android that Pforte deliberately leaves on; the app adds nothing to it. |
+| Google Safe Browsing (by the Android System WebView) | While pages load, the WebView compares shortened hashes of the addresses with a list from Google to warn about malware and phishing. This is a feature of Android that Industrial Kiosk Browser deliberately leaves on; the app adds nothing to it. |
 | Links in *Settings → Info* (source code, support, website, legal notice) | Only when you tap them; they open in the device's browser. |
 
 Nothing else from the app itself. Debug builds additionally allow remote debugging with Chrome DevTools over USB.
@@ -58,4 +58,4 @@ On the device, the browser exchanges broadcasts with scanner services and the MD
 ## Deleting everything
 
 - A profile with `clearCookiesOnStart` and `clearCacheOnStart` starts without old browser data.
-- Android *Settings → Apps → Pforte → Storage → Clear storage*, or uninstalling the app, removes all of it.
+- Android *Settings → Apps → Industrial Kiosk Browser → Storage → Clear storage*, or uninstalling the app, removes all of it.

@@ -2,7 +2,7 @@
 
 # Google Play
 
-How Pforte gets into Google Play, and what to answer in the Play Console.
+How Industrial Kiosk Browser gets into Google Play, and what to answer in the Play Console.
 
 - [What is in the repo](#what-is-in-the-repo)
 - [Before the first upload](#before-the-first-upload)
@@ -16,7 +16,7 @@ How Pforte gets into Google Play, and what to answer in the Play Console.
 |---|---|
 | `fastlane/metadata/android/<locale>/` | Title, short and full description in `en-US`, `de-DE`, `es-ES`, `fr-FR`, `zh-CN` (limits: 30, 80, 4000 characters) |
 | `fastlane/metadata/android/en-US/images/` | Hi-res icon 512 × 512, feature graphic 1024 × 500, six phone screenshots 1080 × 1920. Play shows them for every language. |
-| Release `vX.Y.Z` | `Pforte-X.Y.Z.aab` – the App Bundle for Play, signed by the CI |
+| Release `vX.Y.Z` | `IndustrialKioskBrowser-X.Y.Z.aab` – the App Bundle for Play, signed by the CI |
 
 The folder layout is the one of [fastlane supply](https://docs.fastlane.tools/actions/supply/),
 so the texts can later be uploaded automatically. Until then, copy them into the Play Console.
@@ -32,9 +32,9 @@ Done once, by a person with access to the company accounts:
 1. **Developer account** as an organisation (ICT-Baden GmbH, needs a D-U-N-S number). An
    organisation account does not need the 14-day closed test with 12 testers that new personal
    accounts need.
-2. **Package name** is final once the app exists in Play: `de.ictbaden.pforte`.
+2. **Package name** is final once the app exists in Play: `de.ictbaden.industrialkioskbrowser`.
    The domain `ict-baden.de` belongs to ICT-Baden.
-3. **Privacy policy URL:** `https://ict-baden.de/datenschutz/pforte/` (German and English). It
+3. **Privacy policy URL:** `https://ict-baden.de/datenschutz/industrial-kiosk-browser/` (German and English). It
    must be online before the app is submitted.
 4. **Contact details** for the store listing: e-mail (e.g. `support@ict-baden.de`), website.
 5. **Translations** of the app and of the store texts read by native speakers (richtlinien/13).

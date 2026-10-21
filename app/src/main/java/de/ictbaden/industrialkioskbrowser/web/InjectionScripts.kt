@@ -1,0 +1,109 @@
+package de.ictbaden.industrialkioskbrowser.web
+
+import de.ictbaden.industrialkioskbrowser.config.AppConfig
+import de.ictbaden.industrialkioskbrowser.config.Injection
+import de.ictbaden.industrialkioskbrowser.config.InjectionTiming
+import de.ictbaden.industrialkioskbrowser.config.MatchType
+import de.ictbaden.industrialkioskbrowser.config.ViewportMode
+import de.ictbaden.industrialkioskbrowser.config.ViewportSettings
+import org.json.JSONObject
+
+/**
+ * Builds the JavaScript that applies configured injections and viewport overrides. Every script
+ * checks the URL (and optionally page source) itself, so the same script can be registered once
+ * as a document-start script and also be evaluated after a page load.
+ */
+object InjectionScripts {
+
+    /**
+     * Script for [injections] of the given [timing]; `null` when there is nothing to inject.
+     * Contents are resolved through [config] (`res:<name>`).
+     */
+    fun build(injections: List<Injection>, timing: InjectionTiming, config: AppConfig): String? {
+        val blocks = injections.filter { it.timing == timing }.mapNotNull { block(it, config) }
+        if (blocks.isEmpty()) return null
+        return "(function () {\n${HELPERS}\n${blocks.joinToString("\n")}\n})();"
+    }
+
+    private fun block(injection: Injection, config: AppConfig): String? {
+        val actions = buildList {
+            config.content(injection.css)?.let { add("eb.css(${q(it)});") }
+            config.content(injection.html)?.let { add("eb.html(${q(it)}, ${q(injection.htmlPosition.key)});") }
+            config.content(injection.js)?.let { add("eb.js(${q(it)});") }
+        }
+        if (actions.isEmpty()) return null
+        val frameCheck = if (injection.allFrames) "true" else "window === window.top"
+        val urlCheck = when (injection.matchType) {
+            MatchType.ALL -> "true"
+            MatchType.CONTAINS -> "location.href.indexOf(${q(injection.urlMatch)}) >= 0"
+            MatchType.PREFIX -> "location.href.indexOf(${q(injection.urlMatch)}) === 0"
+            MatchType.REGEX -> "new RegExp(${q(injection.urlMatch)}).test(location.href)"
+        }
+        val sourceCheck = injection.sourceContains?.let { "eb.source(${q(it)})" } ?: "true"
+        return """if ($frameCheck && $urlCheck) eb.whenReady(${injection.sourceContains != null}, function () {
+  if (!($sourceCheck)) return;
+  ${actions.joinToString("\n  ")}
+});"""
+    }
+
+    /**
+     * Script that rewrites the page's viewport meta tag, or `null` when the WebView settings alone
+     * implement [viewport].
+     */
+    fun viewport(viewport: ViewportSettings): String? {
+        val content = viewport.metaOverride ?: when (viewport.mode) {
+            ViewportMode.FIXED -> "width=${viewport.width}"
+            else -> return null
+        }
+        return """(function (content) {
+  if (window !== window.top) return;
+  // The page's own viewport tag is parsed after ours and would win: set every viewport tag.
+  function apply() {
+    var metas = document.querySelectorAll('meta[name="viewport"]');
+    if (!metas.length) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      (document.head || document.documentElement).appendChild(meta);
+      metas = [meta];
+    }
+    for (var i = 0; i < metas.length; i++) if (metas[i].content !== content) metas[i].content = content;
+  }
+  apply();
+  document.addEventListener('DOMContentLoaded', apply);
+})(${q(content)});"""
+    }
+
+    private fun q(text: String) = JSONObject.quote(text)
+
+    private const val HELPERS = """var eb = {
+  whenReady: function (needsDom, fn) {
+    if (!needsDom || document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  },
+  source: function (text) { return document.documentElement.outerHTML.indexOf(text) >= 0; },
+  css: function (text) {
+    var style = document.createElement('style');
+    style.setAttribute('data-industrialkioskbrowser', '');
+    style.textContent = text;
+    (document.head || document.documentElement).appendChild(style);
+  },
+  js: function (text) {
+    try { (0, eval)(text); } catch (e) { console.error('Industrial Kiosk Browser injection failed', e); }
+  },
+  html: function (text, position) {
+    eb.whenReady(true, function () {
+      var template = document.createElement('template');
+      template.innerHTML = text;
+      var fragment = template.content;
+      fragment.querySelectorAll('script').forEach(function (old) {
+        var script = document.createElement('script');
+        script.textContent = old.textContent;
+        old.replaceWith(script);
+      });
+      if (position === 'head') document.head.appendChild(fragment);
+      else if (position === 'bodyStart') document.body.insertBefore(fragment, document.body.firstChild);
+      else document.body.appendChild(fragment);
+    });
+  }
+};"""
+}

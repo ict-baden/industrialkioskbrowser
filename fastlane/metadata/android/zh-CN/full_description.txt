@@ -1,4 +1,4 @@
-Pforte 让您的 Web 应用运行在加固型 Android 设备上，适用于仓库、生产和物流场景。扫描结果直接填入网页表单，可将设备限制为只访问您允许的 Web 应用，全部配置均可通过 MDM 下发。
+Industrial Kiosk Browser 让您的 Web 应用运行在加固型 Android 设备上，适用于仓库、生产和物流场景。扫描结果直接填入网页表单，可将设备限制为只访问您允许的 Web 应用，全部配置均可通过 MDM 下发。
 
 条码扫描
 • 支持 Zebra DataWedge、Honeywell 扫描器以及任何通过 Intent 发送结果的扫描应用
@@ -28,7 +28,7 @@ Kiosk 模式
 • 自定义标题、徽标和品牌颜色，可通过配置或直接在应用中设置
 
 隐私
-• 无需账户，无广告，无跟踪。Pforte 不会向 ICT-Baden 发送任何数据。
+• 无需账户，无广告，无跟踪。Industrial Kiosk Browser 不会向 ICT-Baden 发送任何数据。
 • 应用本身只连接您配置的 Web 应用以及由其打开的页面。
 
 界面支持英语、德语、西班牙语、法语和中文。免费开源（MIT 许可证），由 ICT-Baden 开发。可提供付费支持合同。

@@ -1,4 +1,4 @@
-Pforte lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se puede limitar a las aplicaciones web permitidas y toda la configuración llega desde su MDM.
+Industrial Kiosk Browser lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se puede limitar a las aplicaciones web permitidas y toda la configuración llega desde su MDM.
 
 ESCANEO DE CÓDIGOS DE BARRAS
 • Funciona con Zebra DataWedge, escáneres Honeywell y cualquier aplicación de escaneo que envíe un intent
@@ -28,7 +28,7 @@ SU DISEÑO
 • Su título, su logotipo y el color de su marca, por configuración o directamente en la aplicación
 
 PRIVACIDAD
-• Sin cuenta, sin publicidad, sin seguimiento. Pforte no envía datos a ICT-Baden.
+• Sin cuenta, sin publicidad, sin seguimiento. Industrial Kiosk Browser no envía datos a ICT-Baden.
 • La propia aplicación solo se conecta a las aplicaciones web que usted configure y a las páginas a las que llevan.
 
 Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT-Baden. Hay contratos de soporte disponibles.

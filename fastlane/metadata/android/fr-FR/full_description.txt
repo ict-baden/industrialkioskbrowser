@@ -1,4 +1,4 @@
-Pforte fait tourner vos applications web sur des appareils Android durcis – entrepôt, production, logistique. Les scans arrivent directement dans le formulaire web, l’appareil peut être limité aux applications web autorisées et toute la configuration vient de votre MDM.
+Industrial Kiosk Browser fait tourner vos applications web sur des appareils Android durcis – entrepôt, production, logistique. Les scans arrivent directement dans le formulaire web, l’appareil peut être limité aux applications web autorisées et toute la configuration vient de votre MDM.
 
 SCAN DE CODES-BARRES
 • Compatible avec Zebra DataWedge, les scanners Honeywell et toute application de scan qui envoie un intent
@@ -28,7 +28,7 @@ VOTRE DESIGN
 • Votre titre, votre logo et la couleur de votre marque, par configuration ou directement dans l’application
 
 CONFIDENTIALITÉ
-• Pas de compte, pas de publicité, pas de suivi. Pforte n’envoie aucune donnée à ICT-Baden.
+• Pas de compte, pas de publicité, pas de suivi. Industrial Kiosk Browser n’envoie aucune donnée à ICT-Baden.
 • L’application elle-même se connecte uniquement aux applications web que vous configurez et aux pages vers lesquelles elles mènent.
 
 Interface en anglais, allemand, espagnol, français et chinois. Gratuit et open source (licence MIT), par ICT-Baden. Des contrats de support sont disponibles.
