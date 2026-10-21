@@ -1,4 +1,4 @@
-Pforte runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device can be limited to the web apps you allow, and the whole configuration comes from your MDM.
+Industrial Kiosk Browser runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device can be limited to the web apps you allow, and the whole configuration comes from your MDM.
 
 BARCODE SCANNING
 • Works with Zebra DataWedge, Honeywell scanners and any scanner app that sends an intent
@@ -28,7 +28,7 @@ YOUR DESIGN
 • Your title, logo and brand color, set by configuration or right in the app
 
 PRIVACY
-• No account, no ads, no tracking. Pforte sends no data to ICT-Baden.
+• No account, no ads, no tracking. Industrial Kiosk Browser sends no data to ICT-Baden.
 • The app itself only connects to the web apps you configure and the pages they lead to.
 
 User interface in English, German, Spanish, French and Chinese. Free and open source (MIT licence), made by ICT-Baden. Paid support contracts are available.

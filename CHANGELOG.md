@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- **New name: Industrial Kiosk Browser** (formerly *Pforte*, before that *EnterpriseBrowser*), matching
+  [Industrial Keyboard](https://github.com/ict-baden/industrialkeyboard). Package name
+  `de.ictbaden.industrialkioskbrowser`, so Android and the EMM see a new app – see [Deployment](docs/deployment.md).
+  Also renamed: broadcast actions (`de.ictbaden.industrialkioskbrowser.action.BARCODE`, `…action.INSTALL_CONFIG`),
+  JavaScript API `window.IndustrialKioskBrowser` and event `industrialkioskbrowser:scan`, DataWedge profile
+  "Industrial Kiosk Browser", configuration file `industrialkioskbrowser.json`, error codes `IKB-…` (same numbers as
+  `PFT-…`), retry link `industrialkioskbrowser://retry` (`pforte://retry` and `ebrowser://retry` still work).
+  Release files are called `IndustrialKioskBrowser-<version>`.
+
 ## [0.6.1] – 2026-10-21
 
 ### Fixed

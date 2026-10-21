@@ -3,7 +3,7 @@
 Quelle ist die Liste group:artifact:version, die check-notices.sh aus releaseRuntimeClasspath erzeugt –
 dieselbe Liste, gegen die THIRD-PARTY-NOTICES.txt geprüft wird.
 
-    python3 .github/scripts/sbom.py <version> build/release-dependencies.txt dist/Pforte-<version>.cdx.json
+    python3 .github/scripts/sbom.py <version> build/release-dependencies.txt dist/IndustrialKioskBrowser-<version>.cdx.json
 """
 import datetime
 import json
@@ -27,7 +27,7 @@ with open(deps_file, encoding="utf-8") as f:
             "purl": f"pkg:maven/{group}/{artifact}@{ver}",
         })
 
-app_ref = f"pkg:android/de.ictbaden.pforte@{version}"
+app_ref = f"pkg:android/de.ictbaden.industrialkioskbrowser@{version}"
 bom = {
     "bomFormat": "CycloneDX",
     "specVersion": "1.5",
@@ -38,7 +38,7 @@ bom = {
         "component": {
             "type": "application",
             "bom-ref": app_ref,
-            "name": "Pforte",
+            "name": "IndustrialKioskBrowser",
             "version": version,
             "licenses": [{"license": {"id": "MIT"}}],
             "supplier": {"name": "ICT-Baden", "url": ["https://ict-baden.de/"]},

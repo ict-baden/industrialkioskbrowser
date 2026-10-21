@@ -70,7 +70,7 @@ passwords that are not set keep their current value.
 | `exitPassword` / `exitPasswordHash` | Asked for when exiting. |
 | `hideExit` | Hides "Exit" and "Profiles" (kiosk). |
 | `language` | `auto` (default: the device language), `en`, `de`, `es`, `fr` or `zh-Hans`. Can also be changed in the app under **Settings → Design → Language**. |
-| `branding.title` | Title of the start screen (default: "Pforte") |
+| `branding.title` | Title of the start screen (default: "Industrial Kiosk Browser") |
 | `branding.subtitle` | Subtitle (default: device manufacturer and model) |
 | `branding.color` | Brand color `#RRGGBB` for the start screen, toolbars and error pages |
 | `branding.logo` | Logo as a resource, e.g. `res:logo.png` (PNG/JPEG/WebP) |
@@ -174,8 +174,8 @@ third-party web app, or a scan hook.
 ```
 
 - `template` – your own HTML with the placeholders `{{title}}`, `{{message}}`, `{{url}}`,
-  `{{color}}` (brand color), `{{code}}` (translated "Error code: PFT-…", see [error codes](error-codes.md)),
-  `{{retry}}` (label of the retry button) and `{{lang}}` (language tag for `<html lang>`). The link `pforte://retry` reloads (`ebrowser://retry` from older templates still works). Without a template
+  `{{color}}` (brand color), `{{code}}` (translated "Error code: IKB-…", see [error codes](error-codes.md)),
+  `{{retry}}` (label of the retry button) and `{{lang}}` (language tag for `<html lang>`). The link `industrialkioskbrowser://retry` reloads (`ebrowser://retry` from older templates still works). Without a template
   the built-in error page is used (see [image](images/screen-error.png)).
 - `showHttpErrors` – also replaces the server's error pages (HTTP ≥ 400).
 - Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` or `res:<name>`
@@ -205,9 +205,9 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 
 | Device | Integration |
 |---|---|
-| Zebra | DataWedge intent API. On start a DataWedge profile "Pforte" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. DataWedge is a separate app, so the scan receiver has to be open to other apps as well; Android cannot tell who sent a scan. |
+| Zebra | DataWedge intent API. On start a DataWedge profile "Industrial Kiosk Browser" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. DataWedge is a separate app, so the scan receiver has to be open to other apps as well; Android cannot tell who sent a scan. |
 | Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
-| Others | Any scanner app that broadcasts `de.ictbaden.pforte.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). By default only on devices without a Zebra or Honeywell scanner – `scanner.genericIntent: "on"` accepts it everywhere. |
+| Others | Any scanner app that broadcasts `de.ictbaden.industrialkioskbrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). By default only on devices without a Zebra or Honeywell scanner – `scanner.genericIntent: "on"` accepts it everywhere. |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 

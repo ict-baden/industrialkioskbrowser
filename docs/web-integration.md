@@ -1,6 +1,6 @@
 # Web integration
 
-For developers of the web apps that run in Pforte. An existing web app works
+For developers of the web apps that run in Industrial Kiosk Browser. An existing web app works
 **without any changes**: scans are typed into the focused field like keyboard input.
 Everything on this page is optional.
 
@@ -11,10 +11,10 @@ Everything on this page is optional.
 ```mermaid
 sequenceDiagram
   participant S as Scanner (DataWedge/Honeywell)
-  participant A as Pforte
+  participant A as Industrial Kiosk Browser
   participant P as Web page
   S->>A: barcode + symbology
-  A->>P: event "pforte:scan" (cancelable)
+  A->>P: event "industrialkioskbrowser:scan" (cancelable)
   alt preventDefault()
     P-->>A: page handles it itself
   else default
@@ -25,7 +25,7 @@ sequenceDiagram
 
 1. If the page has a `ScannerNavigate` meta tag, its target is opened instead (see
    below) – otherwise:
-2. The cancelable event `pforte:scan` is dispatched on `window`.
+2. The cancelable event `industrialkioskbrowser:scan` is dispatched on `window`.
 3. Unless a listener calls `preventDefault()`, the text is written into the focused input
    field (also inside shadow DOM and same-origin iframes). `input` and `change` events are
    fired – React, Vue & co. pick up the value.
@@ -35,7 +35,7 @@ sequenceDiagram
 ## Scan event
 
 ```js
-window.addEventListener('pforte:scan', (event) => {
+window.addEventListener('industrialkioskbrowser:scan', (event) => {
   const { data, symbology, source, timestamp } = event.detail;
   // data: "4006381333931", symbology: "EAN13", source: "Zebra DataWedge"
   if (data.startsWith('LOC-')) {
@@ -67,37 +67,37 @@ They apply to the current page:
 
 ## JavaScript API
 
-`window.Pforte` is available on allowed hosts – the hosts of the `allowList`,
+`window.IndustrialKioskBrowser` is available on allowed hosts – the hosts of the `allowList`,
 or the host of the start URL when there is no allow list. All methods return promises.
 
 ```js
-Pforte.onScan((scan, event) => { /* same as the scan event */ });
+IndustrialKioskBrowser.onScan((scan, event) => { /* same as the scan event */ });
 
-await Pforte.scanner.trigger();       // start scanning (soft trigger)
-await Pforte.scanner.trigger(false);  // stop scanning
-await Pforte.scanner.disable();       // scanner off until the next page load
-await Pforte.scanner.enable();
-const { name, enabled } = await Pforte.scanner.status();
+await Industrial Kiosk Browser.scanner.trigger();       // start scanning (soft trigger)
+await Industrial Kiosk Browser.scanner.trigger(false);  // stop scanning
+await Industrial Kiosk Browser.scanner.disable();       // scanner off until the next page load
+await Industrial Kiosk Browser.scanner.enable();
+const { name, enabled } = await Industrial Kiosk Browser.scanner.status();
 
-await Pforte.beep();                  // confirmation
-await Pforte.beep('error');           // error tone
-await Pforte.vibrate(300);
-await Pforte.toast('Booked');
+await Industrial Kiosk Browser.beep();                  // confirmation
+await Industrial Kiosk Browser.beep('error');           // error tone
+await Industrial Kiosk Browser.vibrate(300);
+await Industrial Kiosk Browser.toast('Booked');
 
-const info = await Pforte.deviceInfo();
+const info = await Industrial Kiosk Browser.deviceInfo();
 // { manufacturer, model, androidVersion, sdk, appVersion, profileId, scanner }
 ```
 
 Feature detection for pages that also run in a normal browser:
 
 ```js
-if (window.Pforte) {
-  Pforte.beep();
+if (window.IndustrialKioskBrowser) {
+  Industrial Kiosk Browser.beep();
 }
 ```
 
 > **Note:** on servers with a non-default port (e.g. `:8443`)
-> `window.Pforte` is currently not available. Scans, the scan event and the
+> `window.IndustrialKioskBrowser` is currently not available. Scans, the scan event and the
 > meta tags still work there.
 
 ## Built-in pages and resources
@@ -110,8 +110,8 @@ if (window.Pforte) {
 ## Testing without a scanner
 
 ```bash
-adb shell am broadcast -a de.ictbaden.pforte.action.BARCODE \
-  -p de.ictbaden.pforte --es data 4006381333931 --es symbology EAN13
+adb shell am broadcast -a de.ictbaden.industrialkioskbrowser.action.BARCODE \
+  -p de.ictbaden.industrialkioskbrowser --es data 4006381333931 --es symbology EAN13
 ```
 
 Remote debugging with Chrome DevTools (`chrome://inspect`) is enabled in debug builds.

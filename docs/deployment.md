@@ -7,11 +7,11 @@ transport differs.
 | Method | Suited for | Configuration |
 |---|---|---|
 | [Managed configuration](#managed-configuration-all-emms) | SOTI, Intune, Workspace ONE, … (Android Enterprise) | key `config_json` |
-| [Configuration file](#configuration-file) | SOTI File Sync, Zebra StageNow/MX, adb | `pforte.json` |
+| [Configuration file](#configuration-file) | SOTI File Sync, Zebra StageNow/MX, adb | `industrialkioskbrowser.json` |
 | [Broadcast intent](#broadcast-intent-stagenow-adb) | Zebra StageNow (Intent CSP), scripts, adb | extra `config` |
 | [QR code](#qr-code) | single devices, testing | JSON inside the QR code |
 
-Package name: **`de.ictbaden.pforte`**
+Package name: **`de.ictbaden.industrialkioskbrowser`**
 
 > **Always set an admin password** (`global.adminPassword`, managed configuration key
 > `admin_password` or *Settings → Admin password*). Without one, the settings are open on the
@@ -20,12 +20,12 @@ Package name: **`de.ictbaden.pforte`**
 > Use at least 10 characters. After 5 wrong passwords, broadcasts (and, counted separately,
 > app-folder files) are refused for 15 minutes.
 
-> **Coming from EnterpriseBrowser?** Pforte is the same app under a new name and package name
-> (`de.ictbaden.pforte` instead of `de.ictbaden.enterprisebrowser`). Android and the EMM treat it
-> as a new app: distribute Pforte, roll out the configuration again (the JSON format is
-> unchanged; rename the file to `pforte.json`), then remove the old app. Broadcast actions,
-> the JavaScript API (`window.Pforte`, event `pforte:scan`), the DataWedge profile name and
-> the error codes (`PFT-…` instead of `EB-…`) changed with the name.
+> **Coming from Pforte or EnterpriseBrowser?** Industrial Kiosk Browser is the same app under a new name and package
+> name (`de.ictbaden.industrialkioskbrowser` instead of `de.ictbaden.pforte` or `de.ictbaden.enterprisebrowser`). Android and the EMM treat it
+> as a new app: distribute Industrial Kiosk Browser, roll out the configuration again (the JSON format is
+> unchanged; rename the file to `industrialkioskbrowser.json`), then remove the old app. Broadcast actions,
+> the JavaScript API (`window.IndustrialKioskBrowser`, event `industrialkioskbrowser:scan`), the DataWedge profile name and
+> the error codes (`IKB-…` instead of `PFT-…`/`EB-…`, same numbers) changed with the name.
 
 ## Managed configuration (all EMMs)
 
@@ -56,9 +56,9 @@ Menu names differ between MobiControl versions and device management modes
    open the app configuration of the enterprise app and paste the contents of the JSON
    file into `config_json`.
 3. **Configuration – option B, file** (e.g. Android+ with the Zebra agent):
-   put `pforte.json` into `/enterprise/usr/` on the device with File Sync or a
+   put `industrialkioskbrowser.json` into `/enterprise/usr/` on the device with File Sync or a
    package (Zebra; survives an enterprise reset).
-4. **Kiosk** – allow Pforte as the only app in a lockdown/kiosk profile. Under
+4. **Kiosk** – allow Industrial Kiosk Browser as the only app in a lockdown/kiosk profile. Under
    Android Enterprise (dedicated device) the app then starts in lock task mode
    automatically. Also set `global.hideExit` in the configuration
    ([template](../examples/kiosk-single-app.json)).
@@ -84,21 +84,21 @@ configurations shows the schema automatically.
 ## Zebra StageNow / MX
 
 - **Install the app:** AppMgr CSP with the APK.
-- **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/pforte.json`.
+- **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/industrialkioskbrowser.json`.
 - **Configuration via intent:** Intent CSP, *send broadcast* with
-  action `de.ictbaden.pforte.action.INSTALL_CONFIG`,
-  package `de.ictbaden.pforte`, string extra `config` (JSON) and string extra
+  action `de.ictbaden.industrialkioskbrowser.action.INSTALL_CONFIG`,
+  package `de.ictbaden.industrialkioskbrowser`, string extra `config` (JSON) and string extra
   `admin_password` – see [Broadcast intent](#broadcast-intent-stagenow-adb) for when it is needed.
   Without an EMM the configuration file above is the simpler way.
-- **Scanner:** on first start the app creates a DataWedge profile "Pforte".
+- **Scanner:** on first start the app creates a DataWedge profile "Industrial Kiosk Browser".
   Decoders (symbologies, lengths, illumination …) can then be tuned with the DataWedge
   CSP or in the DataWedge app – the app does not overwrite them.
 
 ## Configuration file
 
-The app reads `pforte.json` from
+The app reads `industrialkioskbrowser.json` from
 
-1. `Android/data/de.ictbaden.pforte/files/` (app folder; exists after
+1. `Android/data/de.ictbaden.industrialkioskbrowser/files/` (app folder; exists after
    the app has been started once)
 2. `/enterprise/usr/` (Zebra, persistent; writable only by MX/StageNow, the EMM agent or adb)
 
@@ -124,7 +124,7 @@ lock has expired). Files in `/enterprise/usr/` are trusted and may also set a ne
 
 ```bash
 adb push examples/sap-its-mobile.json \
-  /sdcard/Android/data/de.ictbaden.pforte/files/pforte.json
+  /sdcard/Android/data/de.ictbaden.industrialkioskbrowser/files/industrialkioskbrowser.json
 ```
 
 ## Broadcast intent (StageNow, adb)
@@ -144,8 +144,8 @@ or with the managed configuration key `admin_password` – or use the configurat
 
 ```bash
 adb shell am broadcast \
-  -a de.ictbaden.pforte.action.INSTALL_CONFIG \
-  -n de.ictbaden.pforte/.provisioning.ConfigReceiver \
+  -a de.ictbaden.industrialkioskbrowser.action.INSTALL_CONFIG \
+  -n de.ictbaden.industrialkioskbrowser/.provisioning.ConfigReceiver \
   --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'   --es admin_password 'change-me'
 ```
 

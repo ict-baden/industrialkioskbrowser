@@ -82,7 +82,7 @@
     <string name="language_machine_translated">%1$s (traduction automatique)</string>
     <string name="title">Titre</string>
     <string name="subtitle">Sous-titre</string>
-    <string name="title_summary">Vide = Pforte</string>
+    <string name="title_summary">Vide = Industrial Kiosk Browser</string>
     <string name="subtitle_summary">Vide = modèle de l\'appareil</string>
     <string name="start_screen_title">Titre de l\'écran d\'accueil</string>
     <string name="brand_color">Couleur de la marque</string>
@@ -159,7 +159,7 @@
     <string name="no_browser">Aucun navigateur disponible</string>
 
     <string name="mc_config_json_title">Configuration (JSON)</string>
-    <string name="mc_config_json_description">Configuration complète au format JSON de Pforte. Prioritaire sur l\'URL de départ et le nom du profil.</string>
+    <string name="mc_config_json_description">Configuration complète au format JSON de Industrial Kiosk Browser. Prioritaire sur l\'URL de départ et le nom du profil.</string>
     <string name="mc_profile_name_title">Nom du profil</string>
     <string name="mc_profile_name_description">Nom du profil géré (uniquement avec l\'URL de départ).</string>
     <string name="mc_start_url_title">URL de départ</string>

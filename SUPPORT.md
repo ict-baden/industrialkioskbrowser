@@ -1,12 +1,12 @@
 # Hilfe und Support / Help and support
 
-Pforte ist kostenlos und Open Source. Für Hilfe gibt es zwei Wege.
-Pforte is free and open source. There are two ways to get help.
+Industrial Kiosk Browser ist kostenlos und Open Source. Für Hilfe gibt es zwei Wege.
+Industrial Kiosk Browser is free and open source. There are two ways to get help.
 
 ## Kostenlos: GitHub / Free: GitHub
 
-- **Fehler und Wünsche:** [Issue anlegen](https://github.com/ict-baden/pforte/issues/new/choose)
-- **Fragen / questions:** ebenfalls als [Issue](https://github.com/ict-baden/pforte/issues/new/choose) – also as an issue
+- **Fehler und Wünsche:** [Issue anlegen](https://github.com/ict-baden/industrialkioskbrowser/issues/new/choose)
+- **Fragen / questions:** ebenfalls als [Issue](https://github.com/ict-baden/industrialkioskbrowser/issues/new/choose) – also as an issue
 
 Wir lesen alles, können aber keine Reaktionszeit zusagen. Alles dort ist öffentlich – bitte keine internen Daten.
 We read everything but cannot promise response times. Everything there is public.
