@@ -11,13 +11,13 @@ PERFILES
 
 MODO QUIOSCO
 • Ocultar la barra de herramientas y las barras del sistema, ocultar la salida o protegerla con contraseña
-• Solo se pueden abrir los hosts permitidos; todo lo demás se bloquea antes de cargarse
+• Lista de hosts permitidos por perfil: solo esos se pueden abrir; todo lo demás se bloquea antes de cargarse
 • Modo de bloqueo de tareas en dispositivos gestionados
 
 CONFIGURACIÓN CENTRAL
 • Configuración gestionada desde su MDM (por ejemplo SOTI MobiControl, Microsoft Intune, Workspace ONE)
 • Archivo de configuración, intent de difusión (StageNow) o código QR
-• Los ajustes en el dispositivo están protegidos con una contraseña de administrador
+• Los ajustes en el dispositivo se pueden proteger con una contraseña de administrador
 
 PARA APLICACIONES WEB
 • Añada su propio CSS, JavaScript o HTML a aplicaciones web de terceros, según la dirección
@@ -29,6 +29,6 @@ SU DISEÑO
 
 PRIVACIDAD
 • Sin cuenta, sin publicidad, sin seguimiento. Pforte no envía datos a ICT-Baden.
-• La aplicación solo se conecta a las direcciones web que usted configure.
+• La propia aplicación solo se conecta a las aplicaciones web que usted configure y a las páginas a las que llevan.
 
 Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT-Baden. Hay contratos de soporte disponibles.

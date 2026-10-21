@@ -113,7 +113,7 @@ class AdminActivity : AppCompatActivity() {
             scroll.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
             insets
         }
-        scanner = ScannerManager(this, ::onScan).apply { enabled = false }
+        scanner = ScannerManager(this, onScan = ::onScan).apply { enabled = false }
         render()
     }
 
@@ -205,7 +205,7 @@ class AdminActivity : AppCompatActivity() {
                 ),
                 // About block required by ict-baden/richtlinien 07.
                 row(R.drawable.ic_shield, getString(R.string.about_privacy), getString(R.string.about_privacy_summary)) {
-                    openLink("$SOURCE/blob/main/docs/data-and-privacy.md")
+                    openLink(PRIVACY)
                 },
                 row(R.drawable.ic_info, getString(R.string.about_licence), getString(R.string.about_licence_summary)) {
                     showText(getString(R.string.about_licence), "LICENSE")
@@ -223,7 +223,11 @@ class AdminActivity : AppCompatActivity() {
         )
     }
 
-    private fun languageName(language: String) = AppLanguage.NAMES[language] ?: getString(R.string.language_system)
+    /** Machine-translated languages are marked as such (they still need review by native speakers). */
+    private fun languageName(language: String): String {
+        val name = AppLanguage.NAMES[language] ?: return getString(R.string.language_system)
+        return if (language in AppLanguage.MACHINE_TRANSLATED) getString(R.string.language_machine_translated, name) else name
+    }
 
     /** Language of this device; stored in `global.language` like every other setting. */
     private fun pickLanguage() {
@@ -728,8 +732,9 @@ class AdminActivity : AppCompatActivity() {
     companion object {
         private const val LOGO_RESOURCE = "branding-logo"
         private const val SOURCE = "https://github.com/ict-baden/pforte"
-        private const val WEBSITE = "https://ict-baden.de"
-        private const val IMPRESSUM = "https://ict-baden.de/impressum"
+        private const val WEBSITE = "https://ict-baden.de/produkte/pforte/"
+        private const val IMPRESSUM = "https://ict-baden.de/impressum/"
+        private const val PRIVACY = "https://ict-baden.de/datenschutz/pforte/"
         private const val SUBTITLE_TAG = "subtitle"
         private const val MAX_LOGO_BYTES = 1024 * 1024
         private val PALETTE = listOf(

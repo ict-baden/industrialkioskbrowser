@@ -28,7 +28,8 @@ JDK 17–21, Android SDK mit Compile-SDK 37.
 
 - Paketname `de.ictbaden.pforte`, Debug `….debug` (Richtlinie 12). Früherer Name „EnterpriseBrowser“ (`de.ictbaden.enterprisebrowser`) wegen Zebras gleichnamigem Produkt ab 0.6.0 aufgegeben; Fehlercodes `PFT-…` (vorher `EB-…`). Die Broadcast-Actions hängen am Paketnamen (`<paket>.action.BARCODE`, `<paket>.action.INSTALL_CONFIG`) und sind öffentliche API – nicht nebenbei ändern. Im Manifest steht deshalb `${applicationId}`.
 - Release-APKs signiert nur die CI mit dem Schlüssel aus den Secrets `ANDROID_KEYSTORE` (Base64), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`. `ANDROID_KEY_PASSWORD` ist optional (PKCS12: gleiches Passwort). Ohne Schlüssel baut und testet die CI nur. Den Schlüssel hat nur der Release-Verantwortliche von ICT-Baden, Claude bekommt ihn nie.
-- `LICENSE` und `THIRD-PARTY-NOTICES.txt` werden beim Bauen als Assets in die APK kopiert. Neue Abhängigkeit → `THIRD-PARTY-NOTICES.txt` ergänzen; die CI gibt die Liste der Abhängigkeiten im Schritt „Abhängigkeiten der APK“ aus.
+- `LICENSE` und `THIRD-PARTY-NOTICES.txt` werden beim Bauen als Assets in die APK kopiert. Neue oder geänderte Abhängigkeit (auch Dependabot) → `THIRD-PARTY-NOTICES.txt` ergänzen, lesbarer Teil und Liste „Components“; `.github/scripts/check-notices.sh` vergleicht die Liste mit `releaseRuntimeClasspath` und lässt die CI sonst scheitern. Dieselbe Liste wird zur SBOM (`.github/scripts/sbom.py`, `<Name>-<version>.cdx.json` im Release).
+- Ohne Signier-Secrets legt ein Tag `v*` das Release trotzdem an (SBOM, Prüfsummen); nach dem Setzen der Secrets den Lauf des Tags neu starten, dann kommen APK und `.aab` dazu.
 - Google Play: Store-Texte und -Grafiken in `fastlane/metadata/android/`, Anleitung und Console-Antworten in `docs/play-store.md`. Die CI legt bei Tags zusätzlich das signierte `.aab` ins Release.
 - `gradlew` muss in Git ausführbar sein (`git update-index --chmod=+x gradlew`), sonst scheitert die CI.
 

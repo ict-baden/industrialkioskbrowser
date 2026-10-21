@@ -84,8 +84,9 @@ the administrator usually limits it to an allow list.
 - *Does the app collect or share user data?* **No.** The app has no servers of its own and
   sends nothing to ICT-Baden (no telemetry, no crash reports, no account). Like any browser it
   transmits what the user enters into a web page to that web page's server – the servers the
-  device owner configures as start URL and allow list. Re-check this answer against the current
-  Play definitions before submitting.
+  device owner configures as start URL and allow list (an empty allow list allows every host).
+  Google Safe Browsing in the Android System WebView stays on (a function of Android, not of the
+  app). Re-check this answer against the current Play definitions before submitting.
 - Encryption in transit: the configured web apps decide (HTTPS recommended; the app enforces
   strict TLS checks).
 - Data deletion: no account, nothing to delete on our side; *Clear storage* removes everything

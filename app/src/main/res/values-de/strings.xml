@@ -79,6 +79,7 @@
     <string name="add_profile_summary">Start-URL, Kiosk und Scanner</string>
     <string name="language">Sprache</string>
     <string name="language_system">Systemsprache</string>
+    <string name="language_machine_translated">%1$s (maschinell übersetzt)</string>
     <string name="title">Titel</string>
     <string name="subtitle">Untertitel</string>
     <string name="title_summary">Leer = Pforte</string>

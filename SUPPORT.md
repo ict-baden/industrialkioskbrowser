@@ -6,7 +6,7 @@ Pforte is free and open source. There are two ways to get help.
 ## Kostenlos: GitHub / Free: GitHub
 
 - **Fehler und Wünsche:** [Issue anlegen](https://github.com/ict-baden/pforte/issues/new/choose)
-- **Fragen:** [Discussions](https://github.com/ict-baden/pforte/discussions)
+- **Fragen / questions:** ebenfalls als [Issue](https://github.com/ict-baden/pforte/issues/new/choose) – also as an issue
 
 Wir lesen alles, können aber keine Reaktionszeit zusagen. Alles dort ist öffentlich – bitte keine internen Daten.
 We read everything but cannot promise response times. Everything there is public.
@@ -21,7 +21,7 @@ Mit einem Supportvertrag von ICT-Baden bekommen Sie:
 - Vorrang bei Fehlerbehebungen und Sicherheitsinformationen vorab
 - Anpassungen und Schulungen nach Absprache
 
-Kontakt: [Impressum](https://ict-baden.de/impressum)
+Kontakt: [Impressum](https://ict-baden.de/impressum/)
 
 ## Konfiguration mitschicken / Send your configuration
 

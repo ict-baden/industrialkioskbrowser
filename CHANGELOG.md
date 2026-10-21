@@ -2,6 +2,51 @@
 
 ## Unreleased
 
+## [0.6.0] – 2026-10-21
+
+### Changed
+
+- **New name: Pforte** (formerly *EnterpriseBrowser*; the old name is a product of another vendor).
+  Package name `de.ictbaden.pforte`, so **Android and the EMM see a new app**: distribute Pforte, roll out the
+  configuration again (same JSON format, file name now `pforte.json`) and remove the old app – see
+  [Deployment](docs/deployment.md). Also renamed: broadcast actions (`de.ictbaden.pforte.action.BARCODE`,
+  `…action.INSTALL_CONFIG`), JavaScript API `window.Pforte` and event `pforte:scan`, DataWedge profile "Pforte",
+  error codes `PFT-…` (same numbers as `EB-…`), retry link `pforte://retry` (`ebrowser://retry` still works).
+- A tap on the launcher icon no longer closes the open web session.
+- Settings, configuration files and the MDM take effect in an open profile right away: the session starts again
+  with the new configuration instead of after an app restart.
+- The back key skips error pages and the address that failed; with nothing to go back to it opens the menu, so a
+  kiosk without toolbar is never stuck on an error page.
+- `ScannerNavigate` templates with leading spaces before `javascript:` work.
+- Store texts and [Data and privacy](docs/data-and-privacy.md) are precise: an empty `allowList` allows every
+  host, the admin password is optional, Google Safe Browsing of the Android WebView stays on.
+- Info links point to https://ict-baden.de (privacy policy, website, legal notice).
+- Spanish, French and Chinese are marked as machine translations in the language picker.
+
+### Added
+
+- `scanner.genericIntent` (`auto`/`on`/`off`): the generic scan broadcast `<package>.action.BARCODE`, which any
+  app can send, is by default only accepted on devices without a Zebra or Honeywell scanner.
+- Releases contain an SBOM (CycloneDX, `Pforte-<version>.cdx.json`); build provenance attestation is prepared
+  for the public repository. The CI checks `THIRD-PARTY-NOTICES.txt` against the libraries in the APK.
+- [Limitations](docs/limitations.md) and [Security review](docs/security-review.md).
+
+### Security
+
+- **A configuration file in the app folder** (`Android/data/<package>/files/`) needs the admin password once one
+  is set (`global.adminPassword` in plain text) and never replaces it; without a password it is only accepted on
+  managed devices and from Android 11 on. After the import the file is deleted, so the plain password does not
+  stay readable. Files in `/enterprise/usr/` are trusted as before.
+- After 5 wrong admin passwords, broadcasts (and, counted separately, app-folder files) are refused for 15 minutes.
+- Password hashes with more than 600,000 PBKDF2 iterations are rejected.
+
+### Fixed
+
+- French store texts contained broken characters instead of dashes.
+- `THIRD-PARTY-NOTICES.txt` listed outdated versions and missed AndroidX WebKit.
+
+### Also new since 0.5.0 (developed under the former name)
+
 - **Security: configuration broadcasts (`INSTALL_CONFIG`) are only accepted with the admin password, or – while
   no password is set – on devices managed by an EMM.** Before, any app on an unmanaged device could replace the
   configuration (e.g. the start URL). **Action needed** if you configure unmanaged devices by broadcast (StageNow
@@ -11,7 +56,7 @@
 
 - **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
   device language; `global.language` or **Settings → Design → Language** set it per device.
-- Error messages and error pages show a code such as `EB-0001` ([list](docs/error-codes.md)), so support can identify
+- Error messages and error pages show a code such as `PFT-0001` ([list](docs/error-codes.md)), so support can identify
   them in any language. Custom error page templates get the placeholders `{{code}}`, `{{retry}}` and `{{lang}}`.
 - **Settings → Info** now shows data and privacy, licence, third-party licences, source code, support, website and
   legal notice; new page [Data and privacy](docs/data-and-privacy.md).

@@ -91,6 +91,7 @@
     <string name="add_profile_summary">Start URL, kiosk and scanner</string>
     <string name="language">Language</string>
     <string name="language_system">System default</string>
+    <string name="language_machine_translated">%1$s (machine translation)</string>
     <string name="title">Title</string>
     <string name="subtitle">Subtitle</string>
     <string name="title_summary">Empty = Pforte</string>

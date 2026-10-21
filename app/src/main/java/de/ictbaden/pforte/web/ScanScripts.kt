@@ -4,6 +4,7 @@ import de.ictbaden.pforte.scanner.ScanResult
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
+import java.net.URI
 import java.net.URLEncoder
 
 /** JavaScript snippets evaluated in the page and helpers for their results. */
@@ -78,6 +79,23 @@ object ScanScripts {
         } else {
             template.replace("%s", URLEncoder.encode(data, "UTF-8"))
         }
+
+    /** What a filled ScannerNavigate template asks for. */
+    sealed interface Target {
+        data class Script(val js: String) : Target
+        data class Address(val url: String) : Target
+    }
+
+    /**
+     * Fills a ScannerNavigate template. Leading spaces in the meta tag are ignored, so
+     * `" javascript:…"` still runs as script; relative targets (`/item?code=%s`) are resolved
+     * against [currentUrl].
+     */
+    fun navigationTarget(template: String, data: String, currentUrl: String?): Target {
+        val filled = applyTemplate(template.trim(), data)
+        if (filled.startsWith("javascript:", ignoreCase = true)) return Target.Script(filled.substringAfter(':'))
+        return Target.Address(runCatching { URI(currentUrl).resolve(filled).toString() }.getOrDefault(filled))
+    }
 
     /** Decodes the value `evaluateJavascript` reports for a script that returns a string. */
     fun decodeStringResult(result: String?): String? {

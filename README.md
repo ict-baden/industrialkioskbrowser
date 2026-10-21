@@ -16,14 +16,21 @@
 
 <p align="center">
   <b>Web apps on rugged Android devices – with barcode scanning, kiosk mode and central configuration.</b><br>
-  A lean, modern kiosk browser written in Kotlin.
+  A lean, modern kiosk browser written in Kotlin. Formerly called <i>EnterpriseBrowser</i>.
+</p>
+
+<p align="center">
+  <sub>🇩🇪 Pforte bringt Web-Apps auf robuste Android-Geräte (Zebra, Honeywell …): Barcode-Scan direkt ins Webformular,
+  Kiosk-Modus, Konfiguration zentral per MDM. Oberfläche auf Deutsch und Englisch; Spanisch, Französisch und Chinesisch sind
+  maschinell übersetzt.</sub>
 </p>
 
 <p align="center">
   <a href="#-up-and-running-in-5-minutes">Quick start</a> ·
   <a href="docs/configuration.md">Configuration</a> ·
   <a href="docs/deployment.md">Deployment (SOTI, Intune, StageNow)</a> ·
-  <a href="docs/web-integration.md">Web integration</a>
+  <a href="docs/web-integration.md">Web integration</a> ·
+  <a href="#%EF%B8%8F-limitations">Limitations</a>
 </p>
 
 ---
@@ -157,6 +164,19 @@ flowchart LR
   C --> B
 ```
 
+## ⚠️ Limitations
+
+Honest list in [docs/limitations.md](docs/limitations.md). In short:
+
+- **Tested on real hardware only on a Zebra HC20** (Android 15, DataWedge). Honeywell devices and other Zebra
+  models are untested – the Honeywell integration follows the vendor's documented intent API.
+- An **empty `allowList` allows every host** – set one on kiosk devices.
+- The JavaScript API is also offered to `http://` pages of allowed hosts (intranet apps), and plain HTTP and
+  user-installed CAs are accepted – both on purpose for intranets, see the limitations page.
+- The user interface is English and German; **Spanish, French and Chinese are machine translations** that
+  still need review by native speakers.
+- Version 0.x: settings and the JSON format may still change.
+
 ## 🛠️ Building
 
 Requirements: JDK 17–21, Android SDK (platform 37).
@@ -187,6 +207,8 @@ docs/            documentation and images
 - [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
 - [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
 - [Error codes](docs/error-codes.md) – `PFT-0001` … with causes
+- [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
+- [Security review](docs/security-review.md) – independent review before 0.6.0 and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
 - [Changelog](CHANGELOG.md)
 
@@ -198,5 +220,6 @@ Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
-<a href="https://ict-baden.de/impressum">Impressum</a>
+<a href="https://ict-baden.de/datenschutz/pforte/">Privacy</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/impressum/">Impressum</a>
 </sub>

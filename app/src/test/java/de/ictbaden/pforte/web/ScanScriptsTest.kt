@@ -56,4 +56,20 @@ class ScanScriptsTest {
         assertEquals(ScanTerminator.NONE, PagePolicy.fromMetaTags(listOf("scanner" to "NoAuto")).terminator)
         assertEquals(PagePolicy.NONE, PagePolicy.fromMetaTags(listOf("viewport" to "width=device-width")))
     }
+
+    @Test
+    fun `navigation targets ignore leading spaces and resolve relative addresses`() {
+        assertEquals(
+            ScanScripts.Target.Script("lookup(\"4006\")"),
+            ScanScripts.navigationTarget("  javascript:lookup(%s)", "4006", "https://wms.example.com/a"),
+        )
+        assertEquals(
+            ScanScripts.Target.Address("https://wms.example.com/item?code=A%2BB"),
+            ScanScripts.navigationTarget(" /item?code=%s", "A+B", "https://wms.example.com/list/x"),
+        )
+        assertEquals(
+            ScanScripts.Target.Address("https://other.example.org/%3Cx%3E"),
+            ScanScripts.navigationTarget("https://other.example.org/%s", "<x>", null),
+        )
+    }
 }

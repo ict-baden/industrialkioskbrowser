@@ -9,7 +9,10 @@ import de.ictbaden.pforte.R
  * `{{retry}}` (button label) and `{{lang}}` are case-insensitive; the retry link uses [RETRY_URL].
  */
 object StatusPage {
-    const val RETRY_URL = "ebrowser://retry"
+    const val RETRY_URL = "pforte://retry"
+
+    /** Retry link of error page templates written for the former name; still accepted. */
+    const val LEGACY_RETRY_URL = "ebrowser://retry"
     const val BASE_URL = "https://${UrlPolicy.ASSET_HOST}/status"
 
     fun render(context: Context, template: String?, title: String, message: String, url: String?, color: String, code: String): String =
