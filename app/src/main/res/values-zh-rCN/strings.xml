@@ -79,6 +79,7 @@
     <string name="add_profile_summary">起始网址、信息亭和扫描器</string>
     <string name="language">语言</string>
     <string name="language_system">系统语言</string>
+    <string name="language_machine_translated">%1$s（机器翻译）</string>
     <string name="title">标题</string>
     <string name="subtitle">副标题</string>
     <string name="title_summary">留空 = Pforte</string>

@@ -31,11 +31,13 @@
             android:name="android.content.APP_RESTRICTIONS"
             android:resource="@xml/app_restrictions" />
 
-        <!-- if_whitelisted: a device owner that allow-lists the app gets lock task (kiosk) mode. -->
+        <!-- if_whitelisted: a device owner that allow-lists the app gets lock task (kiosk) mode.
+             singleTop, not singleTask: a tap on the launcher icon brings the running task to the
+             front instead of clearing the open browser session above the start screen. -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:lockTaskMode="if_whitelisted"
             android:theme="@style/Theme.Pforte.Starting">
             <intent-filter>

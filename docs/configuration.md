@@ -52,7 +52,7 @@ checked against the app by the automated tests.
       "errorPages": { "showHttpErrors": false },
       "sounds":     { "scanOk": "none", "error": "error" },
       "kiosk":      { "hideToolbar": false, "immersive": false, "keepScreenOn": true, "orientation": "auto" },
-      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true }
+      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto" }
     }
   ]
 }
@@ -83,7 +83,7 @@ passwords that are not set keep their current value.
 | `name` | `startUrl` | Display name |
 | `startUrl` | – | **Required**, `http://` or `https://` |
 | `color` | brand color | Color of the profile card and toolbar, `#RRGGBB` |
-| `allowList` | `[]` | Allowed hosts including subdomains (`example.com` also allows `a.example.com`). Empty = everything allowed. The host of the start URL is always allowed. Applies to main-frame navigations. |
+| `allowList` | `[]` | Allowed hosts including subdomains (`example.com` also allows `a.example.com`). **Empty = every host allowed** – set an allow list on kiosk devices. The host of the start URL is always allowed. Applies to main-frame navigations. |
 | `launchOnStartup` | `false` | Open this profile directly when the app starts |
 | `userAgent` | default | Custom user agent; `{default}` is replaced by the default user agent |
 | `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Clear when the profile opens (e.g. a fresh SAP session) |
@@ -175,7 +175,7 @@ third-party web app, or a scan hook.
 
 - `template` – your own HTML with the placeholders `{{title}}`, `{{message}}`, `{{url}}`,
   `{{color}}` (brand color), `{{code}}` (translated "Error code: PFT-…", see [error codes](error-codes.md)),
-  `{{retry}}` (label of the retry button) and `{{lang}}` (language tag for `<html lang>`). The link `ebrowser://retry` reloads. Without a template
+  `{{retry}}` (label of the retry button) and `{{lang}}` (language tag for `<html lang>`). The link `pforte://retry` reloads (`ebrowser://retry` from older templates still works). Without a template
   the built-in error page is used (see [image](images/screen-error.png)).
 - `showHttpErrors` – also replaces the server's error pages (HTTP ≥ 400).
 - Sounds: `none`, `beep`, `error`, `tone:<Hz>:<ms>[:<Hz>:<ms>…]` or `res:<name>`
@@ -201,12 +201,13 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 | `enabled` | `true` | Scanner active when a page loads |
 | `terminator` | `enter` | Keys sent after inserting: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
 | `injectIntoFocusedField` | `true` | Type the scan into the focused input field |
+| `genericIntent` | `auto` | Accept scans from the broadcast `<package>.action.BARCODE` (see *Others* below): `auto` = only on devices without a Zebra or Honeywell scanner, `on`, `off`. Any app on the device can send this broadcast and thus type fake scans – turn it `off` where no other scanner app is used. |
 
 | Device | Integration |
 |---|---|
-| Zebra | DataWedge intent API. On start a DataWedge profile "Pforte" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. |
+| Zebra | DataWedge intent API. On start a DataWedge profile "Pforte" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. DataWedge is a separate app, so the scan receiver has to be open to other apps as well; Android cannot tell who sent a scan. |
 | Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
-| Others | Any scanner app that broadcasts `de.ictbaden.pforte.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). |
+| Others | Any scanner app that broadcasts `de.ictbaden.pforte.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). By default only on devices without a Zebra or Honeywell scanner – `scanner.genericIntent: "on"` accepts it everywhere. |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 
