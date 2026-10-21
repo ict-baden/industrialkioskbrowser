@@ -96,14 +96,14 @@
     next.focus();
   });
 
-  window.addEventListener('enterprisebrowser:scan', function (e) {
+  window.addEventListener('industrialkioskbrowser:scan', function (e) {
     entry(e.detail.data, e.detail.symbology || 'SCAN');
     if (document.getElementById('intercept').checked) e.preventDefault();
   });
 
-  var bridge = window.EnterpriseBrowser;
+  var bridge = window.IndustrialKioskBrowser;
   function run(fn) {
-    if (!bridge) { entry('window.EnterpriseBrowser is not available', 'INFO'); return; }
+    if (!bridge) { entry('window.IndustrialKioskBrowser is not available', 'INFO'); return; }
     fn().then(function (r) { if (r) entry(JSON.stringify(r), 'INFO'); }, function (e) { entry(e.message, 'ERROR'); });
   }
   document.getElementById('trigger').onclick = function () { run(function () { return bridge.scanner.trigger(); }); };

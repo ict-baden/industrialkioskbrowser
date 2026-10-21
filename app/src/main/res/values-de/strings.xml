@@ -79,9 +79,10 @@
     <string name="add_profile_summary">Start-URL, Kiosk und Scanner</string>
     <string name="language">Sprache</string>
     <string name="language_system">Systemsprache</string>
+    <string name="language_machine_translated">%1$s (maschinell übersetzt)</string>
     <string name="title">Titel</string>
     <string name="subtitle">Untertitel</string>
-    <string name="title_summary">Leer = EnterpriseBrowser</string>
+    <string name="title_summary">Leer = Industrial Kiosk Browser</string>
     <string name="subtitle_summary">Leer = Gerätemodell</string>
     <string name="start_screen_title">Titel der Startseite</string>
     <string name="brand_color">Markenfarbe</string>
@@ -157,7 +158,7 @@
     <string name="no_browser">Kein Browser verfügbar</string>
 
     <string name="mc_config_json_title">Konfiguration (JSON)</string>
-    <string name="mc_config_json_description">Vollständige Konfiguration im JSON-Format von EnterpriseBrowser. Hat Vorrang vor Start-URL und Profilname.</string>
+    <string name="mc_config_json_description">Vollständige Konfiguration im JSON-Format von Industrial Kiosk Browser. Hat Vorrang vor Start-URL und Profilname.</string>
     <string name="mc_profile_name_title">Profilname</string>
     <string name="mc_profile_name_description">Name des verwalteten Profils (nur zusammen mit der Start-URL).</string>
     <string name="mc_start_url_title">Start-URL</string>

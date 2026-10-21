@@ -2,7 +2,7 @@
 <!-- English is the base and fallback language (richtlinien/13-sprachen.md). Every new text goes into all
      values-* folders; terms from ict-baden/richtlinien sprachen/glossar.csv. -->
 <resources>
-    <string name="app_name" translatable="false">EnterpriseBrowser</string>
+    <string name="app_name" translatable="false">Industrial Kiosk Browser</string>
 
     <!-- Toolbar and menu -->
     <string name="action_back">Back</string>
@@ -49,7 +49,7 @@
     <string name="sign_in">Sign in</string>
     <string name="user_name">User name</string>
 
-    <!-- Browser messages; %2$s is an error code such as EB-0010 -->
+    <!-- Browser messages; %2$s is an error code such as IKB-0010 -->
     <string name="message_with_code">%1$s (%2$s)</string>
     <string name="profile_not_found">Profile not found</string>
     <string name="page_not_allowed">Page not allowed: %1$s</string>
@@ -91,9 +91,10 @@
     <string name="add_profile_summary">Start URL, kiosk and scanner</string>
     <string name="language">Language</string>
     <string name="language_system">System default</string>
+    <string name="language_machine_translated">%1$s (machine translation)</string>
     <string name="title">Title</string>
     <string name="subtitle">Subtitle</string>
-    <string name="title_summary">Empty = EnterpriseBrowser</string>
+    <string name="title_summary">Empty = Industrial Kiosk Browser</string>
     <string name="subtitle_summary">Empty = device model</string>
     <string name="start_screen_title">Start screen title</string>
     <string name="brand_color">Brand color</string>
@@ -173,7 +174,7 @@
 
     <!-- Managed configuration (shown in the EMM console) -->
     <string name="mc_config_json_title">Configuration (JSON)</string>
-    <string name="mc_config_json_description">Complete configuration in the EnterpriseBrowser JSON format. Takes precedence over start URL and profile name.</string>
+    <string name="mc_config_json_description">Complete configuration in the Industrial Kiosk Browser JSON format. Takes precedence over start URL and profile name.</string>
     <string name="mc_profile_name_title">Profile name</string>
     <string name="mc_profile_name_description">Name of the managed profile (only together with the start URL).</string>
     <string name="mc_start_url_title">Start URL</string>

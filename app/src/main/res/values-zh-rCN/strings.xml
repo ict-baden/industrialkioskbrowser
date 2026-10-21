@@ -79,9 +79,10 @@
     <string name="add_profile_summary">起始网址、信息亭和扫描器</string>
     <string name="language">语言</string>
     <string name="language_system">系统语言</string>
+    <string name="language_machine_translated">%1$s（机器翻译）</string>
     <string name="title">标题</string>
     <string name="subtitle">副标题</string>
-    <string name="title_summary">留空 = EnterpriseBrowser</string>
+    <string name="title_summary">留空 = Industrial Kiosk Browser</string>
     <string name="subtitle_summary">留空 = 设备型号</string>
     <string name="start_screen_title">起始屏幕标题</string>
     <string name="brand_color">品牌颜色</string>
@@ -156,7 +157,7 @@
     <string name="no_browser">没有可用的浏览器</string>
 
     <string name="mc_config_json_title">配置（JSON）</string>
-    <string name="mc_config_json_description">EnterpriseBrowser JSON 格式的完整配置。优先于起始网址和配置文件名称。</string>
+    <string name="mc_config_json_description">Industrial Kiosk Browser JSON 格式的完整配置。优先于起始网址和配置文件名称。</string>
     <string name="mc_profile_name_title">配置文件名称</string>
     <string name="mc_profile_name_description">受管理配置文件的名称（仅与起始网址一起使用）。</string>
     <string name="mc_start_url_title">起始网址</string>

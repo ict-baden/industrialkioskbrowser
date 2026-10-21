@@ -2,16 +2,88 @@
 
 ## Unreleased
 
+### Changed
+
+- **New name: Industrial Kiosk Browser** (formerly *Pforte*, before that *EnterpriseBrowser*), matching
+  [Industrial Keyboard](https://github.com/ict-baden/industrialkeyboard). Package name
+  `de.ictbaden.industrialkioskbrowser`, so Android and the EMM see a new app – see [Deployment](docs/deployment.md).
+  Also renamed: broadcast actions (`de.ictbaden.industrialkioskbrowser.action.BARCODE`, `…action.INSTALL_CONFIG`),
+  JavaScript API `window.IndustrialKioskBrowser` and event `industrialkioskbrowser:scan`, DataWedge profile
+  "Industrial Kiosk Browser", configuration file `industrialkioskbrowser.json`, error codes `IKB-…` (same numbers as
+  `PFT-…`), retry link `industrialkioskbrowser://retry` (`pforte://retry` and `ebrowser://retry` still work).
+  Release files are called `IndustrialKioskBrowser-<version>`.
+
+## [0.6.1] – 2026-10-21
+
+### Fixed
+
+- **A new configuration reaches an open profile right away**, as 0.6.0 promised: an `INSTALL_CONFIG` broadcast
+  restarts the session immediately, a configuration file (app folder or `/enterprise/usr/`) within about five
+  seconds. Before, both only took effect when the app came back to the front (the MDM already worked).
+- Store texts no longer say the device *stays* locked to the allowed apps: it *can* be limited to them, and
+  without an allow list every host is allowed.
+
+### Changed
+
+- Release notes are taken from this changelog. A release built before the signing key is set up is marked
+  *Latest* and says at the top that the signed APK will follow.
+- The download badge and the install steps in the README point to the latest release.
+
+## [0.6.0] – 2026-10-21
+
+### Changed
+
+- **New name: Pforte** (formerly *EnterpriseBrowser*; the old name is a product of another vendor).
+  Package name `de.ictbaden.pforte`, so **Android and the EMM see a new app**: distribute Pforte, roll out the
+  configuration again (same JSON format, file name now `pforte.json`) and remove the old app – see
+  [Deployment](docs/deployment.md). Also renamed: broadcast actions (`de.ictbaden.pforte.action.BARCODE`,
+  `…action.INSTALL_CONFIG`), JavaScript API `window.Pforte` and event `pforte:scan`, DataWedge profile "Pforte",
+  error codes `PFT-…` (same numbers as `EB-…`), retry link `pforte://retry` (`ebrowser://retry` still works).
+- A tap on the launcher icon no longer closes the open web session.
+- Settings, configuration files and the MDM take effect in an open profile right away: the session starts again
+  with the new configuration instead of after an app restart.
+- The back key skips error pages and the address that failed; with nothing to go back to it opens the menu, so a
+  kiosk without toolbar is never stuck on an error page.
+- `ScannerNavigate` templates with leading spaces before `javascript:` work.
+- Store texts and [Data and privacy](docs/data-and-privacy.md) are precise: an empty `allowList` allows every
+  host, the admin password is optional, Google Safe Browsing of the Android WebView stays on.
+- Info links point to https://ict-baden.de (privacy policy, website, legal notice).
+- Spanish, French and Chinese are marked as machine translations in the language picker.
+
+### Added
+
+- `scanner.genericIntent` (`auto`/`on`/`off`): the generic scan broadcast `<package>.action.BARCODE`, which any
+  app can send, is by default only accepted on devices without a Zebra or Honeywell scanner.
+- Releases contain an SBOM (CycloneDX, `Pforte-<version>.cdx.json`); build provenance attestation is prepared
+  for the public repository. The CI checks `THIRD-PARTY-NOTICES.txt` against the libraries in the APK.
+- [Limitations](docs/limitations.md) and [Security review](docs/security-review.md).
+
+### Security
+
+- **A configuration file in the app folder** (`Android/data/<package>/files/`) needs the admin password once one
+  is set (`global.adminPassword` in plain text) and never replaces it; without a password it is only accepted on
+  managed devices and from Android 11 on. After the import the file is deleted, so the plain password does not
+  stay readable. Files in `/enterprise/usr/` are trusted as before.
+- After 5 wrong admin passwords, broadcasts (and, counted separately, app-folder files) are refused for 15 minutes.
+- Password hashes with more than 600,000 PBKDF2 iterations are rejected.
+
+### Fixed
+
+- French store texts contained broken characters instead of dashes.
+- `THIRD-PARTY-NOTICES.txt` listed outdated versions and missed AndroidX WebKit.
+
+### Also new since 0.5.0 (developed under the former name)
+
 - **Security: configuration broadcasts (`INSTALL_CONFIG`) are only accepted with the admin password, or – while
   no password is set – on devices managed by an EMM.** Before, any app on an unmanaged device could replace the
   configuration (e.g. the start URL). **Action needed** if you configure unmanaged devices by broadcast (StageNow
   without EMM, adb): set an admin password first and send it as `admin_password`, or use the configuration file
-  (`/enterprise/usr/enterprisebrowser.json`). Refused broadcasts are shown under Settings → Configuration.
+  (`/enterprise/usr/pforte.json`). Refused broadcasts are shown under Settings → Configuration.
 - An empty password (settings dialog or a broadcast without `admin_password`) no longer crashes the app on Android.
 
 - **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
   device language; `global.language` or **Settings → Design → Language** set it per device.
-- Error messages and error pages show a code such as `EB-0001` ([list](docs/error-codes.md)), so support can identify
+- Error messages and error pages show a code such as `PFT-0001` ([list](docs/error-codes.md)), so support can identify
   them in any language. Custom error page templates get the placeholders `{{code}}`, `{{retry}}` and `{{lang}}`.
 - **Settings → Info** now shows data and privacy, licence, third-party licences, source code, support, website and
   legal notice; new page [Data and privacy](docs/data-and-privacy.md).
@@ -21,7 +93,9 @@
 
 ## 0.5.0
 
-- **New package name `de.ictbaden.enterprisebrowser`** (previously `io.github.pieewiee.enterprisebrowser`), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
+Released under the former name *EnterpriseBrowser*.
+
+- **New package name `de.ictbaden.enterprisebrowser`** (previously a personal `io.github.…` package name), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
 - The broadcast actions change accordingly: `de.ictbaden.enterprisebrowser.action.BARCODE` and `…action.INSTALL_CONFIG`. Update scanner apps or StageNow/MDM profiles that send them.
 - Debug builds are called `de.ictbaden.enterprisebrowser.debug` and can be installed next to the release.
 - Release APKs are signed by the CI with the ICT-Baden key and published under fixed links (release `latest`) with checksums.

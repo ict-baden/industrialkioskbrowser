@@ -1,4 +1,4 @@
-EnterpriseBrowser bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät bleibt auf die erlaubten Anwendungen beschränkt, und die gesamte Konfiguration kommt aus Ihrem MDM.
+Industrial Kiosk Browser bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät lässt sich auf die erlaubten Web-Apps beschränken, und die gesamte Konfiguration kommt aus Ihrem MDM.
 
 BARCODE-SCAN
 • Funktioniert mit Zebra DataWedge, Honeywell-Scannern und jeder Scanner-App, die einen Intent sendet
@@ -11,13 +11,13 @@ PROFILE
 
 KIOSK-MODUS
 • Symbolleiste und Systemleisten ausblenden, Beenden ausblenden oder mit Passwort schützen
-• Nur erlaubte Hosts lassen sich öffnen, alles andere wird vor dem Laden blockiert
+• Erlaubte Hosts pro Profil: nur diese lassen sich öffnen, alles andere wird vor dem Laden blockiert (ohne Liste sind alle Hosts erlaubt)
 • Lock-Task-Modus auf verwalteten Geräten
 
 ZENTRALE KONFIGURATION
 • Managed Configuration aus Ihrem MDM (zum Beispiel SOTI MobiControl, Microsoft Intune, Workspace ONE)
 • Konfigurationsdatei, Broadcast-Intent (StageNow) oder QR-Code
-• Einstellungen auf dem Gerät sind durch ein Admin-Passwort geschützt
+• Einstellungen auf dem Gerät lassen sich mit einem Admin-Passwort schützen
 
 FÜR WEB-APPS
 • Eigenes CSS, JavaScript oder HTML in fremde Web-Apps einfügen, passend zur Adresse
@@ -28,7 +28,7 @@ IHR DESIGN
 • Eigener Titel, eigenes Logo und eigene Markenfarbe, per Konfiguration oder direkt in der App
 
 DATENSCHUTZ
-• Kein Konto, keine Werbung, kein Tracking. EnterpriseBrowser sendet keine Daten an ICT-Baden.
-• Die App verbindet sich nur mit den Webadressen, die Sie konfigurieren.
+• Kein Konto, keine Werbung, kein Tracking. Industrial Kiosk Browser sendet keine Daten an ICT-Baden.
+• Die App selbst verbindet sich nur mit den konfigurierten Web-Apps und den Seiten, zu denen sie führen.
 
 Oberfläche auf Englisch, Deutsch, Spanisch, Französisch und Chinesisch. Kostenlos und Open Source (MIT-Lizenz), von ICT-Baden. Supportverträge sind erhältlich.

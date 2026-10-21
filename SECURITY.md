@@ -4,7 +4,7 @@
 
 Bitte **kein öffentliches Issue**. Melden Sie Sicherheitslücken vertraulich:
 
-- über GitHub: [Private vulnerability report](https://github.com/ict-baden/enterprisebrowser/security/advisories/new)
+- über GitHub: [Private vulnerability report](https://github.com/ict-baden/industrialkioskbrowser/security/advisories/new)
 
 Please **do not open a public issue**. Report vulnerabilities privately via the link above.
 

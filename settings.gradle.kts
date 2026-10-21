@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "EnterpriseBrowser"
+rootProject.name = "Industrial Kiosk Browser"
 include(":app")

@@ -1,4 +1,4 @@
-EnterpriseBrowser runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device stays locked to the apps you allow, and the whole configuration comes from your MDM.
+Industrial Kiosk Browser runs your web apps on rugged Android devices – warehouse, production, logistics. Scans go straight into the web form, the device can be limited to the web apps you allow, and the whole configuration comes from your MDM.
 
 BARCODE SCANNING
 • Works with Zebra DataWedge, Honeywell scanners and any scanner app that sends an intent
@@ -11,13 +11,13 @@ PROFILES
 
 KIOSK MODE
 • Hide the toolbar and system bars, hide or password-protect the exit
-• Only allowed hosts can be opened; everything else is blocked before it loads
+• Allow list per profile: only those hosts can be opened, everything else is blocked before it loads (without a list every host is allowed)
 • Lock task mode when the device is managed
 
 CENTRAL CONFIGURATION
 • Managed configuration from your MDM (for example SOTI MobiControl, Microsoft Intune, Workspace ONE)
 • Configuration file, broadcast intent (StageNow) or QR code
-• Settings on the device are protected by an admin password
+• Settings on the device can be protected by an admin password
 
 FOR WEB APPS
 • Add your own CSS, JavaScript or HTML to third-party web apps, matched by address
@@ -28,7 +28,7 @@ YOUR DESIGN
 • Your title, logo and brand color, set by configuration or right in the app
 
 PRIVACY
-• No account, no ads, no tracking. EnterpriseBrowser sends no data to ICT-Baden.
-• The app connects only to the web addresses you configure.
+• No account, no ads, no tracking. Industrial Kiosk Browser sends no data to ICT-Baden.
+• The app itself only connects to the web apps you configure and the pages they lead to.
 
 User interface in English, German, Spanish, French and Chinese. Free and open source (MIT licence), made by ICT-Baden. Paid support contracts are available.
