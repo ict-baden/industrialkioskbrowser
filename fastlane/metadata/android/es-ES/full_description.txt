@@ -1,4 +1,4 @@
-EnterpriseBrowser lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se limita a las aplicaciones permitidas y toda la configuración llega desde su MDM.
+Pforte lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se limita a las aplicaciones permitidas y toda la configuración llega desde su MDM.
 
 ESCANEO DE CÓDIGOS DE BARRAS
 • Funciona con Zebra DataWedge, escáneres Honeywell y cualquier aplicación de escaneo que envíe un intent
@@ -28,7 +28,7 @@ SU DISEÑO
 • Su título, su logotipo y el color de su marca, por configuración o directamente en la aplicación
 
 PRIVACIDAD
-• Sin cuenta, sin publicidad, sin seguimiento. EnterpriseBrowser no envía datos a ICT-Baden.
+• Sin cuenta, sin publicidad, sin seguimiento. Pforte no envía datos a ICT-Baden.
 • La aplicación solo se conecta a las direcciones web que usted configure.
 
 Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT-Baden. Hay contratos de soporte disponibles.

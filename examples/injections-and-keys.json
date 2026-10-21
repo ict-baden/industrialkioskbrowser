@@ -5,7 +5,7 @@
       "text": "input, select, button { min-height: 44px; font-size: 18px; } :focus { outline: 3px solid #1565C0; }"
     },
     "scan-hook.js": {
-      "text": "window.addEventListener('enterprisebrowser:scan', function (e) { if (e.detail.data.indexOf('LOC-') === 0) { e.preventDefault(); location.href = '/location/' + encodeURIComponent(e.detail.data); } });"
+      "text": "window.addEventListener('pforte:scan', function (e) { if (e.detail.data.indexOf('LOC-') === 0) { e.preventDefault(); location.href = '/location/' + encodeURIComponent(e.detail.data); } });"
     }
   },
   "profiles": [

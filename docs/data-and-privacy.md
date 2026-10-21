@@ -10,7 +10,7 @@
 
 ## Summary
 
-EnterpriseBrowser **sends no data to ICT-Baden**. There is no telemetry, no crash reporting,
+Pforte **sends no data to ICT-Baden**. There is no telemetry, no crash reporting,
 no update check and no account. The browser only connects to the web apps you configure
 (the start URLs and the hosts in `allowList`).
 
@@ -53,4 +53,4 @@ On the device, the browser exchanges broadcasts with scanner services and the MD
 ## Deleting everything
 
 - A profile with `clearCookiesOnStart` and `clearCacheOnStart` starts without old browser data.
-- Android *Settings → Apps → EnterpriseBrowser → Storage → Clear storage*, or uninstalling the app, removes all of it.
+- Android *Settings → Apps → Pforte → Storage → Clear storage*, or uninstalling the app, removes all of it.

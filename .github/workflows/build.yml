@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  APP: EnterpriseBrowser
+  APP: Pforte
   # Signieren nur mit dem Keystore aus den Secrets (siehe richtlinien/05-signieren.md) und nicht bei Pull Requests.
   # Ohne Schlüssel wird gebaut und getestet, aber nichts veröffentlicht: Eine unsignierte APK lässt sich nicht installieren,
   # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren.

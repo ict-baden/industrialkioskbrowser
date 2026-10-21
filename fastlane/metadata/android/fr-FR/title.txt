@@ -1,1 +1,1 @@
-EnterpriseBrowser – Kiosk
+Pforte – Navigateur kiosque

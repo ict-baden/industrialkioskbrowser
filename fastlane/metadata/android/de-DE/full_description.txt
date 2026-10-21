@@ -1,4 +1,4 @@
-EnterpriseBrowser bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät bleibt auf die erlaubten Anwendungen beschränkt, und die gesamte Konfiguration kommt aus Ihrem MDM.
+Pforte bringt Ihre Web-Apps auf robuste Android-Geräte – im Lager, in der Produktion, in der Logistik. Scans landen direkt im Webformular, das Gerät bleibt auf die erlaubten Anwendungen beschränkt, und die gesamte Konfiguration kommt aus Ihrem MDM.
 
 BARCODE-SCAN
 • Funktioniert mit Zebra DataWedge, Honeywell-Scannern und jeder Scanner-App, die einen Intent sendet
@@ -28,7 +28,7 @@ IHR DESIGN
 • Eigener Titel, eigenes Logo und eigene Markenfarbe, per Konfiguration oder direkt in der App
 
 DATENSCHUTZ
-• Kein Konto, keine Werbung, kein Tracking. EnterpriseBrowser sendet keine Daten an ICT-Baden.
+• Kein Konto, keine Werbung, kein Tracking. Pforte sendet keine Daten an ICT-Baden.
 • Die App verbindet sich nur mit den Webadressen, die Sie konfigurieren.
 
 Oberfläche auf Englisch, Deutsch, Spanisch, Französisch und Chinesisch. Kostenlos und Open Source (MIT-Lizenz), von ICT-Baden. Supportverträge sind erhältlich.
