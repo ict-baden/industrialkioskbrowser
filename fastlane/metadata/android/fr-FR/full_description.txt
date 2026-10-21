@@ -1,4 +1,4 @@
-Pforte fait tourner vos applications web sur des appareils Android durcis – entrepôt, production, logistique. Les scans arrivent directement dans le formulaire web, l’appareil reste limité aux applications autorisées et toute la configuration vient de votre MDM.
+Pforte fait tourner vos applications web sur des appareils Android durcis – entrepôt, production, logistique. Les scans arrivent directement dans le formulaire web, l’appareil peut être limité aux applications web autorisées et toute la configuration vient de votre MDM.
 
 SCAN DE CODES-BARRES
 • Compatible avec Zebra DataWedge, les scanners Honeywell et toute application de scan qui envoie un intent
@@ -11,7 +11,7 @@ PROFILS
 
 MODE KIOSQUE
 • Masquer la barre d’outils et les barres système, masquer la sortie ou la protéger par mot de passe
-• Liste d’hôtes autorisés par profil : seuls ceux-ci s’ouvrent, tout le reste est bloqué avant le chargement
+• Liste d’hôtes autorisés par profil : seuls ceux-ci s’ouvrent, tout le reste est bloqué avant le chargement (sans liste, tous les hôtes sont autorisés)
 • Mode tâche verrouillée sur les appareils gérés
 
 CONFIGURATION CENTRALISÉE

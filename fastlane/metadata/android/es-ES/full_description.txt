@@ -1,4 +1,4 @@
-Pforte lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se limita a las aplicaciones permitidas y toda la configuración llega desde su MDM.
+Pforte lleva sus aplicaciones web a dispositivos Android robustos: almacén, producción y logística. Los escaneos van directamente al formulario web, el dispositivo se puede limitar a las aplicaciones web permitidas y toda la configuración llega desde su MDM.
 
 ESCANEO DE CÓDIGOS DE BARRAS
 • Funciona con Zebra DataWedge, escáneres Honeywell y cualquier aplicación de escaneo que envíe un intent
@@ -11,7 +11,7 @@ PERFILES
 
 MODO QUIOSCO
 • Ocultar la barra de herramientas y las barras del sistema, ocultar la salida o protegerla con contraseña
-• Lista de hosts permitidos por perfil: solo esos se pueden abrir; todo lo demás se bloquea antes de cargarse
+• Lista de hosts permitidos por perfil: solo esos se pueden abrir; todo lo demás se bloquea antes de cargarse (sin lista, se permiten todos los hosts)
 • Modo de bloqueo de tareas en dispositivos gestionados
 
 CONFIGURACIÓN CENTRAL
