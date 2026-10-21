@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **Moved:** this project continues as **Pforte** in [ict-baden/pforte](https://github.com/ict-baden/pforte)
+> (new package name `de.ictbaden.pforte`). This repository is no longer maintained.
+> Umgezogen: Das Projekt heißt jetzt **Pforte** und liegt in [ict-baden/pforte](https://github.com/ict-baden/pforte).
+
 <p align="center">
   <img src="docs/images/hero.png" alt="EnterpriseBrowser – the kiosk browser for Zebra &amp; Honeywell" width="100%">
 </p>
