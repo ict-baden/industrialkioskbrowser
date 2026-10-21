@@ -1,10 +1,10 @@
 // Injected at document start into allow-listed origins. Wraps the native message channel
-// PforteNative in a promise-based API: window.Pforte.
+// IndustrialKioskBrowserNative in a promise-based API: window.IndustrialKioskBrowser.
 (function () {
   'use strict';
-  if (window.Pforte || typeof PforteNative === 'undefined') return;
+  if (window.IndustrialKioskBrowser || typeof IndustrialKioskBrowserNative === 'undefined') return;
 
-  var channel = PforteNative;
+  var channel = IndustrialKioskBrowserNative;
   var nextId = 0;
   var pending = {};
 
@@ -26,7 +26,7 @@
     });
   }
 
-  window.Pforte = Object.freeze({
+  window.IndustrialKioskBrowser = Object.freeze({
     beep: function (kind) { return call('beep', { kind: kind === 'error' ? 'error' : 'ok' }); },
     vibrate: function (ms) { return call('vibrate', { ms: ms || 200 }); },
     toast: function (text) { return call('toast', { text: String(text) }); },
@@ -39,7 +39,7 @@
     }),
     // handler(scan, event); call event.preventDefault() to stop insertion into the focused field.
     onScan: function (handler) {
-      window.addEventListener('pforte:scan', function (event) { handler(event.detail, event); });
+      window.addEventListener('industrialkioskbrowser:scan', function (event) { handler(event.detail, event); });
     }
   });
 })();

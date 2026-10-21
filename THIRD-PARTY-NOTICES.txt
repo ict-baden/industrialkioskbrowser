@@ -1,8 +1,8 @@
 THIRD-PARTY NOTICES
 ===================
 
-Pforte contains the following third-party software. Each part keeps its own licence; the licence text follows below.
-Pforte enthält die folgende Software Dritter. Jeder Teil behält seine eigene Lizenz; der Lizenztext folgt unten.
+Industrial Kiosk Browser contains the following third-party software. Each part keeps its own licence; the licence text follows below.
+Industrial Kiosk Browser enthält die folgende Software Dritter. Jeder Teil behält seine eigene Lizenz; der Lizenztext folgt unten.
 
 All parts are compiled into the APK (classes.dex and resources).
 Alle Teile sind in die APK einkompiliert (classes.dex und Ressourcen).

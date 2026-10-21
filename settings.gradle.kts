@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Pforte"
+rootProject.name = "Industrial Kiosk Browser"
 include(":app")

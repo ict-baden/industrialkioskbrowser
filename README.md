@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="docs/images/hero.png" alt="Pforte – the kiosk browser for rugged Android devices" width="100%">
+  <img src="docs/images/hero.png" alt="Industrial Kiosk Browser – the kiosk browser for rugged Android devices" width="100%">
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android 8.0+">
-  <a href="https://github.com/ict-baden/pforte/releases/latest"><img src="https://img.shields.io/badge/Download-latest%20release-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest release"></a>
+  <a href="https://github.com/ict-baden/industrialkioskbrowser/releases/latest"><img src="https://img.shields.io/badge/Download-latest%20release-2ea44f?logo=github&amp;logoColor=white" alt="Download: latest release"></a>
   <img src="https://img.shields.io/badge/Licence-MIT-blue" alt="Licence: MIT">
   <img src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280" alt="User interface in English, German, Spanish, French and Chinese">
-  <a href="https://github.com/ict-baden/pforte/actions/workflows/build.yml"><img src="https://github.com/ict-baden/pforte/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/ict-baden/industrialkioskbrowser/actions/workflows/build.yml"><img src="https://github.com/ict-baden/industrialkioskbrowser/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/Zebra-DataWedge-000000" alt="Zebra DataWedge">
   <img src="https://img.shields.io/badge/Honeywell-Intent%20API-E4002B" alt="Honeywell">
   <img src="https://img.shields.io/badge/MDM-Managed%20Config-00796B" alt="Managed configuration">
@@ -16,11 +16,11 @@
 
 <p align="center">
   <b>Web apps on rugged Android devices – with barcode scanning, kiosk mode and central configuration.</b><br>
-  A lean, modern kiosk browser written in Kotlin. Formerly called <i>EnterpriseBrowser</i>.
+  A lean, modern kiosk browser written in Kotlin. Formerly called <i>Pforte</i> and <i>EnterpriseBrowser</i>.
 </p>
 
 <p align="center">
-  <sub>🇩🇪 Pforte bringt Web-Apps auf robuste Android-Geräte (Zebra, Honeywell …): Barcode-Scan direkt ins Webformular,
+  <sub>🇩🇪 Industrial Kiosk Browser bringt Web-Apps auf robuste Android-Geräte (Zebra, Honeywell …): Barcode-Scan direkt ins Webformular,
   Kiosk-Modus, Konfiguration zentral per MDM. Oberfläche auf Deutsch und Englisch; Spanisch, Französisch und Chinesisch sind
   maschinell übersetzt.</sub>
 </p>
@@ -62,10 +62,10 @@
 
 ## ⚡ Up and running in 5 minutes
 
-**1. Install the app** – download `Pforte-<version>.apk` from the [latest release](../../releases/latest) and distribute it with your MDM, or install it over USB:
+**1. Install the app** – download `IndustrialKioskBrowser-<version>.apk` from the [latest release](../../releases/latest) and distribute it with your MDM, or install it over USB:
 
 ```bash
-adb install -r Pforte-<version>.apk
+adb install -r IndustrialKioskBrowser-<version>.apk
 ```
 
 Release APKs are signed by the CI – the current state is under [Limitations](docs/limitations.md#releases-and-updates).
@@ -84,7 +84,7 @@ Release APKs are signed by the CI – the current state is under [Limitations](d
 (start the app once so the folder exists):
 
 ```bash
-adb push examples/minimal.json /sdcard/Android/data/de.ictbaden.pforte/files/pforte.json
+adb push examples/minimal.json /sdcard/Android/data/de.ictbaden.industrialkioskbrowser/files/industrialkioskbrowser.json
 ```
 
 All options, including step by step for **SOTI MobiControl**: [Deployment](docs/deployment.md).
@@ -92,8 +92,8 @@ All options, including step by step for **SOTI MobiControl**: [Deployment](docs/
 **4. Test** – open the built-in profile "Demo & scanner test" and scan, or without a scanner:
 
 ```bash
-adb shell am broadcast -a de.ictbaden.pforte.action.BARCODE \
-  -p de.ictbaden.pforte --es data 4006381333931 --es symbology EAN13
+adb shell am broadcast -a de.ictbaden.industrialkioskbrowser.action.BARCODE \
+  -p de.ictbaden.industrialkioskbrowser --es data 4006381333931 --es symbology EAN13
 ```
 
 ## 🎨 Custom design
@@ -135,13 +135,13 @@ More: [Configuration → Custom design](docs/configuration.md#custom-design).
 ```
 
 ```js
-window.addEventListener('pforte:scan', (e) => {
+window.addEventListener('industrialkioskbrowser:scan', (e) => {
   if (e.detail.data.startsWith('LOC-')) {
     e.preventDefault();               // don't type it into the field
     openLocation(e.detail.data);
   }
 });
-Pforte.beep();             // JavaScript API on allowed hosts
+Industrial Kiosk Browser.beep();             // JavaScript API on allowed hosts
 ```
 
 Everything about events, meta tags and the JavaScript API: [Web integration](docs/web-integration.md).
@@ -154,12 +154,12 @@ flowchart LR
     S[Scanner<br>DataWedge · Honeywell · Intent] --> M[ScannerManager]
     M --> B[BrowserActivity]
     B -->|text + Tab/Enter| W[(WebView)]
-    B -->|pforte:scan| W
-    W <-->|window.Pforte| B
+    B -->|industrialkioskbrowser:scan| W
+    W <-->|window.IndustrialKioskBrowser| B
   end
   subgraph Provisioning
     MC[Managed config] --> C[ConfigStore]
-    F[pforte.json] --> C
+    F[industrialkioskbrowser.json] --> C
     I[INSTALL_CONFIG intent] --> C
     Q[QR code] --> C
   end
@@ -170,8 +170,8 @@ flowchart LR
 
 Honest list in [docs/limitations.md](docs/limitations.md). In short:
 
-- **Tested on real hardware only on a Zebra HC20** (Android 15, DataWedge). Honeywell devices and other Zebra
-  models are untested – the Honeywell integration follows the vendor's documented intent API.
+- **Zebra scanning uses the DataWedge intent API; the Honeywell integration follows the vendor's documented
+  intent API** and still needs to be verified on Honeywell hardware.
 - An **empty `allowList` allows every host** – set one on kiosk devices.
 - The JavaScript API is also offered to `http://` pages of allowed hosts (intranet apps), and plain HTTP and
   user-installed CAs are accepted – both on purpose for intranets, see the limitations page.
@@ -192,7 +192,7 @@ The screenshots in this documentation are rendered straight from the UI code
 (Robolectric/Roborazzi, web content with Chromium) – see [`tools/screenshots`](tools/screenshots).
 
 ```
-app/src/main/java/de/ictbaden/pforte/
+app/src/main/java/de/ictbaden/industrialkioskbrowser/
   config/        profile model, JSON format, storage, password hashing
   web/           BrowserActivity, URL policy, scan delivery, JS bridge, keyboard, injections
   scanner/       DataWedge, Honeywell, generic intent
@@ -208,7 +208,7 @@ docs/            documentation and images
 - [Deployment](docs/deployment.md) – SOTI MobiControl, Intune, Workspace ONE, StageNow, adb, QR
 - [Web integration](docs/web-integration.md) – scan events, meta tags, JavaScript API
 - [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
-- [Error codes](docs/error-codes.md) – `PFT-0001` … with causes
+- [Error codes](docs/error-codes.md) – `IKB-0001` … with causes
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
 - [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
@@ -217,11 +217,11 @@ docs/            documentation and images
 ---
 
 <sub>
-Pforte is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
+Industrial Kiosk Browser is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
-<a href="https://ict-baden.de/datenschutz/pforte/">Privacy</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/datenschutz/industrial-kiosk-browser/">Privacy</a> &nbsp;·&nbsp;
 <a href="https://ict-baden.de/impressum/">Impressum</a>
 </sub>

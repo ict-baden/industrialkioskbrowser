@@ -17,7 +17,7 @@ staging = """<style>::-webkit-scrollbar { display: none; }</style>
   var times = ['09:40:58', '09:41:05', '09:41:27'], i = 0;
   Date.prototype.toLocaleTimeString = function () { return times[i++] || '09:41:30'; };
   function scan(data, symbology) {
-    window.dispatchEvent(new CustomEvent('pforte:scan', {
+    window.dispatchEvent(new CustomEvent('industrialkioskbrowser:scan', {
       detail: { data: data, symbology: symbology, source: 'Zebra DataWedge' }, cancelable: true }));
   }
   scan('4006381000017', 'EAN13');
@@ -36,7 +36,7 @@ for key, value in {
     "message": "The address could not be resolved. Check the Wi-Fi connection. (net::ERR_NAME_NOT_RESOLVED)",
     "url": "https://wms.example.com/goods-receipt",
     "color": "#0D47A1",
-    "code": "Error code: PFT-0001",
+    "code": "Error code: IKB-0001",
     "retry": "Try again",
     "lang": "en",
 }.items():
