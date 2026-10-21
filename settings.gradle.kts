@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "EnterpriseBrowser"
+rootProject.name = "Pforte"
 include(":app")

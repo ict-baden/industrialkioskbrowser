@@ -6,7 +6,7 @@
   no password is set – on devices managed by an EMM.** Before, any app on an unmanaged device could replace the
   configuration (e.g. the start URL). **Action needed** if you configure unmanaged devices by broadcast (StageNow
   without EMM, adb): set an admin password first and send it as `admin_password`, or use the configuration file
-  (`/enterprise/usr/enterprisebrowser.json`). Refused broadcasts are shown under Settings → Configuration.
+  (`/enterprise/usr/pforte.json`). Refused broadcasts are shown under Settings → Configuration.
 - An empty password (settings dialog or a broadcast without `admin_password`) no longer crashes the app on Android.
 
 - **User interface in five languages:** English, German, Spanish, French and Chinese (simplified). It follows the
@@ -21,7 +21,9 @@
 
 ## 0.5.0
 
-- **New package name `de.ictbaden.enterprisebrowser`** (previously `io.github.pieewiee.enterprisebrowser`), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
+Released under the former name *EnterpriseBrowser*.
+
+- **New package name `de.ictbaden.enterprisebrowser`** (previously a personal `io.github.…` package name), following the ICT-Baden guidelines. Android and the MDM see a **new app**: uninstall the old one, distribute the new one and roll out the configuration again.
 - The broadcast actions change accordingly: `de.ictbaden.enterprisebrowser.action.BARCODE` and `…action.INSTALL_CONFIG`. Update scanner apps or StageNow/MDM profiles that send them.
 - Debug builds are called `de.ictbaden.enterprisebrowser.debug` and can be installed next to the release.
 - Release APKs are signed by the CI with the ICT-Baden key and published under fixed links (release `latest`) with checksums.

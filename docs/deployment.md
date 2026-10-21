@@ -7,11 +7,11 @@ transport differs.
 | Method | Suited for | Configuration |
 |---|---|---|
 | [Managed configuration](#managed-configuration-all-emms) | SOTI, Intune, Workspace ONE, … (Android Enterprise) | key `config_json` |
-| [Configuration file](#configuration-file) | SOTI File Sync, Zebra StageNow/MX, adb | `enterprisebrowser.json` |
+| [Configuration file](#configuration-file) | SOTI File Sync, Zebra StageNow/MX, adb | `pforte.json` |
 | [Broadcast intent](#broadcast-intent-stagenow-adb) | Zebra StageNow (Intent CSP), scripts, adb | extra `config` |
 | [QR code](#qr-code) | single devices, testing | JSON inside the QR code |
 
-Package name: **`de.ictbaden.enterprisebrowser`**
+Package name: **`de.ictbaden.pforte`**
 
 ## Managed configuration (all EMMs)
 
@@ -41,9 +41,9 @@ Menu names differ between MobiControl versions and device management modes
    open the app configuration of the enterprise app and paste the contents of the JSON
    file into `config_json`.
 3. **Configuration – option B, file** (e.g. Android+ with the Zebra agent):
-   put `enterprisebrowser.json` into `/enterprise/usr/` on the device with File Sync or a
+   put `pforte.json` into `/enterprise/usr/` on the device with File Sync or a
    package (Zebra; survives an enterprise reset).
-4. **Kiosk** – allow EnterpriseBrowser as the only app in a lockdown/kiosk profile. Under
+4. **Kiosk** – allow Pforte as the only app in a lockdown/kiosk profile. Under
    Android Enterprise (dedicated device) the app then starts in lock task mode
    automatically. Also set `global.hideExit` in the configuration
    ([template](../examples/kiosk-single-app.json)).
@@ -69,21 +69,21 @@ configurations shows the schema automatically.
 ## Zebra StageNow / MX
 
 - **Install the app:** AppMgr CSP with the APK.
-- **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/enterprisebrowser.json`.
+- **Configuration as a file:** FileMgr CSP, target `/enterprise/usr/pforte.json`.
 - **Configuration via intent:** Intent CSP, *send broadcast* with
-  action `de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG`,
-  package `de.ictbaden.enterprisebrowser`, string extra `config` (JSON) and string extra
+  action `de.ictbaden.pforte.action.INSTALL_CONFIG`,
+  package `de.ictbaden.pforte`, string extra `config` (JSON) and string extra
   `admin_password` – see [Broadcast intent](#broadcast-intent-stagenow-adb) for when it is needed.
   Without an EMM the configuration file above is the simpler way.
-- **Scanner:** on first start the app creates a DataWedge profile "EnterpriseBrowser".
+- **Scanner:** on first start the app creates a DataWedge profile "Pforte".
   Decoders (symbologies, lengths, illumination …) can then be tuned with the DataWedge
   CSP or in the DataWedge app – the app does not overwrite them.
 
 ## Configuration file
 
-The app reads `enterprisebrowser.json` from
+The app reads `pforte.json` from
 
-1. `Android/data/de.ictbaden.enterprisebrowser/files/` (app folder; exists after
+1. `Android/data/de.ictbaden.pforte/files/` (app folder; exists after
    the app has been started once)
 2. `/enterprise/usr/` (Zebra, persistent)
 
@@ -92,7 +92,7 @@ you return to the profile list.
 
 ```bash
 adb push examples/sap-its-mobile.json \
-  /sdcard/Android/data/de.ictbaden.enterprisebrowser/files/enterprisebrowser.json
+  /sdcard/Android/data/de.ictbaden.pforte/files/pforte.json
 ```
 
 ## Broadcast intent (StageNow, adb)
@@ -110,8 +110,8 @@ or with the managed configuration key `admin_password` – or use the configurat
 
 ```bash
 adb shell am broadcast \
-  -a de.ictbaden.enterprisebrowser.action.INSTALL_CONFIG \
-  -n de.ictbaden.enterprisebrowser/.provisioning.ConfigReceiver \
+  -a de.ictbaden.pforte.action.INSTALL_CONFIG \
+  -n de.ictbaden.pforte/.provisioning.ConfigReceiver \
   --es config '{"profiles":[{"name":"WMS","startUrl":"https://wms.example.com"}]}'   --es admin_password 'change-me'
 ```
 

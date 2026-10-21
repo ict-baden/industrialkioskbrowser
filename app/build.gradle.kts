@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "de.ictbaden.enterprisebrowser"
+    namespace = "de.ictbaden.pforte"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "de.ictbaden.enterprisebrowser"
+        applicationId = "de.ictbaden.pforte"
         minSdk = 26
         targetSdk = 36
         // The CI passes -PversionCode (run number) and -PversionName (e.g. 0.5.0-ci.12).

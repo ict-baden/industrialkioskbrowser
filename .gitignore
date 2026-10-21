@@ -4,9 +4,6 @@
 *.apks
 *.xapk
 
-# Local tooling (REA lives here but is not part of this repo)
-rea/
-
 # Build output and dependencies
 node_modules/
 dist/
