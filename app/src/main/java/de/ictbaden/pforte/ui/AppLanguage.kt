@@ -20,4 +20,7 @@ object AppLanguage {
 
     /** Language names in their own language, so everyone finds theirs. */
     val NAMES = mapOf("en" to "English", "de" to "Deutsch", "es" to "Español", "fr" to "Français", "zh-Hans" to "简体中文")
+
+    /** Translated by machine, not yet reviewed by a native speaker. */
+    val MACHINE_TRANSLATED = setOf("es", "fr", "zh-Hans")
 }

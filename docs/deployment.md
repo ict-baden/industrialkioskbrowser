@@ -13,6 +13,20 @@ transport differs.
 
 Package name: **`de.ictbaden.pforte`**
 
+> **Always set an admin password** (`global.adminPassword`, managed configuration key
+> `admin_password` or *Settings → Admin password*). Without one, the settings are open on the
+> device, and on an EMM-managed device **every app** may replace the configuration with the
+> `INSTALL_CONFIG` broadcast (see [Broadcast intent](#broadcast-intent-stagenow-adb)).
+> Use at least 10 characters. After 5 wrong passwords, broadcasts (and, counted separately,
+> app-folder files) are refused for 15 minutes.
+
+> **Coming from EnterpriseBrowser?** Pforte is the same app under a new name and package name
+> (`de.ictbaden.pforte` instead of `de.ictbaden.enterprisebrowser`). Android and the EMM treat it
+> as a new app: distribute Pforte, roll out the configuration again (the JSON format is
+> unchanged; rename the file to `pforte.json`), then remove the old app. Broadcast actions,
+> the JavaScript API (`window.Pforte`, event `pforte:scan`), the DataWedge profile name and
+> the error codes (`PFT-…` instead of `EB-…`) changed with the name.
+
 ## Managed configuration (all EMMs)
 
 The app ships a schema that every EMM with Android Enterprise support shows:
@@ -53,8 +67,8 @@ Menu names differ between MobiControl versions and device management modes
 ## Microsoft Intune
 
 1. On Android Enterprise devices the app has to be provided through **managed Google Play**
-   (private app). Google Play only accepts release-signed APKs – the current debug APK is
-   not suitable for this yet (release signing is planned).
+   (private app) – upload the App Bundle (`.aab`) from a tagged release, see
+   [Google Play](play-store.md).
 2. Create an **app configuration policy** (managed devices), use the configuration designer
    and set `config_json` or `start_url` etc.
 3. For kiosk use: enroll the device as a *dedicated device* and allow the app as the only
@@ -85,10 +99,27 @@ The app reads `pforte.json` from
 
 1. `Android/data/de.ictbaden.pforte/files/` (app folder; exists after
    the app has been started once)
-2. `/enterprise/usr/` (Zebra, persistent)
+2. `/enterprise/usr/` (Zebra, persistent; writable only by MX/StageNow, the EMM agent or adb)
 
-A file is applied as soon as its timestamp or size changes – when the app starts or when
-you return to the profile list.
+A file is applied as soon as its timestamp or size changes – when the app starts, when you
+return to the profile list or to an open profile. An open profile whose settings changed
+starts again with the new configuration.
+
+The app folder is checked like a broadcast, because before Android 11 any app with storage
+permission can write into it:
+
+- Once an admin password is set, the file must contain it in plain text as
+  `global.adminPassword`. It proves the file comes from the administrator; it never replaces
+  the password that is set. Exported configurations contain only the hash – add the plain
+  password before pushing them. After the import the app **deletes** such a file, because
+  before Android 11 other apps could read the password there.
+- Without an admin password the file is accepted on EMM-managed devices and from Android 11 on
+  (there only adb, i.e. someone with the unlocked device on USB, can write into the folder).
+  On unmanaged Android 8–10 devices set a password first or use `/enterprise/usr/`.
+
+A refused file is shown under **Settings → Configuration** and is only read again when it
+changes (a file that arrives while wrong passwords have locked the check is read once the
+lock has expired). Files in `/enterprise/usr/` are trusted and may also set a new admin password.
 
 ```bash
 adb push examples/sap-its-mobile.json \
@@ -105,7 +136,9 @@ did. So it is only accepted
   configuration, or the device or work profile has an owner, i.e. Android Enterprise).
 
 On an unmanaged device without a password the broadcast is refused (shown under
-**Settings → Configuration**). Set an admin password first – in the app, in the configuration file
+**Settings → Configuration**). After 5 wrong passwords in a row, broadcasts are refused for
+15 minutes, even with the right password. Any app can trigger this lock; configuration files
+and the managed configuration are not affected by it. Set an admin password first – in the app, in the configuration file
 or with the managed configuration key `admin_password` – or use the configuration file.
 
 ```bash
@@ -116,7 +149,8 @@ adb shell am broadcast \
 ```
 
 Result code (for ordered broadcasts): `-1` = installed, `2` = refused (admin password
-missing or wrong, or unmanaged device without a password), `3` = invalid configuration.
+missing or wrong, locked after wrong passwords, or unmanaged device without a password),
+`3` = invalid configuration.
 
 ## QR code
 

@@ -8,7 +8,6 @@ import android.util.Log
 import de.ictbaden.pforte.config.ConfigException
 import de.ictbaden.pforte.config.ConfigJson
 import de.ictbaden.pforte.config.ConfigStore
-import de.ictbaden.pforte.config.PasswordHasher
 
 /**
  * Installs a configuration sent as broadcast (e.g. by StageNow or an EMM intent action):
@@ -16,7 +15,9 @@ import de.ictbaden.pforte.config.PasswordHasher
  * Any app on the device can send this broadcast, and Android does not tell us which one did.
  * So it is only accepted with the admin password (`admin_password`), or – while no password is
  * set – on a device managed by an EMM ([Provisioning.isManaged]). Otherwise a store install
- * could be redirected to a foreign start URL by any other app.
+ * could be redirected to a foreign start URL by any other app. Wrong passwords lock the receiver
+ * for a while ([AdminGate]). On a managed device without password every app could still send it –
+ * docs/deployment.md therefore asks to always set an admin password.
  */
 class ConfigReceiver : BroadcastReceiver() {
 
@@ -24,9 +25,12 @@ class ConfigReceiver : BroadcastReceiver() {
         if (intent.action != "${context.packageName}$ACTION_SUFFIX") return
         val store = ConfigStore.get(context)
         val adminHash = store.config.global.adminPasswordHash
-        if (adminHash != null && !PasswordHasher.verify(intent.getStringExtra(EXTRA_ADMIN_PASSWORD).orEmpty(), adminHash)) {
-            deny(context, "admin_password is missing or wrong")
-            return
+        if (adminHash != null) {
+            val result = AdminGate.check(context, AdminGate.Source.BROADCAST, intent.getStringExtra(EXTRA_ADMIN_PASSWORD), adminHash)
+            AdminGate.message(result)?.let {
+                deny(context, it)
+                return
+            }
         }
         if (adminHash == null && !Provisioning.isManaged(context)) {
             deny(context, "Refused: no admin password set and the device is not managed by an EMM. Set an admin password or use a configuration file or managed configuration.")

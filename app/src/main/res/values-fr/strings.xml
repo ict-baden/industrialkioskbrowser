@@ -79,6 +79,7 @@
     <string name="add_profile_summary">URL de départ, kiosque et scanner</string>
     <string name="language">Langue</string>
     <string name="language_system">Langue du système</string>
+    <string name="language_machine_translated">%1$s (traduction automatique)</string>
     <string name="title">Titre</string>
     <string name="subtitle">Sous-titre</string>
     <string name="title_summary">Vide = Pforte</string>

@@ -51,8 +51,9 @@ class DocScreenshots {
 
     @Before
     fun setUp() {
-        ShadowBuild.setManufacturer("Zebra Technologies")
-        ShadowBuild.setModel("TC58")
+        // Selects the DataWedge scanner (scan button, scanner name); no device name appears on the images.
+        ShadowBuild.setManufacturer("Zebra")
+        ShadowBuild.setModel("Handheld")
         ConfigStore.reset()
         File(context.filesDir, "config.json").delete()
     }
@@ -139,7 +140,9 @@ class DocScreenshots {
         captureScreenRoboImage("build/screenshots/$name.png", RoborazziOptions())
     }
 
+    // No real device name on the images: the subtitle would otherwise show manufacturer and model.
     private fun sampleConfig() = AppConfig(
+        global = GlobalSettings(branding = Branding(subtitle = "Handheld 07 · Warehouse")),
         profiles = listOf(
             Profile(
                 id = "goods-receipt",

@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: write # für die Releases
+  id-token: write # Herkunftsnachweis (attest-build-provenance), nur bei öffentlichem Repo genutzt
+  attestations: write
 
 # Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen
 concurrency:
@@ -19,7 +21,7 @@ concurrency:
 env:
   APP: Pforte
   # Signieren nur mit dem Keystore aus den Secrets (siehe richtlinien/05-signieren.md) und nicht bei Pull Requests.
-  # Ohne Schlüssel wird gebaut und getestet, aber nichts veröffentlicht: Eine unsignierte APK lässt sich nicht installieren,
+  # Ohne Schlüssel wird gebaut und getestet, aber keine APK veröffentlicht: Eine unsignierte APK lässt sich nicht installieren,
   # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren.
   SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
 
@@ -56,12 +58,8 @@ jobs:
       - name: Tests und Lint
         run: ./gradlew testDebugUnitTest lintDebug --console=plain
 
-      - name: Abhängigkeiten der APK (für THIRD-PARTY-NOTICES.txt)
-        continue-on-error: true
-        run: |
-          ./gradlew -q :app:dependencies --configuration releaseRuntimeClasspath --console=plain \
-            | grep -oE '[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+:[0-9][^ ]*( -> [0-9][^ ]*)?' \
-            | sed -E 's/:[^:]+ -> /:/' | sort -u
+      - name: Drittanbieter-Lizenzen prüfen (THIRD-PARTY-NOTICES.txt gegen die Bibliotheken der APK)
+        run: ./.github/scripts/check-notices.sh
 
       - name: Testergebnisse
         if: always()
@@ -101,14 +99,29 @@ jobs:
           jarsigner -verify "dist/$APP${{ steps.version.outputs.suffix }}.aab" | grep -q "jar verified" || { echo "::error::App Bundle ist nicht signiert"; exit 1; }
           rm "$RUNNER_TEMP/release.jks"
 
-      - name: Ohne Schlüssel nichts veröffentlichen
+      - name: Ohne Schlüssel keine APK
         if: env.SIGN != 'true' && github.event_name != 'pull_request'
         run: echo "::notice::Kein Keystore in den Secrets (ANDROID_KEYSTORE …) – gebaut und getestet, aber keine APK veröffentlicht."
 
+      - name: SBOM (CycloneDX)
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p dist
+          python3 .github/scripts/sbom.py "${{ steps.version.outputs.version }}" build/release-dependencies.txt "dist/$APP${{ steps.version.outputs.suffix }}.cdx.json"
+
       - name: Prüfsummen
-        if: env.SIGN == 'true'
+        if: github.event_name != 'pull_request'
         working-directory: dist
-        run: sha256sum *.apk *.aab | tee SHA256SUMS.txt
+        run: sha256sum $(ls | grep -v '^SHA256SUMS.txt$') | tee SHA256SUMS.txt
+
+      - name: Herkunftsnachweis (nur bei öffentlichem Repo)
+        # GitHub-Attestierungen gibt es für private Repos nur mit Enterprise; ab dem Umschalten auf öffentlich läuft der Schritt
+        if: env.SIGN == 'true' && github.event.repository.visibility == 'public'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/*.apk
+            dist/*.aab
 
       - uses: actions/upload-artifact@v7
         if: env.SIGN == 'true'
@@ -120,14 +133,31 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-      - name: Release erstellen (nur bei Tag v*)
-        if: env.SIGN == 'true' && github.ref_type == 'tag'
+      - name: Release erstellen oder ergänzen (nur bei Tag v*)
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
+          UNSIGNED_NOTE: '**The signed APK and App Bundle will be added here once the release signing key is set up.**'
         run: |
-          # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
-          pre=""; case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
-          gh release create "$GITHUB_REF_NAME" dist/* --title "$APP $GITHUB_REF_NAME" --generate-notes $pre
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
+            pre=""; case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
+            notes=""; latest=""
+            if [ "$SIGN" != true ]; then
+              # Ohne Schlüssel steht das Release mit SBOM und Prüfsummen schon da, aber nicht als „Latest“
+              # (releases/latest/download/… liefe sonst ins Leere). Nach dem Setzen der Secrets diesen Lauf
+              # neu starten, dann kommen APK und App Bundle dazu.
+              notes="$UNSIGNED_NOTE"; latest="--latest=false"
+            fi
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$APP $GITHUB_REF_NAME" --generate-notes --notes "$notes" $pre $latest
+          fi
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          if [ "$SIGN" = true ]; then
+            # Nachgereichte Signatur: Hinweis entfernen, Release wird (außer Vorabversionen) „Latest“
+            gh release view "$GITHUB_REF_NAME" --json body --jq .body | grep -vF "$UNSIGNED_NOTE" > "$RUNNER_TEMP/notes.md" || true
+            case "$GITHUB_REF_NAME" in *-*) gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md";;
+              *) gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" --latest;; esac
+          fi
 
       - name: "Release 'latest' aktualisieren (main)"
         if: env.SIGN == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
@@ -141,5 +171,6 @@ jobs:
           $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ steps.version.outputs.version }}, gebaut $built UTC, signiert.`n`n" +
                    "Die Links bleiben gleich und zeigen immer auf den neuesten Build:`n`n" +
                    "- **[$env:APP.apk]($base/$env:APP.apk)**: zum Verteilen per MDM (SOTI, Intune, StageNow) oder zum Installieren per adb`n" +
+                   "- [$env:APP.cdx.json]($base/$env:APP.cdx.json): Stückliste (SBOM, CycloneDX)`n" +
                    "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen"
           ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ steps.version.outputs.version }}"

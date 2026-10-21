@@ -5,7 +5,10 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.DownloadManager
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -65,6 +68,7 @@ import de.ictbaden.pforte.config.ConfigStore
 import de.ictbaden.pforte.config.InjectionTiming
 import de.ictbaden.pforte.config.Profile
 import de.ictbaden.pforte.config.ViewportMode
+import de.ictbaden.pforte.provisioning.Provisioning
 import de.ictbaden.pforte.config.ScanTerminator
 import de.ictbaden.pforte.config.ScreenOrientation
 import de.ictbaden.pforte.scanner.NoScanner
@@ -141,6 +145,36 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun softTrigger(start: Boolean?) = scanner.softTrigger(start)
 
+    /** A new managed configuration from the MDM, applied while the browser is in front. */
+    private val restrictionsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Provisioning.applyAll(context)
+            restartIfConfigChanged()
+        }
+    }
+
+    /**
+     * Allow list, start URL, injections etc. are read when the session starts. When the settings,
+     * a configuration file or the MDM changed this profile, the session starts again with the new
+     * configuration; a removed profile closes it. Passwords are read when needed and don't count.
+     */
+    private fun restartIfConfigChanged(): Boolean {
+        if (isFinishing) return true
+        val current = ConfigStore.get(this).config
+        if (current === config) return false
+        val updated = current.profile(profile.id)
+        if (updated == profile && current.resources == config.resources && withoutPasswords(current) == withoutPasswords(config)) {
+            config = current
+            return false
+        }
+        Log.i(TAG, "Configuration of profile ${profile.id} changed, restarting the session")
+        if (updated != null) startActivity(intent)
+        finish()
+        return true
+    }
+
+    private fun withoutPasswords(config: AppConfig) = config.global.copy(adminPasswordHash = null, exitPasswordHash = null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -161,7 +195,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         applyBranding()
         applyInsets()
 
-        scanner = ScannerManager(this, ::onScan)
+        scanner = ScannerManager(this, profile.scanner.genericIntent, ::onScan)
         sounds = Sounds(this, config)
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()
@@ -194,12 +228,21 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun onResume() {
         super.onResume()
+        ContextCompat.registerReceiver(
+            this,
+            restrictionsReceiver,
+            IntentFilter(Intent.ACTION_APPLICATION_RESTRICTIONS_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        Provisioning.applyAll(this)
+        if (restartIfConfigChanged()) return
         webView.onResume()
         scanner.start()
         if (profile.kiosk.immersive) hideSystemBars()
     }
 
     override fun onPause() {
+        unregisterReceiver(restrictionsReceiver)
         scanner.stop()
         webView.onPause()
         CookieManager.getInstance().flush()
@@ -226,7 +269,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     /** Browser actions triggered by toolbar, hotkeys, macros and the back key. */
     private fun perform(action: BrowserAction) {
         when (action) {
-            BrowserAction.BACK -> if (webView.canGoBack()) webView.goBack() else showMenu()
+            BrowserAction.BACK -> stepsBack()?.let(webView::goBackOrForward) ?: showMenu()
             BrowserAction.FORWARD -> if (webView.canGoForward()) webView.goForward()
             BrowserAction.STOP -> webView.stopLoading()
             BrowserAction.HOME -> loadStart()
@@ -302,7 +345,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private fun setupToolbar() {
-        backButton.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
+        backButton.setOnClickListener { stepsBack()?.let(webView::goBackOrForward) }
         findViewById<View>(R.id.menu).setOnClickListener { showMenu() }
         scanButton.isVisible = scanner.scanner !is NoScanner
         scanButton.setOnClickListener { scanner.softTrigger(null) }
@@ -403,8 +446,21 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private fun updateNavigation() {
-        backButton.isEnabled = webView.canGoBack()
+        backButton.isEnabled = stepsBack() != null
         backButton.alpha = if (backButton.isEnabled) 1f else 0.4f
+    }
+
+    /** History steps for "back", skipping error pages ([BackNavigation]); `null` when there is nothing to go back to. */
+    private fun stepsBack(): Int? {
+        val history = webView.copyBackForwardList()
+        // Status pages are data loads: depending on the WebView the entry reports BASE_URL (history URL) or a data: URL.
+        val urls = (0 until history.size).map { index ->
+            history.getItemAtIndex(index)?.let { item ->
+                val status = listOf(item.url, item.originalUrl).any { it != null && (BackNavigation.isStatusPage(it) || it.startsWith("data:")) }
+                if (status) StatusPage.BASE_URL else item.url
+            }
+        }
+        return BackNavigation.stepsBack(urls, history.currentIndex, failedUrl)
     }
 
     // region scanning
@@ -412,15 +468,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private fun onScan(scan: ScanResult) {
         val template = pagePolicy.navigateTemplate
         if (template != null) {
-            val filled = ScanScripts.applyTemplate(template, scan.data)
-            // Relative targets ("/item?code=%s") are resolved against the current page.
-            val target = if (filled.startsWith("javascript:", ignoreCase = true)) filled
-            else runCatching { java.net.URI(webView.url).resolve(filled).toString() }.getOrDefault(filled)
-            when {
-                target.startsWith("javascript:", ignoreCase = true) ->
-                    webView.evaluateJavascript(target.substringAfter(':'), null)
-                UrlPolicy.isAllowed(target, profile) -> webView.loadUrl(target)
-                else -> toast(withCode(getString(R.string.scan_target_not_allowed, target), ErrorCodes.SCAN_TARGET_NOT_ALLOWED))
+            when (val target = ScanScripts.navigationTarget(template, scan.data, webView.url)) {
+                is ScanScripts.Target.Script -> webView.evaluateJavascript(target.js, null)
+                is ScanScripts.Target.Address ->
+                    if (UrlPolicy.isAllowed(target.url, profile)) webView.loadUrl(target.url)
+                    else toast(withCode(getString(R.string.scan_target_not_allowed, target.url), ErrorCodes.SCAN_TARGET_NOT_ALLOWED))
             }
             return
         }
@@ -491,7 +543,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         val html = StatusPage.render(
             this, config.content(profile.errorPages.template), title, message, url, "#%06X".format(0xFFFFFF and brandColor), code,
         )
-        webView.loadDataWithBaseURL(StatusPage.BASE_URL, html, "text/html", "utf-8", null)
+        // History entry under BASE_URL, so back navigation recognises and skips it.
+        webView.loadDataWithBaseURL(StatusPage.BASE_URL, html, "text/html", "utf-8", StatusPage.BASE_URL)
     }
 
     private fun download(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
@@ -569,7 +622,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val url = request.url.toString()
-            if (url == StatusPage.RETRY_URL) {
+            if (url == StatusPage.RETRY_URL || url == StatusPage.LEGACY_RETRY_URL) {
                 failedUrl?.let(view::loadUrl) ?: view.reload()
                 return true
             }

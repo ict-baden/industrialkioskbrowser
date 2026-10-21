@@ -13,9 +13,9 @@ android {
         applicationId = "de.ictbaden.pforte"
         minSdk = 26
         targetSdk = 36
-        // The CI passes -PversionCode (run number) and -PversionName (e.g. 0.5.0-ci.12).
-        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 6
-        versionName = findProperty("versionName") as String? ?: "0.5.0"
+        // The CI passes -PversionCode (run number) and -PversionName (e.g. 0.6.0-ci.12).
+        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 7
+        versionName = findProperty("versionName") as String? ?: "0.6.0"
         buildConfigField("String", "COMMIT", "\"${System.getenv("GITHUB_SHA")?.take(7) ?: "local"}\"")
     }
 

@@ -38,6 +38,13 @@ object ConfigJson {
         return AppConfig(global, resources, profiles)
     }
 
+    /** Plain-text `global.adminPassword` of a configuration, to check that it comes from the administrator. */
+    fun plainAdminPassword(text: String): String? = try {
+        JSONObject(text.trim()).optJSONObject("global")?.optString("adminPassword")?.ifBlank { null }
+    } catch (_: JSONException) {
+        null
+    }
+
     fun write(config: AppConfig): String {
         val root = JSONObject()
         root.put("version", VERSION)
@@ -109,7 +116,9 @@ object ConfigJson {
 
     private fun passwordHash(json: JSONObject, key: String): String? {
         json.optNonBlank("${key}Hash")?.let { hash ->
-            if (!PasswordHasher.isHash(hash)) throw ConfigException("${key}Hash has an unknown format")
+            if (!PasswordHasher.isHash(hash)) {
+                throw ConfigException("${key}Hash has an unknown format or more than ${PasswordHasher.MAX_ITERATIONS} iterations")
+            }
             return hash
         }
         return json.optNonBlank(key)?.let(PasswordHasher::hash)
@@ -180,6 +189,7 @@ object ConfigJson {
                     "injectIntoFocusedField",
                     defaults.scanner.injectIntoFocusedField,
                 ),
+                genericIntent = GenericIntent.parse(scanner.optNonBlank("genericIntent")),
             ),
         )
         checkResourceReferences(profile, resources, where)
@@ -323,6 +333,7 @@ object ConfigJson {
             put("enabled", profile.scanner.enabled)
             put("terminator", profile.scanner.terminator.key)
             put("injectIntoFocusedField", profile.scanner.injectIntoFocusedField)
+            put("genericIntent", profile.scanner.genericIntent.key)
         })
     }
 

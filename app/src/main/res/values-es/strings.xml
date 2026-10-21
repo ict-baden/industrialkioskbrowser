@@ -79,6 +79,7 @@
     <string name="add_profile_summary">URL de inicio, quiosco y escáner</string>
     <string name="language">Idioma</string>
     <string name="language_system">Idioma del sistema</string>
+    <string name="language_machine_translated">%1$s (traducción automática)</string>
     <string name="title">Título</string>
     <string name="subtitle">Subtítulo</string>
     <string name="title_summary">Vacío = Pforte</string>

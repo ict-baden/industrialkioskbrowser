@@ -32,10 +32,25 @@ enum class ScreenOrientation(override val key: String) : Keyed {
     }
 }
 
+/**
+ * Scans broadcast as `<package>.action.BARCODE`. Any app can send this broadcast, so it can also
+ * fake scans; AUTO accepts it only on devices without a supported scanner (not Zebra/Honeywell).
+ */
+enum class GenericIntent(override val key: String) : Keyed {
+    AUTO("auto"),
+    ON("on"),
+    OFF("off");
+
+    companion object {
+        fun parse(value: String?): GenericIntent = parseKey(value, AUTO)
+    }
+}
+
 data class ScannerSettings(
     val enabled: Boolean = true,
     val terminator: ScanTerminator = ScanTerminator.ENTER,
     val injectIntoFocusedField: Boolean = true,
+    val genericIntent: GenericIntent = GenericIntent.AUTO,
 )
 
 data class KioskSettings(
