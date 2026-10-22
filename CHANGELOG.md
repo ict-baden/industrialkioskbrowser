@@ -12,6 +12,9 @@
   "Industrial Kiosk Browser", configuration file `industrialkioskbrowser.json`, error codes `IKB-…` (same numbers as
   `PFT-…`), retry link `industrialkioskbrowser://retry` (`pforte://retry` and `ebrowser://retry` still work).
   Release files are called `IndustrialKioskBrowser-<version>`.
+- **Google Play pipeline:** every merge to `main` goes to internal testing, a tag `vX.Y.Z` to production with a
+  staged rollout (store texts, graphics and release notes included), tags `vX.Y.Z-…` to closed testing. The workflow
+  *Google Play Rollout* raises, halts or resumes the rollout. See [Google Play](docs/play-store.md).
 
 ## [0.6.1] – 2026-10-21
 

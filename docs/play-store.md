@@ -9,6 +9,7 @@ How Industrial Kiosk Browser gets into Google Play, and what to answer in the Pl
 - [App signing](#app-signing)
 - [Play Console answers](#play-console-answers)
 - [Publishing a version](#publishing-a-version)
+- [Google Play access for the CI](#google-play-access-for-the-ci)
 
 ## What is in the repo
 
@@ -19,7 +20,7 @@ How Industrial Kiosk Browser gets into Google Play, and what to answer in the Pl
 | Release `vX.Y.Z` | `IndustrialKioskBrowser-X.Y.Z.aab` – the App Bundle for Play, signed by the CI |
 
 The folder layout is the one of [fastlane supply](https://docs.fastlane.tools/actions/supply/),
-so the texts can later be uploaded automatically. Until then, copy them into the Play Console.
+so the CI uploads them with every production release (see below).
 
 The graphics are rendered from the real UI like the documentation images: run the steps in
 [tools/screenshots](../tools/screenshots/README.md); `compose.py` also writes the Play graphics.
@@ -104,11 +105,50 @@ accessibility, all-files access, package queries beyond the two scanner services
 
 ## Publishing a version
 
-1. Update `CHANGELOG.md`, push the tag `vX.Y.Z`.
-2. The CI builds and signs APK and App Bundle and attaches both to the GitHub release.
-3. Play Console → *Testing → Internal testing* → create a release → upload the `.aab`
-   → release notes from the changelog → roll out to the internal testers.
-4. Check the pre-launch report, then promote the release to *Production*.
+The pipeline in `.github/workflows/build.yml` (job `play`) publishes by itself once the CI has Play access:
 
-The `versionCode` is the CI run number, so every build is higher than the one before. Play
-refuses an App Bundle whose `versionCode` was uploaded already – use a new tag, not a re-run.
+| Event | What happens | Play track |
+|---|---|---|
+| Pull request | build, unit tests, lint, licence check – nothing is signed or uploaded | – |
+| Merge to `main` | signed App Bundle, release notes = commit subject | **Internal testing**, available to the testers at once |
+| Tag `vX.Y.Z-…` (e.g. `v0.7.0-rc1`) | GitHub pre-release and signed App Bundle | **Closed testing** (`alpha`) |
+| Tag `vX.Y.Z` | GitHub release (APK, App Bundle, SBOM, checksums) and upload with release notes from `CHANGELOG.md` (plain text, max. 500 characters), store texts and graphics from `fastlane/` | **Production**, staged: starts with `PLAY_ROLLOUT` (repository variable, default `0.2` = 20 %) |
+
+**Creating the tag is the release decision.** Only the GitHub users in the repository variable `PLAY_RELEASERS`
+(default `pieewiee gear1900`) can publish to production; for anyone else the job stops. Claude never creates
+release tags.
+
+Raising, halting or resuming the staged rollout: *Actions → Google Play Rollout → Run workflow*
+(`.github/workflows/play-rollout.yml`), or
+
+```bash
+gh workflow run play-rollout.yml -f rollout=0.5          # 50 %
+gh workflow run play-rollout.yml -f rollout=1.0          # everyone, rollout complete
+gh workflow run play-rollout.yml -f action=halt          # stop the rollout (e.g. crash reports)
+```
+
+The `versionCode` is the CI run number, so every build is higher than the one before. Play refuses an App Bundle
+whose `versionCode` was uploaded already; a new build (new tag or `gh workflow run`) gets a new number.
+
+Without the secret `PLAY_SERVICE_ACCOUNT_JSON` the job only leaves a notice and uploads nothing. The very first
+version has to be uploaded by hand anyway (see below).
+
+## Google Play access for the CI
+
+Done once by a person with owner access to the Play Console and to Google Cloud:
+
+1. **Create the app** in the Play Console (name *Industrial Kiosk Browser*, default language English, free, app)
+   and **upload the first App Bundle by hand** – from the GitHub release – to *Testing → Internal testing*,
+   including the app signing setup described above. The Play API cannot create apps or do the first upload.
+2. **Google Cloud:** a project for ICT-Baden, *Google Play Android Developer API* enabled, a **service account**
+   (e.g. `github-play@….iam.gserviceaccount.com`) with a **JSON key**.
+3. **Play Console → Users and permissions → Invite new users:** the e-mail address of the service account, for
+   this app with *Release apps to testing tracks*, *Release to production, exclude devices, and use Play App
+   Signing* and *Manage store presence*.
+4. **GitHub:** the JSON key as repository secret `PLAY_SERVICE_ACCOUNT_JSON`
+   (`gh secret set PLAY_SERVICE_ACCOUNT_JSON -R ict-baden/industrialkioskbrowser < key.json`), then delete the
+   local file. Optional: repository variables `PLAY_RELEASERS` and `PLAY_ROLLOUT`.
+5. **Internal testers:** in *Testing → Internal testing*, a list of Google accounts (or a Google group) and the
+   opt-in link for the test devices.
+
+From then on: merge → internal testers, tag → production.

@@ -1,0 +1,67 @@
+# Gestaffelten Produktions-Rollout in Google Play steuern: erhöhen (z. B. 20 % → 50 % → 100 %), anhalten oder fortsetzen.
+# Ein Tag vX.Y.Z startet den Rollout (build.yml, Job „play“, Anteil aus der Repo-Variable PLAY_ROLLOUT, Standard 20 %).
+# Starten: Actions → „Google Play Rollout“ → Run workflow, oder: gh workflow run play-rollout.yml -f rollout=1.0
+name: Google Play Rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'update = Anteil setzen, halt = anhalten, resume = mit dem Anteil fortsetzen'
+        type: choice
+        options: [update, halt, resume]
+        default: update
+      rollout:
+        description: 'Anteil der Nutzer (1.0 = alle, schließt den Rollout ab)'
+        type: choice
+        options: ['0.2', '0.5', '1.0']
+        default: '1.0'
+      version_code:
+        description: 'Version-Code des Releases (leer = neuestes im Produktions-Track)'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-play
+  cancel-in-progress: false
+
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: de.ictbaden.industrialkioskbrowser
+      RELEASERS: ${{ vars.PLAY_RELEASERS || 'pieewiee gear1900' }}
+    steps:
+      - name: Wer darf?
+        run: |
+          case " $RELEASERS " in *" $GITHUB_ACTOR "*) echo "Rollout durch $GITHUB_ACTOR." ;;
+            *) echo "::error::$GITHUB_ACTOR darf den Produktions-Rollout nicht ändern (PLAY_RELEASERS: $RELEASERS)"; exit 1 ;; esac
+
+      - name: fastlane installieren
+        run: sudo gem install fastlane --no-document --quiet && fastlane --version | tail -1
+
+      - name: Rollout ändern
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          ACTION: ${{ inputs.action }}
+          ROLLOUT: ${{ inputs.rollout }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          FASTLANE_HIDE_CHANGELOG: '1'
+        shell: bash
+        run: |
+          [ -n "$PLAY_JSON" ] || { echo "::error::Secret PLAY_SERVICE_ACCOUNT_JSON fehlt"; exit 1; }
+          args=(--package_name "$PACKAGE" --json_key_data "$PLAY_JSON" --track production
+                --skip_upload_apk true --skip_upload_aab true --skip_upload_metadata true --skip_upload_changelogs true
+                --skip_upload_images true --skip_upload_screenshots true)
+          [ -n "$VERSION_CODE" ] && args+=(--version_code "$VERSION_CODE")
+          case "$ACTION" in
+            halt)   args+=(--release_status halted) ;;
+            resume|update)
+              # 1.0 schließt den Rollout ab (Status „completed“), darunter bleibt er gestaffelt
+              if [ "$ROLLOUT" = 1.0 ]; then args+=(--release_status completed); else args+=(--release_status inProgress --rollout "$ROLLOUT"); fi ;;
+          esac
+          fastlane supply "${args[@]}"
+          echo "::notice::Produktions-Rollout: $ACTION ${ROLLOUT}"
