@@ -16,11 +16,18 @@ class ConfigException(message: String) : Exception(message)
 object ConfigJson {
     const val VERSION = 2
 
+    /** Upper bound for a configuration text; a broadcast carries at most about 1 MB, a QR code 3 KB. */
+    const val MAX_LENGTH = 16 * 1024 * 1024
+
     fun parse(text: String): AppConfig {
+        if (text.length > MAX_LENGTH) throw ConfigException("Configuration is larger than ${MAX_LENGTH / (1024 * 1024)} MB")
         val root = try {
             JSONObject(text.trim())
         } catch (e: JSONException) {
             throw ConfigException("Invalid JSON: ${e.message}")
+        } catch (_: StackOverflowError) {
+            // org.json parses recursively: thousands of nested brackets would otherwise crash the app.
+            throw ConfigException("Invalid JSON: nested too deeply")
         }
         val version = root.optInt("version", VERSION)
         if (version > VERSION) throw ConfigException("Configuration version $version is not supported")
