@@ -20,7 +20,7 @@ object ConfigJson {
         val root = try {
             JSONObject(text.trim())
         } catch (e: JSONException) {
-            throw ConfigException("Invalid JSON: ${e.message}")
+            throw ConfigException("Invalid JSON: ${withoutInput(e)}")
         }
         val version = root.optInt("version", VERSION)
         if (version > VERSION) throw ConfigException("Configuration version $version is not supported")
@@ -37,6 +37,13 @@ object ConfigJson {
         if (duplicate != null) throw ConfigException("Profile ID \"${duplicate.key}\" is used more than once")
         return AppConfig(global, resources, profiles)
     }
+
+    /**
+     * Android's `org.json` appends the whole input to its messages ("… at character 12 of {…}"). The
+     * input may contain a plain admin password and would end up in the log and the settings screen.
+     */
+    private fun withoutInput(e: JSONException): String =
+        e.message.orEmpty().replace(Regex("(?s)( at character \\d+) of .*"), "$1")
 
     /** Plain-text `global.adminPassword` of a configuration, to check that it comes from the administrator. */
     fun plainAdminPassword(text: String): String? = try {

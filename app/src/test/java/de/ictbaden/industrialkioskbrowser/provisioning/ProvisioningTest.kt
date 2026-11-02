@@ -98,6 +98,16 @@ class ProvisioningTest {
         assertEquals(false, PasswordHasher.verify("secret", huge))
     }
 
+    @Test
+    fun `an invalid file does not leak its text into the provisioning error`() {
+        // Android's org.json puts the whole input into the exception message, including a plain admin password.
+        write("""{"global":{"adminPassword":"S3cretPW"}, broken""")
+        Provisioning.applyAll(context)
+        val error = Provisioning.lastError(context)!!
+        assertTrue(error, error.contains("Invalid JSON"))
+        assertEquals(false, error.contains("S3cretPW"))
+    }
+
     private fun write(json: String) {
         file.parentFile!!.mkdirs()
         file.writeText(json)
