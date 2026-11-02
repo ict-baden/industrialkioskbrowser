@@ -212,6 +212,7 @@ docs/            documentation and images
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
 - [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
+- [Publishing the repository](docs/release-public.md) – for maintainers: fresh history before going public
 - [Changelog](CHANGELOG.md)
 
 ---
