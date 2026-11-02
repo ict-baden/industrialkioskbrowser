@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.ictbaden.industrialkioskbrowser.config.AppConfig
+import de.ictbaden.industrialkioskbrowser.config.ConfigJson
 import de.ictbaden.industrialkioskbrowser.config.ConfigStore
 import de.ictbaden.industrialkioskbrowser.config.GlobalSettings
 import de.ictbaden.industrialkioskbrowser.config.PasswordHasher
@@ -96,6 +97,18 @@ class ProvisioningTest {
         val huge = hash.replaceFirst("\$60000\$", "\$2000000000\$")
         assertEquals(false, PasswordHasher.isHash(huge))
         assertEquals(false, PasswordHasher.verify("secret", huge))
+    }
+
+    @Test
+    fun `a deeply nested or huge file is refused instead of crashing`() {
+        write("[".repeat(50_000))
+        Provisioning.applyAll(context)
+        assertTrue(Provisioning.lastError(context)!!.contains("Invalid JSON"))
+        assertEquals(AppConfig.DEMO_PROFILE_ID, store.config.profiles.single().id)
+
+        write(" ".repeat(ConfigJson.MAX_LENGTH + 1))
+        Provisioning.applyAll(context)
+        assertTrue(Provisioning.lastError(context)!!.contains("larger than"))
     }
 
     private fun write(json: String) {
