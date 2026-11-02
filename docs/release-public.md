@@ -101,6 +101,13 @@ git -C <fresh-clone> push -u origin <branch> && gh pr create …
 Dependabot pull requests need neither: close them. Dependabot opens them again on the fresh
 repository on its next run (*Insights → Dependency graph → Dependabot → Check for updates*).
 
+**Order for the pull requests open at the time of the cut** (recommendation of the pull request
+review of 2026-11-02; details are in the comments on the three pull requests): merge all three
+before the cut, in this order – **#15** (Dependabot, Gradle group; first a two-line fix in
+`THIRD-PARTY-NOTICES.txt`, webkit 1.14.0 → 1.18.0, so the notices check passes) → **#14** (CI
+only builds in full when needed) → **#12** (Google Play pipeline; rebase onto `main` after #14,
+both change `.github/workflows/build.yml`).
+
 Pull requests that are left open when the repository is published (Way B) are public, including
 their description and every comment. Read them before you switch.
 
@@ -157,7 +164,8 @@ is about half an hour of settings work, listed here.
    optional `ANDROID_KEY_PASSWORD`; for the Play pipeline `PLAY_SERVICE_ACCOUNT_JSON` and the
    variables `PLAY_RELEASERS`, `PLAY_ROLLOUT` ([Google Play](play-store.md)).
    The first push already started a build of `main` without secrets; it builds and tests but
-   publishes nothing (`SIGN` is false). That is expected.
+   publishes nothing (`SIGN` is false). That is expected. The new repository has neither a tag nor
+   a release called `latest`; the first signed build of `main` (step 5) creates both from scratch.
 4. **Topics** (`android`, `android-kiosk`, `barcode-scanner`, `datawedge`, `honeywell`,
    `industrial-browser`, `kiosk`, `kiosk-browser`, `kiosk-mode`, `mdm`, `rugged`, `webview`,
    `zebra`): `gh repo edit ict-baden/industrialkioskbrowser --add-topic android,android-kiosk,…`.
@@ -192,18 +200,17 @@ repository. Only take this way if the new repository is not possible for you.
 
 1. Close or merge every pull request (step 2). Close every issue you do not want public, or
    delete it (*Delete issue* in the issue's sidebar; deletion is final).
-2. Delete all releases, with their tags:
+2. Delete the version releases, with their tags – but **not** `latest` (see step 5):
    ```bash
    gh release list --limit 100
-   gh release delete latest --cleanup-tag --yes
    gh release delete v0.5.0 --cleanup-tag --yes
    gh release delete v0.3.1 --cleanup-tag --yes
    gh release delete v0.3.0 --cleanup-tag --yes
    ```
-3. Delete all remaining tags and all branches except `main`:
+3. Delete all remaining tags except `latest`, and all branches except `main`:
    ```bash
-   git ls-remote --tags origin                   # should be empty now; otherwise:
-   git push origin --delete v0.3.0 v0.3.1 v0.5.0 latest
+   git ls-remote --tags origin                   # only refs/tags/latest may remain; otherwise:
+   git push origin --delete v0.3.0 v0.3.1 v0.5.0
    git ls-remote --heads origin | grep -v refs/heads/main
    git push origin --delete <every other branch>
    ```
@@ -215,11 +222,24 @@ repository. Only take this way if the new repository is not possible for you.
    git -C <new-directory> remote add origin https://github.com/ict-baden/industrialkioskbrowser.git
    git -C <new-directory> push --force origin main
    ```
-5. Open a ticket at the [GitHub Support portal](https://support.github.com/) asking to remove
+5. **Move the tag `latest` to the new `main`** – do not delete it:
+   ```bash
+   gh api -X PATCH repos/ict-baden/industrialkioskbrowser/git/refs/tags/latest \
+     -f sha=$(git -C <new-directory> rev-parse main) -F force=true
+   ```
+   Why: the CI script that updates the rolling release
+   ([`release-latest.ps1`](../.github/scripts/release-latest.ps1), lines 108–116) compares the
+   commit the tag points to with the commit being built (`gh api …/compare/<build>...<tag>`).
+   After the cut the old tag has no common ancestor with the new `main`, GitHub answers 404, the
+   call is treated as an error and the step fails on **every** build of `main` until the tag is
+   moved (issue #18). Deleting only the tag is not an option either: GitHub then turns the
+   `latest` release into a draft, which the script no longer finds by tag. With the tag on the new
+   `main`, the next signed build of `main` replaces the files and notes of `latest` as usual.
+6. Open a ticket at the [GitHub Support portal](https://support.github.com/) asking to remove
    the cached views and the pull request refs of the old history and to run garbage collection.
    Give the repository name, the number of pull requests (15) and the old `main` hash
    (`f63c5c0`). Do not switch to public before Support has confirmed.
-6. Dependabot opens its pull requests again on its next run; you can trigger it under
+7. Dependabot opens its pull requests again on its next run; you can trigger it under
    *Insights → Dependency graph → Dependabot*.
 
 ## Step 5 – First release and `latest`
@@ -239,7 +259,9 @@ secrets are in place.
 3. The CI builds, signs and creates the release `v0.7.0` with APK, App Bundle, SBOM and
    checksums ([build.yml](../.github/workflows/build.yml)). Because the secrets are set, the tag
    run also starts a build of `main` that creates the rolling `latest` release – or the next push
-   to `main` does. `latest` is a release *and* a tag; the CI moves both.
+   to `main` does. `latest` is a release *and* a tag; the CI moves both. Way A: both are created
+   new, nothing to prepare. Way B: the tag must already point to the new `main` (Way B, step 5),
+   otherwise this build fails.
 4. Play pipeline: once the pull request that adds the `play` job and `play-rollout.yml` is on
    `main` and `PLAY_SERVICE_ACCOUNT_JSON` is set, follow [Google Play → Publishing a version](play-store.md#publishing-a-version).
    The very first App Bundle is uploaded by hand.
@@ -289,7 +311,7 @@ attestation, which only works for public repositories.
 - [ ] `tools/fresh-history.sh` ran and ended with `all checks passed`
 - [ ] Way A: old repository renamed, new repository created and pushed (private)
 - [ ] Way A: secrets and variables set, topics, features, labels, Dependabot
-- [ ] Way B: releases, tags and branches deleted, `main` force-pushed, Support ticket sent
+- [ ] Way B: version releases, tags and branches deleted, `main` force-pushed, tag `latest` moved to the new `main`, Support ticket sent
 - [ ] Carried-over pull requests opened again on the fresh repository
 - [ ] `CHANGELOG.md` has the `[0.7.0]` section; tag `v0.7.0` pushed; release has APK, App Bundle, SBOM
 - [ ] `latest` release exists from a build of `main`
