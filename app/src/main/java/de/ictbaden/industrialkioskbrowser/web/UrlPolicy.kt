@@ -50,8 +50,10 @@ object UrlPolicy {
         val rules = linkedSetOf("https://$ASSET_HOST")
         for (host in hosts) {
             if (isIpAddress(host)) {
-                rules += "http://$host"
-                rules += "https://$host"
+                // Origin rules need the brackets of IPv6 addresses back ("http://[fd00::1]").
+                val literal = if (host.contains(':')) "[$host]" else host
+                rules += "http://$literal"
+                rules += "https://$literal"
             } else {
                 for (scheme in listOf("https", "http")) {
                     rules += "$scheme://$host"
