@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Docs
+
+- Google Play listing linked from the README, [Deployment](docs/deployment.md) (Intune: use the
+  listing of ICT-Baden, never a private upload of the APK) and [Google Play](docs/play-store.md).
+
 ## [0.7.0] – 2026-11-06
 
 ### Changed
