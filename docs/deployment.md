@@ -67,9 +67,11 @@ Menu names differ between MobiControl versions and device management modes
 
 ## Microsoft Intune
 
-1. On Android Enterprise devices the app has to be provided through **managed Google Play**
-   (private app) – upload the App Bundle (`.aab`) from a tagged release, see
-   [Google Play](play-store.md).
+1. On Android Enterprise devices the app has to be provided through **managed Google Play**.
+   Use the [listing of ICT-Baden](https://play.google.com/store/apps/details?id=de.ictbaden.industrialkioskbrowser) (approve it for your organisation in managed Google
+   Play). **Do not upload the APK as your own private app:** package names are unique in all of
+   Google Play, so your upload would take `de.ictbaden.industrialkioskbrowser` for your
+   developer account. See [Google Play](play-store.md) for how the listing is maintained.
 2. Create an **app configuration policy** (managed devices), use the configuration designer
    and set `config_json` or `start_url` etc.
 3. For kiosk use: enroll the device as a *dedicated device* and allow the app as the only
