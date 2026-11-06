@@ -65,7 +65,6 @@ still pending. The documentation is in English.
   `de.ictbaden.industrialkioskbrowser`, so Android treats it as a new app:
   there is no in-place update, and the old app keeps its data until it is uninstalled. See
   [Deployment](deployment.md) for the switch.
-- Release APKs are signed by the CI. Until the signing key of the new package name is set up,
-  releases contain the SBOM and checksums but no APK (the release says so at the top), and there
-  is no rolling `latest` build of `main` yet.
+- Release APKs and the App Bundle for Google Play are signed by the CI with the release key of the
+  new package name; the rolling `latest` build of `main` carries the same signature.
 - The app does not update itself; updates come from the EMM or Google Play.

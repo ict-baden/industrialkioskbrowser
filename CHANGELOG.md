@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.7.0] – 2026-11-06
 
 ### Changed
 
@@ -12,6 +12,11 @@
   "Industrial Kiosk Browser", configuration file `industrialkioskbrowser.json`, error codes `IKB-…` (same numbers as
   `PFT-…`), retry link `industrialkioskbrowser://retry` (`pforte://retry` and `ebrowser://retry` still work).
   Release files are called `IndustrialKioskBrowser-<version>`.
+
+### Docs
+
+- [Limitations](docs/limitations.md): the signing key of the new package name is set up; releases contain the
+  signed APK and the App Bundle for Google Play.
 
 ## [0.6.1] – 2026-10-21
 
