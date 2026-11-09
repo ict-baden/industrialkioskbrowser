@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- **Release builds are shrunk and obfuscated with R8.** Google Play measures this under *Android vitals →
+  Code optimisation* and warns below 25 %. Error codes, the JavaScript API, broadcast actions and the
+  configuration format are unchanged. Every release now also contains `IndustrialKioskBrowser-<version>-mapping.txt`
+  to translate stack traces back to source names; the App Bundle carries the same mapping, so the Play
+  Console deobfuscates crash reports itself.
+
 ## [0.7.0] – 2026-11-06
 
 ### Changed
