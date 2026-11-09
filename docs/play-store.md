@@ -110,5 +110,9 @@ accessibility, all-files access, package queries beyond the two scanner services
    → release notes from the changelog → roll out to the internal testers.
 4. Check the pre-launch report, then promote the release to *Production*.
 
+The App Bundle contains the R8 mapping file, so *Android vitals → Crashes and ANRs* shows readable
+stack traces without uploading anything else. The same mapping is in the GitHub release as
+`IndustrialKioskBrowser-<version>-mapping.txt` for crash logs collected elsewhere (`retrace`).
+
 The `versionCode` is the CI run number, so every build is higher than the one before. Play
 refuses an App Bundle whose `versionCode` was uploaded already – use a new tag, not a re-run.

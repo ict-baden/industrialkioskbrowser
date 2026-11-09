@@ -113,6 +113,8 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "dist/$APP${{ steps.version.outputs.suffix }}.apk"
           # Das App Bundle ist für Google Play (mit unserem Schlüssel als Upload-Schlüssel, siehe docs/play-store.md)
           cp app/build/outputs/bundle/release/app-release.aab "dist/$APP${{ steps.version.outputs.suffix }}.aab"
+          # R8-Mapping für lesbare Stacktraces aus Absturzberichten (steckt auch im App Bundle für die Play Console)
+          cp app/build/outputs/mapping/release/mapping.txt "dist/$APP${{ steps.version.outputs.suffix }}-mapping.txt"
           # Prüfen, dass wirklich mit dem Release-Schlüssel signiert wurde
           "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "dist/$APP${{ steps.version.outputs.suffix }}.apk" | head -3
           jarsigner -verify "dist/$APP${{ steps.version.outputs.suffix }}.aab" | grep -q "jar verified" || { echo "::error::App Bundle ist nicht signiert"; exit 1; }
