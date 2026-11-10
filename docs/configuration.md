@@ -14,7 +14,8 @@ checked against the app by the automated tests.
 - [`global`](#global) – passwords, kiosk, branding
 - [Profiles](#profiles) – start URL, allow list, basics
 - [`viewport`](#viewport) · [`keyboard`](#keyboard) · [`injections`](#injections) ·
-  [`errorPages` and `sounds`](#errorpages-and-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner)
+  [`errorPages` and `sounds`](#errorpages-and-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner) ·
+  [`scanner.camera`](#scannercamera) · [`scanner.data`](#scannerdata) (scan data formatting)
 - [Resources](#resources)
 - [Custom design](#custom-design)
 
@@ -52,7 +53,8 @@ checked against the app by the automated tests.
       "errorPages": { "showHttpErrors": false },
       "sounds":     { "scanOk": "none", "error": "error" },
       "kiosk":      { "hideToolbar": false, "immersive": false, "keepScreenOn": true, "orientation": "auto" },
-      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto", "engine": "auto" }
+      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto", "engine": "auto",
+                      "camera": { "aim": "frame", "continuous": false }, "data": { "prefix": "", "suffix": null } }
     }
   ]
 }
@@ -212,6 +214,94 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 | Others | Any scanner app that broadcasts `de.ictbaden.industrialkioskbrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). By default only on devices without a Zebra or Honeywell scanner – `scanner.genericIntent: "on"` accepts it everywhere. |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
+
+Every field of a profile except the lists (injections, key remapping, hotkeys, replacements and
+rules of the scan data) can also be changed on the device: **Settings → tap a profile**.
+
+## `scanner.camera`
+
+Settings of the camera scanner (`engine: "camera"` or devices without a scan engine). They do not
+change the scan engine of the device – its decoders, aiming and illumination are set in
+DataWedge or the Honeywell settings. The same fields exist in Industrial Keyboard.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `symbologies` | `[]` | Barcode types the camera reads; empty = all. Names: `aztec`, `codabar`, `code39`, `code93`, `code128`, `databar`, `databarexpanded`, `databarlimited`, `datamatrix`, `ean8`, `ean13`, `itf`, `maxicode`, `pdf417`, `micropdf417`, `qr`, `microqr`, `rmqr`, `upca`, `upce` |
+| `aim` | `frame` | `frame`: only codes whose centre lies inside the aiming frame. `center`: only the code under the red crosshair in the middle (pick list – for labels with many codes side by side). `anywhere`: the whole picture, the code nearest the middle wins |
+| `continuous` | `false` | The camera stays open and enters every new code at once (stock taking); close with ✕. The screen shows how many codes were entered and the last one |
+| `duplicateDelayMs` | `1500` | Continuous mode: the same code is entered again only after this time (0–10000) |
+| `confirmReads` | `1` | The same code must be read in this many frames in a row (1–3) – against misreads of damaged 1D codes |
+| `minLength`, `maxLength` | `0` | Accepted text length (0 = no limit). Other codes are ignored and the camera keeps looking |
+| `zoom` | `1.0` | Zoom when the camera opens (1.0–4.0). A button on the camera screen switches 1× → 2× → 3× |
+| `torch` | `false` | Flashlight on when the camera opens |
+| `inverted` | `true` | Also read light codes on a dark background |
+| `beep`, `vibrate` | `true` | Feedback for every code read |
+| `timeoutSeconds` | `60` | The camera closes after this time without a code (0–600, 0 = never) |
+
+A configuration barcode (*Settings → Import from barcode*) is always read with the defaults
+above, in the whole picture and at a higher resolution.
+
+## `scanner.data`
+
+Formatting of the barcode text before it is entered – for every scan the app receives: camera,
+Zebra DataWedge, Honeywell and the `BARCODE` broadcast. (Scans that another app types as
+keystrokes never pass through the app.) The same fields exist in Industrial Keyboard.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `prefix` | `""` | Text before the code |
+| `suffix` | `null` | Text after the code. Keys after the scan stay `scanner.terminator` |
+| `trim` | `true` | Remove spaces and control characters at the start and end (not the GS separator) |
+| `removeSpaces` | `false` | Remove all spaces |
+| `case` | `none` | `none`, `upper`, `lower` |
+| `stripLeading`, `stripTrailing` | `0` | Remove this many characters at the start / end (0–999), e.g. a check digit |
+| `replace` | `[]` | Replacements in order: `{ "find": "-", "with": "" }`; with `"regex": true` `find` is a Java regular expression and `with` may use `$1` |
+| `gs1` | `hri` | Camera only: GS1 codes as `(01)…(10)…` (`hri`) or raw with the group separator GS, U+001D (`raw`) |
+| `gsReplacement` | `null` | Replaces the GS separator in every scan, e.g. `""` (remove) or `"|"`; `null` keeps it |
+| `rules` | `[]` | Rules per code, see below |
+| `unmatched` | `send` | When `rules` exist and none matches: `send` (with the settings above) or `drop` |
+
+Order: GS replacement and trim → strip → remove spaces → replace → case → prefix and suffix. A
+code with nothing left is dropped. On the device, the dialog *Settings → profile → Scan data*
+offers every field except `replace` and `rules`.
+
+**Rules** – the first rule whose conditions all match a code decides; its fields override the
+ones above for that code, fields left out keep them:
+
+```json
+{ "name": "GTIN", "symbologies": ["ean13", "upca"], "minLength": 0, "maxLength": 0,
+  "startsWith": "", "pattern": "", "action": "send",
+  "prefix": null, "suffix": null, "case": null, "stripLeading": null, "stripTrailing": null,
+  "removeSpaces": null, "replace": null }
+```
+
+Conditions: `symbologies` (names as above; a code whose type is unknown matches only rules
+without `symbologies`), `minLength`/`maxLength`, `startsWith`, `pattern` (Java regular expression
+that has to match the whole trimmed text). `action`: `send` or `drop`. A code the rules drop is
+not entered; the camera ignores it and keeps looking.
+
+### Examples
+
+Strip the check digit of EAN-13 codes, leave everything else as it is:
+
+```json
+"data": { "rules": [ { "symbologies": ["ean13"], "stripTrailing": 1 } ] }
+```
+
+Accept EAN-13 only, ignore every other code:
+
+```json
+"data": { "rules": [ { "symbologies": ["ean13"] } ], "unmatched": "drop" }
+```
+
+GS1 codes (e.g. GS1 DataMatrix with batch and expiry date) read raw by the camera, with the
+group separator turned into a tab character. The browser inserts the text as it is – a tab
+character inside a field does not move on to the next field, so the page has to split the value;
+`"|"` instead of `"\t"` may be easier for the page:
+
+```json
+"data": { "gs1": "raw", "gsReplacement": "\t" }
+```
 
 ## Resources
 

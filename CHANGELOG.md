@@ -11,6 +11,22 @@
   ("Scan with"). Decoding with [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp) 3.1.1, camera with CameraX 1.5.3
   (see THIRD-PARTY-NOTICES.txt). New error codes `IKB-0030` (no camera permission) and `IKB-0031` (camera not
   available).
+- **Camera scanner settings** `scanner.camera` (same fields as Industrial Keyboard): barcode types, aiming
+  (`frame`, `center` with crosshair as pick list, `anywhere`), continuous scanning with duplicate delay and a
+  counter, confirmation over 1–3 frames, length limits, zoom (with a 1×/2×/3× button), flashlight at start,
+  light-on-dark codes, beep, vibration, timeout.
+- **Scan data formatting** `scanner.data` for every scan (camera, DataWedge, Honeywell, broadcast): prefix,
+  suffix, trim, remove spaces, upper/lower case, strip characters at start/end, replacements (also regular
+  expressions), GS1 as `(01)…` or raw, group separator replacement, and rules per barcode type, length, start
+  or pattern that change or drop a code. See [Configuration](docs/configuration.md#scannerdata).
+- **All profile settings on the device:** *Settings → tap a profile* opens a screen with every field of the
+  profile – general, kiosk, display, keyboard, sounds, error pages, scanner, camera and scan data. Lists that do
+  not fit a phone (injections, key remapping, hotkeys, replacements, rules) show their count. New profiles are
+  still created with the short dialog.
+- **Export as barcode:** *Settings → Export as barcode* shows the configuration as a QR code for the next
+  device; long configurations are compressed (`ICTZ1:` + base64url of DEFLATE). All imports (barcode, file,
+  broadcast, managed configuration) accept this form. Too large for a QR code: `IKB-0104`. QR codes are made with
+  the QR Code generator library by Project Nayuki (MIT).
 
 ## [0.7.0] – 2026-11-06
 
