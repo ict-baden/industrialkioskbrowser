@@ -150,7 +150,7 @@
     <string name="scanner_enabled">Escáner activado</string>
     <string name="send_after_scan">Enviar tras escanear</string>
     <string name="scan_engine">Escanear con</string>
-    <string name="scan_engine_auto">Automático (cámara si no hay módulo de escaneo)</string>
+    <string name="scan_engine_auto">Automático</string>
     <string name="scan_engine_hardware">Módulo de escaneo del dispositivo</string>
     <string name="scan_engine_camera">Cámara</string>
     <string name="terminator_none">Ninguna tecla</string>

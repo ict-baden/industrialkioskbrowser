@@ -148,7 +148,7 @@
     <string name="scanner_enabled">启用扫描器</string>
     <string name="send_after_scan">扫描后发送</string>
     <string name="scan_engine">扫描方式</string>
-    <string name="scan_engine_auto">自动（无扫描模块时使用相机）</string>
+    <string name="scan_engine_auto">自动</string>
     <string name="scan_engine_hardware">设备的扫描模块</string>
     <string name="scan_engine_camera">相机</string>
     <string name="terminator_none">无按键</string>
