@@ -51,8 +51,10 @@ import de.ictbaden.industrialkioskbrowser.config.Languages
 import de.ictbaden.industrialkioskbrowser.config.PasswordHasher
 import de.ictbaden.industrialkioskbrowser.config.Profile
 import de.ictbaden.industrialkioskbrowser.config.Resource
+import de.ictbaden.industrialkioskbrowser.config.ScanEngine
 import de.ictbaden.industrialkioskbrowser.config.ScanTerminator
 import de.ictbaden.industrialkioskbrowser.provisioning.Provisioning
+import de.ictbaden.industrialkioskbrowser.scanner.CameraScanActivity
 import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import de.ictbaden.industrialkioskbrowser.scanner.ScannerManager
 import de.ictbaden.industrialkioskbrowser.ui.AppLanguage
@@ -81,6 +83,11 @@ class AdminActivity : AppCompatActivity() {
             contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use { it.write(ConfigJson.write(store.config)) }
         }.onSuccess { toast(getString(R.string.config_exported)) }
             .onFailure { toast(withCode(getString(R.string.export_failed, it.message.orEmpty()), ErrorCodes.EXPORT_FAILED)) }
+    }
+
+    /** Configuration QR code read with the camera on devices without a scan engine. */
+    private val cameraScan = registerForActivityResult(CameraScanActivity.Contract()) { scan ->
+        scan?.let(scanner::deliver)
     }
 
     private val pickLogo = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -113,7 +120,7 @@ class AdminActivity : AppCompatActivity() {
             scroll.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
             insets
         }
-        scanner = ScannerManager(this, onScan = ::onScan).apply { enabled = false }
+        scanner = ScannerManager(this, launchCamera = { cameraScan.launch(requestedOrientation) }, onScan = ::onScan).apply { enabled = false }
         render()
     }
 
@@ -299,7 +306,16 @@ class AdminActivity : AppCompatActivity() {
                 setText(terminatorLabels[profile.scanner.terminator.ordinal], false)
             })
         }
-        val form = Dialogs.form(this, name, url, allowList, colorRow, launchOnStartup, hideToolbar, immersive, keepScreenOn, scannerEnabled, terminator)
+        val engineLabels = listOf(getString(R.string.scan_engine_auto), getString(R.string.scan_engine_hardware), getString(R.string.scan_engine_camera))
+        val engine = TextInputLayout(this, null, com.google.android.material.R.attr.textInputOutlinedExposedDropdownMenuStyle).apply {
+            hint = getString(R.string.scan_engine)
+            addView(MaterialAutoCompleteTextView(context).apply {
+                inputType = InputType.TYPE_NULL
+                setSimpleItems(engineLabels.toTypedArray())
+                setText(engineLabels[profile.scanner.engine.ordinal], false)
+            })
+        }
+        val form = Dialogs.form(this, name, url, allowList, colorRow, launchOnStartup, hideToolbar, immersive, keepScreenOn, scannerEnabled, engine, terminator)
         val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(if (existing == null) R.string.new_profile else R.string.edit_profile)
             .setView(ScrollView(this).apply { addView(form) })
@@ -316,6 +332,8 @@ class AdminActivity : AppCompatActivity() {
             val id = existing?.id ?: uniqueId(store.config, displayName)
             val selectedTerminator = terminatorLabels.indexOf(terminator.value).takeIf { it >= 0 }
                 ?.let { ScanTerminator.entries[it] } ?: profile.scanner.terminator
+            val selectedEngine = engineLabels.indexOf(engine.value).takeIf { it >= 0 }
+                ?.let { ScanEngine.entries[it] } ?: profile.scanner.engine
             val updated = profile.copy(
                 id = id,
                 name = displayName,
@@ -328,7 +346,7 @@ class AdminActivity : AppCompatActivity() {
                     immersive = immersive.isChecked,
                     keepScreenOn = keepScreenOn.isChecked,
                 ),
-                scanner = profile.scanner.copy(enabled = scannerEnabled.isChecked, terminator = selectedTerminator),
+                scanner = profile.scanner.copy(enabled = scannerEnabled.isChecked, terminator = selectedTerminator, engine = selectedEngine),
             )
             store.update { config ->
                 // Only one profile can auto-launch.

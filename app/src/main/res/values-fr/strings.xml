@@ -32,6 +32,12 @@
     <string name="builtin_demo">Démo intégrée</string>
     <string name="demo_profile_name">Démo et test du scanner</string>
     <string name="no_scanner">Aucun scanner matériel</string>
+    <string name="camera_scanner">Caméra</string>
+    <string name="camera_hint">Placez le code-barres dans le cadre</string>
+    <string name="camera_close">Fermer</string>
+    <string name="camera_torch">Lampe torche</string>
+    <string name="camera_permission_denied">Pas d’accès à la caméra</string>
+    <string name="camera_unavailable">Impossible de démarrer la caméra</string>
 
     <string name="password">Mot de passe</string>
     <string name="admin_password">Mot de passe administrateur</string>
@@ -143,6 +149,10 @@
     <string name="keep_screen_on">Garder l\'écran allumé</string>
     <string name="scanner_enabled">Scanner activé</string>
     <string name="send_after_scan">Envoyer après le scan</string>
+    <string name="scan_engine">Scanner avec</string>
+    <string name="scan_engine_auto">Automatique (caméra sans module de scan)</string>
+    <string name="scan_engine_hardware">Module de scan de l’appareil</string>
+    <string name="scan_engine_camera">Caméra</string>
     <string name="terminator_none">Aucune touche</string>
     <string name="delete_profile_title">Supprimer le profil ?</string>
     <string name="delete_profile_message">« %1$s » sera supprimé de cet appareil.</string>

@@ -190,6 +190,7 @@ object ConfigJson {
                     defaults.scanner.injectIntoFocusedField,
                 ),
                 genericIntent = GenericIntent.parse(scanner.optNonBlank("genericIntent")),
+                engine = ScanEngine.parse(scanner.optNonBlank("engine")),
             ),
         )
         checkResourceReferences(profile, resources, where)
@@ -334,6 +335,7 @@ object ConfigJson {
             put("terminator", profile.scanner.terminator.key)
             put("injectIntoFocusedField", profile.scanner.injectIntoFocusedField)
             put("genericIntent", profile.scanner.genericIntent.key)
+            put("engine", profile.scanner.engine.key)
         })
     }
 

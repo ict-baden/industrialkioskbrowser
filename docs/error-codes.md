@@ -19,6 +19,8 @@ any of the five languages. Source: [`ErrorCodes.kt`](../app/src/main/java/de/ict
 | `IKB-0012` | Downloads are disabled | `allowDownloads` is off |
 | `IKB-0013` | This download type is not supported | Download that is not `http`/`https` (e.g. `blob:`) |
 | `IKB-0020` | Profile not found | The profile was removed while it was being opened |
+| `IKB-0030` | No access to the camera | Camera scanning: the camera permission was denied (Android settings → Apps → Industrial Kiosk Browser → Permissions, or grant it through the MDM) |
+| `IKB-0031` | Camera could not be started | Camera scanning: no usable camera, or another app holds it |
 | `IKB-0100` | Last provisioning error | A configuration from the MDM, a file or a broadcast was rejected; the detail names the JSON field |
 | `IKB-0101` | Import failed | Invalid configuration in the import file or QR code |
 | `IKB-0102` | Could not read the file | Import file not readable |

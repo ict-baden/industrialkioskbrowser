@@ -56,6 +56,13 @@
             android:name=".admin.AdminActivity"
             android:exported="false" />
 
+        <!-- Camera scanning on devices without a scan engine; same task as the browser (lock task). -->
+        <activity
+            android:name=".scanner.CameraScanActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.IndustrialKioskBrowser" />
+
         <receiver
             android:name=".provisioning.ConfigReceiver"
             android:exported="true">
