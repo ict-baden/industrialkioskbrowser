@@ -269,12 +269,13 @@ class CameraScanActivity : AppCompatActivity() {
         }
         try {
             provider.unbindAll()
-            camera = provider.bindToLifecycle(this, selector, preview, analysis).also { cam ->
-                torchButton.isVisible = cam.cameraInfo.hasFlashUnit()
-                zoomButton.isVisible = (cam.cameraInfo.zoomState.value?.maxZoomRatio ?: 1f) > 1.01f
-                if (settings.torch) setTorch(true)
-                setZoom(settings.zoom.toFloat())
-            }
+            val cam = provider.bindToLifecycle(this, selector, preview, analysis)
+            // Assign first: setTorch and setZoom use the field.
+            camera = cam
+            torchButton.isVisible = cam.cameraInfo.hasFlashUnit()
+            zoomButton.isVisible = (cam.cameraInfo.zoomState.value?.maxZoomRatio ?: 1f) > 1.01f
+            if (settings.torch) setTorch(true)
+            setZoom(settings.zoom.toFloat())
         } catch (e: Exception) {
             Log.e(TAG, "Binding the camera failed", e)
             fail(R.string.camera_unavailable, ErrorCodes.CAMERA_UNAVAILABLE)
