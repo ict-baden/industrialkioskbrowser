@@ -49,6 +49,39 @@ object ConfigJson {
         null
     }
 
+    /**
+     * Like [write], but without the values that equal the defaults – [parse] fills them in again.
+     * Used for the barcode export, where every character makes the QR code denser.
+     */
+    fun writeCompact(config: AppConfig): String {
+        val root = JSONObject(write(config))
+        val defaults = JSONObject(write(AppConfig()))
+        val defaultProfile = writeProfile(Profile(id = "", name = "", startUrl = ""))
+        prune(root, defaults, keep = setOf("version", "profiles"))
+        root.optJSONArray("profiles")?.let { profiles ->
+            for (i in 0 until profiles.length()) {
+                profiles.optJSONObject(i)?.let { prune(it, defaultProfile, keep = setOf("id", "name", "startUrl")) }
+            }
+        }
+        return root.toString()
+    }
+
+    /** Removes every key of [json] whose value equals the one in [defaults]; empty objects go too. */
+    private fun prune(json: JSONObject, defaults: JSONObject, keep: Set<String> = emptySet()) {
+        val keys = json.keys().asSequence().toList()
+        for (key in keys) {
+            if (key in keep || !defaults.has(key)) continue
+            val value = json.get(key)
+            val default = defaults.get(key)
+            if (value is JSONObject && default is JSONObject) {
+                prune(value, default)
+                if (value.length() == 0) json.remove(key)
+            } else if (value.javaClass == default.javaClass && value.toString() == default.toString()) {
+                json.remove(key)
+            }
+        }
+    }
+
     fun write(config: AppConfig): String {
         val root = JSONObject()
         root.put("version", VERSION)
