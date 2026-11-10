@@ -46,11 +46,26 @@ enum class GenericIntent(override val key: String) : Keyed {
     }
 }
 
+/**
+ * Which scanner reads the barcodes. AUTO uses the scan engine of the device (DataWedge, Honeywell)
+ * and falls back to the camera when the device has none (issue #48).
+ */
+enum class ScanEngine(override val key: String) : Keyed {
+    AUTO("auto"),
+    HARDWARE("hardware"),
+    CAMERA("camera");
+
+    companion object {
+        fun parse(value: String?): ScanEngine = parseKey(value, AUTO)
+    }
+}
+
 data class ScannerSettings(
     val enabled: Boolean = true,
     val terminator: ScanTerminator = ScanTerminator.ENTER,
     val injectIntoFocusedField: Boolean = true,
     val genericIntent: GenericIntent = GenericIntent.AUTO,
+    val engine: ScanEngine = ScanEngine.AUTO,
 )
 
 data class KioskSettings(

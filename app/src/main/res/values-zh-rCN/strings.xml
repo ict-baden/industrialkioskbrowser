@@ -32,6 +32,12 @@
     <string name="builtin_demo">内置演示</string>
     <string name="demo_profile_name">演示和扫描器测试</string>
     <string name="no_scanner">无硬件扫描器</string>
+    <string name="camera_scanner">相机</string>
+    <string name="camera_hint">将条码置于框内</string>
+    <string name="camera_close">关闭</string>
+    <string name="camera_torch">手电筒</string>
+    <string name="camera_permission_denied">无法访问相机</string>
+    <string name="camera_unavailable">无法启动相机</string>
 
     <string name="password">密码</string>
     <string name="admin_password">管理员密码</string>
@@ -141,6 +147,10 @@
     <string name="keep_screen_on">保持屏幕常亮</string>
     <string name="scanner_enabled">启用扫描器</string>
     <string name="send_after_scan">扫描后发送</string>
+    <string name="scan_engine">扫描方式</string>
+    <string name="scan_engine_auto">自动（无扫描模块时使用相机）</string>
+    <string name="scan_engine_hardware">设备的扫描模块</string>
+    <string name="scan_engine_camera">相机</string>
     <string name="terminator_none">无按键</string>
     <string name="delete_profile_title">删除配置文件？</string>
     <string name="delete_profile_message">“%1$s”将从此设备中移除。</string>

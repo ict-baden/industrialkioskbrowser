@@ -96,7 +96,7 @@ the administrator usually limits it to an allow list.
 | Permission | Why |
 |---|---|
 | `INTERNET`, `ACCESS_NETWORK_STATE` | Loading the configured web apps, error pages without network |
-| `CAMERA` | Only when a web page of an allowed host asks for the camera (e.g. a camera barcode scan in the web app); the user is asked first |
+| `CAMERA` | Scanning with the camera on devices without a scan engine (or with `scanner.engine: "camera"`), and when a web page of an allowed host asks for the camera (e.g. a camera barcode scan in the web app); the user is asked first |
 | `VIBRATE` | Feedback after a scan |
 
 No sensitive permissions that need a declaration form (no SMS, call log, location,

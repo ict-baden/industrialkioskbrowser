@@ -74,6 +74,7 @@ import de.ictbaden.industrialkioskbrowser.config.ViewportMode
 import de.ictbaden.industrialkioskbrowser.provisioning.Provisioning
 import de.ictbaden.industrialkioskbrowser.config.ScanTerminator
 import de.ictbaden.industrialkioskbrowser.config.ScreenOrientation
+import de.ictbaden.industrialkioskbrowser.scanner.CameraScanActivity
 import de.ictbaden.industrialkioskbrowser.scanner.NoScanner
 import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import de.ictbaden.industrialkioskbrowser.scanner.ScannerManager
@@ -130,6 +131,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private val fileChooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         fileChooserCallback?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data))
         fileChooserCallback = null
+    }
+
+    /** Camera scanning on devices without a scan engine; the result goes the same way as a hardware scan. */
+    private val cameraScan = registerForActivityResult(CameraScanActivity.Contract()) { scan ->
+        scan?.let(scanner::deliver)
     }
 
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -218,7 +224,14 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         applyBranding()
         applyInsets()
 
-        scanner = ScannerManager(this, profile.scanner.genericIntent, ::onScan)
+        scanner = ScannerManager(
+            this,
+            genericIntent = profile.scanner.genericIntent,
+            engine = profile.scanner.engine,
+            launchCamera = { cameraScan.launch(requestedOrientation) },
+            onScannerChanged = { scanButton.isVisible = scanner.scanner !is NoScanner },
+            onScan = ::onScan,
+        )
         sounds = Sounds(this, config)
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()

@@ -32,6 +32,12 @@
     <string name="builtin_demo">Demo integrada</string>
     <string name="demo_profile_name">Demo y prueba del escáner</string>
     <string name="no_scanner">Sin escáner de hardware</string>
+    <string name="camera_scanner">Cámara</string>
+    <string name="camera_hint">Mantenga el código de barras dentro del marco</string>
+    <string name="camera_close">Cerrar</string>
+    <string name="camera_torch">Linterna</string>
+    <string name="camera_permission_denied">Sin acceso a la cámara</string>
+    <string name="camera_unavailable">No se pudo iniciar la cámara</string>
 
     <string name="password">Contraseña</string>
     <string name="admin_password">Contraseña de administrador</string>
@@ -143,6 +149,10 @@
     <string name="keep_screen_on">Mantener la pantalla encendida</string>
     <string name="scanner_enabled">Escáner activado</string>
     <string name="send_after_scan">Enviar tras escanear</string>
+    <string name="scan_engine">Escanear con</string>
+    <string name="scan_engine_auto">Automático (cámara si no hay módulo de escaneo)</string>
+    <string name="scan_engine_hardware">Módulo de escaneo del dispositivo</string>
+    <string name="scan_engine_camera">Cámara</string>
     <string name="terminator_none">Ninguna tecla</string>
     <string name="delete_profile_title">¿Eliminar el perfil?</string>
     <string name="delete_profile_message">«%1$s» se eliminará de este dispositivo.</string>

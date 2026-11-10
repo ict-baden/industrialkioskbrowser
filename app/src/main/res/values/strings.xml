@@ -39,6 +39,12 @@
     <string name="builtin_demo">Built-in demo</string>
     <string name="demo_profile_name">Demo &amp; scanner test</string>
     <string name="no_scanner">No hardware scanner</string>
+    <string name="camera_scanner">Camera</string>
+    <string name="camera_hint">Hold the barcode inside the frame</string>
+    <string name="camera_close">Close</string>
+    <string name="camera_torch">Flashlight</string>
+    <string name="camera_permission_denied">No access to the camera</string>
+    <string name="camera_unavailable">Camera could not be started</string>
     <string name="footer" translatable="false">%1$s %2$s · %3$s</string>
 
     <!-- Passwords and sign-in -->
@@ -155,6 +161,10 @@
     <string name="keep_screen_on">Keep screen on</string>
     <string name="scanner_enabled">Scanner enabled</string>
     <string name="send_after_scan">Send after scan</string>
+    <string name="scan_engine">Scan with</string>
+    <string name="scan_engine_auto">Automatic (camera without scan engine)</string>
+    <string name="scan_engine_hardware">Scan engine of the device</string>
+    <string name="scan_engine_camera">Camera</string>
     <string name="terminator_none">No key</string>
     <string name="delete_profile_title">Delete profile?</string>
     <string name="delete_profile_message">\"%1$s\" will be removed from this device.</string>

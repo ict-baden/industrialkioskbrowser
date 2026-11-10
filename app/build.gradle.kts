@@ -84,6 +84,12 @@ dependencies {
     implementation("androidx.webkit:webkit:1.14.0")
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("com.google.android.material:material:1.14.0")
+    // Camera scanning on devices without a scan engine (issue #48): CameraX preview and analysis,
+    // decoding with zxing-cpp (same engine as Lupe). 1.5.x and no camera-view on purpose: from 1.6
+    // camera-camera2 brings Dagger, and camera-view always brings camera-video with media3 and Guava.
+    implementation("androidx.camera:camera-camera2:1.5.3")
+    implementation("androidx.camera:camera-lifecycle:1.5.3")
+    implementation("io.github.zxing-cpp:android:3.1.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20260814")

@@ -17,6 +17,8 @@ object ErrorCodes {
     const val DOWNLOADS_DISABLED = "IKB-0012"
     const val DOWNLOAD_UNSUPPORTED = "IKB-0013"
     const val PROFILE_NOT_FOUND = "IKB-0020"
+    const val CAMERA_PERMISSION_DENIED = "IKB-0030"
+    const val CAMERA_UNAVAILABLE = "IKB-0031"
     const val PROVISIONING = "IKB-0100"
     const val IMPORT_INVALID = "IKB-0101"
     const val FILE_UNREADABLE = "IKB-0102"

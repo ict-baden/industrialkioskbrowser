@@ -52,7 +52,7 @@ checked against the app by the automated tests.
       "errorPages": { "showHttpErrors": false },
       "sounds":     { "scanOk": "none", "error": "error" },
       "kiosk":      { "hideToolbar": false, "immersive": false, "keepScreenOn": true, "orientation": "auto" },
-      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto" }
+      "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto", "engine": "auto" }
     }
   ]
 }
@@ -202,11 +202,13 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 | `terminator` | `enter` | Keys sent after inserting: `none`, `tab`, `enter`, `tab+enter`, `enter+tab` |
 | `injectIntoFocusedField` | `true` | Type the scan into the focused input field |
 | `genericIntent` | `auto` | Accept scans from the broadcast `<package>.action.BARCODE` (see *Others* below): `auto` = only on devices without a Zebra or Honeywell scanner, `on`, `off`. Any app on the device can send this broadcast and thus type fake scans – turn it `off` where no other scanner app is used. |
+| `engine` | `auto` | What reads the barcodes: `auto` = the scan engine of the device, or the camera if it has none; `hardware` = always the scan engine (as before 0.7.1); `camera` = always the camera, also on devices with a scan engine. |
 
 | Device | Integration |
 |---|---|
 | Zebra | DataWedge intent API. On start a DataWedge profile "Industrial Kiosk Browser" is created (intent output on, keystroke off). Decoder settings are left alone and can be tuned in DataWedge/StageNow. DataWedge is a separate app, so the scan receiver has to be open to other apps as well; Android cannot tell who sent a scan. |
 | Honeywell | Intent API of the Data Collection Service (the scanner is claimed with data intent output). |
+| Camera | Devices without a scan engine (`engine: "auto"`) or `engine: "camera"`: the scan button and `scanner.trigger()` open a full-screen camera view with an aiming frame and a torch button; the first barcode read closes it and is delivered like a hardware scan. Decoding with zxing-cpp on the device, nothing leaves the device. Android asks for the camera permission on the first scan (or the MDM grants it). On Zebra, "no scan engine" means DataWedge lists neither a built-in scanner (`INTERNAL_IMAGER`, `INTERNAL_LASER` …) nor a connected Bluetooth/USB scanner; until DataWedge answers (at most 2 s after app start) the scan engine is assumed. Honeywell devices always count as having one. |
 | Others | Any scanner app that broadcasts `de.ictbaden.industrialkioskbrowser.action.BARCODE` with the barcode in an extra (`data`, `…data_string`, `…decode_string`, `barcode_string`). By default only on devices without a Zebra or Honeywell scanner – `scanner.genericIntent: "on"` accepts it everywhere. |
 
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).

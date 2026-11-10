@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **Scanning with the camera** on devices without a scan engine ([#48](https://github.com/ict-baden/industrialkioskbrowser/issues/48)):
+  the app detects whether the device has one (Zebra: DataWedge's scanner list, Honeywell: scanner service) and
+  otherwise opens a full-screen camera view with aiming frame and torch from the scan button and from
+  `scanner.trigger()`. New setting `scanner.engine` (`auto`, `hardware`, `camera`), also in the profile dialog
+  ("Scan with"). Decoding with [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp) 3.1.1, camera with CameraX 1.5.3
+  (see THIRD-PARTY-NOTICES.txt). New error codes `IKB-0030` (no camera permission) and `IKB-0031` (camera not
+  available).
+
 ## [0.7.0] – 2026-11-06
 
 ### Changed
