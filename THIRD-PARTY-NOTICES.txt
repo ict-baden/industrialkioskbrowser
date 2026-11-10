@@ -15,7 +15,7 @@ Alle Teile sind in die APK einkompiliert (classes.dex, Ressourcen und, bei zxing
    appcompat 1.8.0, appcompat-resources 1.8.0, cardview 1.0.0, collection 1.4.2, concurrent-futures 1.1.0,
    constraintlayout 2.2.1, constraintlayout-core 1.1.1, coordinatorlayout 1.1.0, arch core-common 2.2.0,
    arch core-runtime 2.2.0, core 1.19.1, core-ktx 1.19.1, core-splashscreen 1.2.0, core-viewtree 1.0.0, cursoradapter 1.0.0,
-   camera-camera2 1.5.3, camera-core 1.5.3, camera-lifecycle 1.5.3, camera featurecombinationquery 1.5.3
+   camera-camera2 1.5.3, camera-core 1.5.3, camera-lifecycle 1.5.3, camera-view 1.5.3, camera featurecombinationquery 1.5.3
    (camera scanning), concurrent-futures-ktx 1.1.0, exifinterface 1.4.2, tracing-ktx 1.2.0, customview 1.2.0, customview-poolingcontainer 1.0.0, drawerlayout 1.1.1, dynamicanimation 1.1.0, emoji2 1.3.0, emoji2-views-helper 1.3.0,
    fragment 1.5.4, graphics-shapes 1.0.1, interpolator 1.0.0, lifecycle 2.10.0, loader 1.0.0,
    profileinstaller 1.4.0, recyclerview 1.4.0, resourceinspection-annotation 1.0.1, savedstate 1.4.0,
@@ -99,6 +99,7 @@ Komponenten (von der CI geprüft)
    androidx.camera:camera-camera2:1.5.3
    androidx.camera:camera-core:1.5.3
    androidx.camera:camera-lifecycle:1.5.3
+   androidx.camera:camera-view:1.5.3
    androidx.cardview:cardview:1.0.0
    androidx.collection:collection-jvm:1.4.2
    androidx.collection:collection:1.4.2

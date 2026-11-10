@@ -8,11 +8,9 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.SurfaceTexture
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -21,8 +19,6 @@ import android.os.VibratorManager
 import android.util.Log
 import android.util.Size
 import android.view.Gravity
-import android.view.Surface
-import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -41,6 +37,7 @@ import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -53,7 +50,6 @@ import zxingcpp.BarcodeReader
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.max
 
 /**
  * Full-screen camera scanner for devices without a scan engine (issue #48): live picture, a frame
@@ -62,7 +58,7 @@ import kotlin.math.max
  */
 class CameraScanActivity : AppCompatActivity() {
 
-    private lateinit var textureView: TextureView
+    private lateinit var previewView: PreviewView
     private lateinit var torchButton: ImageButton
     private lateinit var analysisExecutor: ExecutorService
     private val reader by lazy {
@@ -72,8 +68,6 @@ class CameraScanActivity : AppCompatActivity() {
     private val done = AtomicBoolean(false)
     private var camera: Camera? = null
     private var torchOn = false
-    private var bufferSize: Size? = null
-    private var bufferRotation = 0
 
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else fail(R.string.camera_permission_denied, ErrorCodes.CAMERA_PERMISSION_DENIED)
@@ -102,7 +96,11 @@ class CameraScanActivity : AppCompatActivity() {
         val density = resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
 
-        textureView = TextureView(this)
+        // PreviewView turns and centre-crops the picture itself, without distortion.
+        previewView = PreviewView(this).apply {
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            scaleType = PreviewView.ScaleType.FILL_CENTER
+        }
         val viewfinder = ViewfinderView(this, Color.WHITE)
         val close = ImageButton(this).apply {
             setImageResource(R.drawable.ic_close)
@@ -134,7 +132,7 @@ class CameraScanActivity : AppCompatActivity() {
         }
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
-            addView(textureView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            addView(previewView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             addView(viewfinder, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             addView(topBar, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP))
             addView(hint, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM))
@@ -145,7 +143,6 @@ class CameraScanActivity : AppCompatActivity() {
             hint.updatePadding(bottom = bars.bottom + dp(32))
             insets
         }
-        textureView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateTransform() }
         return root
     }
 
@@ -159,42 +156,17 @@ class CameraScanActivity : AppCompatActivity() {
                 fail(R.string.camera_unavailable, ErrorCodes.CAMERA_UNAVAILABLE)
                 return@addListener
             }
-            if (textureView.isAvailable) {
-                bind(provider)
-            } else {
-                textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-                    override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) = bind(provider)
-                    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) = updateTransform()
-                    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture) = true
-                    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
-                }
-            }
+            bind(provider)
         }, ContextCompat.getMainExecutor(this))
     }
 
     private fun bind(provider: ProcessCameraProvider) {
         if (isFinishing || isDestroyed) return
-        val main = ContextCompat.getMainExecutor(this)
         val resolution = ResolutionSelector.Builder()
             .setResolutionStrategy(ResolutionStrategy(Size(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
             .build()
         val preview = Preview.Builder().setResolutionSelector(resolution).build()
-        preview.setSurfaceProvider(main) { request ->
-            val texture = textureView.surfaceTexture
-            if (texture == null) {
-                request.willNotProvideSurface()
-                return@setSurfaceProvider
-            }
-            texture.setDefaultBufferSize(request.resolution.width, request.resolution.height)
-            bufferSize = request.resolution
-            val surface = Surface(texture)
-            request.setTransformationInfoListener(main) { info ->
-                bufferRotation = info.rotationDegrees
-                updateTransform()
-            }
-            request.provideSurface(surface, main) { surface.release() }
-            updateTransform()
-        }
+        preview.surfaceProvider = previewView.surfaceProvider
         val analysis = ImageAnalysis.Builder()
             .setResolutionSelector(resolution)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -233,18 +205,6 @@ class CameraScanActivity : AppCompatActivity() {
             Log.e(TAG, "Binding the camera failed", e)
             fail(R.string.camera_unavailable, ErrorCodes.CAMERA_UNAVAILABLE)
         }
-    }
-
-    /**
-     * The texture view stretches the camera buffer (sensor orientation) over the whole view: undo the
-     * stretch, turn it upright and scale it so it fills the view (centre crop).
-     */
-    private fun updateTransform() {
-        val size = bufferSize ?: return
-        val viewWidth = textureView.width.toFloat()
-        val viewHeight = textureView.height.toFloat()
-        if (viewWidth == 0f || viewHeight == 0f) return
-        textureView.setTransform(previewMatrix(viewWidth, viewHeight, size.width.toFloat(), size.height.toFloat(), bufferRotation))
     }
 
     private fun toggleTorch() {
@@ -326,23 +286,5 @@ class CameraScanActivity : AppCompatActivity() {
         private const val EXTRA_FORMAT = "format"
         private const val EXTRA_ORIENTATION = "orientation"
         private const val VIBRATION_MS = 60L
-
-        /**
-         * Matrix for a [TextureView] showing a camera buffer of [bufferWidth]×[bufferHeight] that has
-         * to be turned by [rotation] degrees to be upright: centre crop, no distortion.
-         */
-        fun previewMatrix(viewWidth: Float, viewHeight: Float, bufferWidth: Float, bufferHeight: Float, rotation: Int): Matrix {
-            val cx = viewWidth / 2
-            val cy = viewHeight / 2
-            val turned = rotation % 180 != 0
-            val rotatedWidth = if (turned) bufferHeight else bufferWidth
-            val rotatedHeight = if (turned) bufferWidth else bufferHeight
-            val scale = max(viewWidth / rotatedWidth, viewHeight / rotatedHeight)
-            return Matrix().apply {
-                setScale(bufferWidth / viewWidth, bufferHeight / viewHeight, cx, cy)
-                postRotate(rotation.toFloat(), cx, cy)
-                postScale(scale, scale, cx, cy)
-            }
-        }
     }
 }
