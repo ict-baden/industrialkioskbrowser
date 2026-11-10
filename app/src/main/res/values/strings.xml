@@ -162,7 +162,7 @@
     <string name="scanner_enabled">Scanner enabled</string>
     <string name="send_after_scan">Send after scan</string>
     <string name="scan_engine">Scan with</string>
-    <string name="scan_engine_auto">Automatic (camera without scan engine)</string>
+    <string name="scan_engine_auto">Automatic</string>
     <string name="scan_engine_hardware">Scan engine of the device</string>
     <string name="scan_engine_camera">Camera</string>
     <string name="terminator_none">No key</string>
