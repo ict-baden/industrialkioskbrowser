@@ -155,12 +155,28 @@ missing or wrong, locked after wrong passwords, or unmanaged device without a pa
 
 ## QR code
 
-In the app choose **Settings → Import from barcode** and scan a QR code containing the JSON
-configuration. A QR code holds a little under 3 KB – use a managed configuration or a file
-for larger configurations (resources, logo).
+**Export:** *Settings → Export as barcode* shows the configuration of this device as a QR code,
+ready to be scanned by the next device. Short configurations (up to 1 800 characters) are plain
+JSON. Longer ones are compressed: `ICTZ1:` followed by base64url (without padding) of raw DEFLATE
+of the JSON. A QR code holds a little under 3 KB; when even the compressed configuration does not
+fit (usually because of a logo or other resources), the app says so (`IKB-0104`) and offers the
+JSON file instead. Like the JSON export the code contains the password hashes, never the
+passwords.
+
+**Import:** *Settings → Import from barcode* and scan the code – with the scan engine of the
+device or with the camera. Every way of importing (barcode, file, broadcast, managed
+configuration) accepts both plain JSON and `ICTZ1:`; the unpacked text may be at most 1 MB.
+
+Making a code on a PC:
 
 ```bash
 qrencode -r examples/minimal.json -o config-qr.png
+```
+
+or compressed, for longer configurations:
+
+```bash
+python3 -c "import sys,zlib,base64,json;j=json.dumps(json.load(open(sys.argv[1])),separators=(',',':')).encode();c=zlib.compressobj(9,zlib.DEFLATED,-15);print('ICTZ1:'+base64.urlsafe_b64encode(c.compress(j)+c.flush()).decode().rstrip('='))" config.json | qrencode -o config-qr.png
 ```
 
 ## Updates and signing
