@@ -27,23 +27,21 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.divider.MaterialDivider
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
 import de.ictbaden.industrialkioskbrowser.BuildConfig
 import de.ictbaden.industrialkioskbrowser.R
 import de.ictbaden.industrialkioskbrowser.config.AppConfig
+import de.ictbaden.industrialkioskbrowser.config.ConfigCodec
 import de.ictbaden.industrialkioskbrowser.config.ConfigException
 import de.ictbaden.industrialkioskbrowser.config.ConfigJson
 import de.ictbaden.industrialkioskbrowser.config.ConfigStore
@@ -69,9 +67,11 @@ class AdminActivity : AppCompatActivity() {
     private val store by lazy { ConfigStore.get(this) }
     private lateinit var toolbar: MaterialToolbar
     private lateinit var content: LinearLayout
+    private lateinit var ui: SettingsUi
     private lateinit var scanner: ScannerManager
     private var barcodeImportDialog: AlertDialog? = null
     private var brandColor = 0
+    private var rendered = false
 
     private val importFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { readText(it) }?.let(::confirmImport)
@@ -107,6 +107,7 @@ class AdminActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(4), dp(16), dp(24))
         }
+        ui = SettingsUi(this, content)
         val scroll = NestedScrollView(this).apply { addView(content) }
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -120,12 +121,14 @@ class AdminActivity : AppCompatActivity() {
             scroll.updatePadding(left = bars.left, right = bars.right, bottom = bars.bottom)
             insets
         }
-        scanner = ScannerManager(this, launchCamera = { cameraScan.launch(requestedOrientation) }, onScan = ::onScan).apply { enabled = false }
+        scanner = ScannerManager(this, launchCamera = { cameraScan.launch(CameraScanActivity.Request(requestedOrientation, configImport = true)) }, onScan = ::onScan).apply { enabled = false }
         render()
     }
 
     override fun onResume() {
         super.onResume()
+        if (::ui.isInitialized && rendered) render()
+        rendered = true
         scanner.start()
     }
 
@@ -137,6 +140,7 @@ class AdminActivity : AppCompatActivity() {
     private fun render() {
         val config = store.config
         brandColor = Brand.color(this, config)
+        ui.brandColor = brandColor
         val onBrand = Brand.onColor(brandColor)
         toolbar.setBackgroundColor(brandColor)
         toolbar.setTitleTextColor(onBrand)
@@ -177,6 +181,7 @@ class AdminActivity : AppCompatActivity() {
                 row(R.drawable.ic_download, getString(R.string.export_file), getString(R.string.export_file_summary)) {
                     exportFile.launch("industrialkioskbrowser.json")
                 },
+                row(R.drawable.ic_qr, getString(R.string.export_barcode), getString(R.string.export_barcode_summary)) { showConfigBarcode() },
                 row(R.drawable.ic_qr, getString(R.string.import_barcode), getString(R.string.import_barcode_summary)) { startBarcodeImport() },
                 Provisioning.lastError(this)?.let {
                     row(R.drawable.ic_info, getString(R.string.last_provisioning_error), withCode(it, ErrorCodes.PROVISIONING), onClick = null)
@@ -217,7 +222,7 @@ class AdminActivity : AppCompatActivity() {
                 row(R.drawable.ic_info, getString(R.string.about_licence), getString(R.string.about_licence_summary)) {
                     showText(getString(R.string.about_licence), "LICENSE")
                 },
-                row(R.drawable.ic_info, getString(R.string.about_third_party), "AndroidX, Material Components, Kotlin") {
+                row(R.drawable.ic_info, getString(R.string.about_third_party), "AndroidX, Material Components, Kotlin, zxing-cpp, QR Code generator") {
                     showText(getString(R.string.about_third_party), "THIRD-PARTY-NOTICES.txt")
                 },
                 row(R.drawable.ic_globe, getString(R.string.about_source), SOURCE) { openLink(SOURCE) },
@@ -535,6 +540,46 @@ class AdminActivity : AppCompatActivity() {
             .show()
     }
 
+    /** "Export as barcode": QR code of the current configuration, packed when it is long (ConfigCodec). */
+    private fun showConfigBarcode() {
+        val payload = ConfigCodec.pack(ConfigJson.write(store.config))
+        val qr = ConfigBarcode.encode(payload)
+        if (qr == null) {
+            MaterialAlertDialogBuilder(this)
+                .setIcon(Dialogs.icon(this, R.drawable.ic_qr))
+                .setTitle(R.string.export_barcode)
+                .setMessage(withCode(getString(R.string.export_barcode_too_large, payload.length), ErrorCodes.CONFIG_TOO_LARGE))
+                .setPositiveButton(R.string.export_file) { _, _ -> exportFile.launch("industrialkioskbrowser.json") }
+                .setNegativeButton(R.string.button_cancel, null)
+                .show()
+            return
+        }
+        val modules = qr.size + 2 * ConfigBarcode.QUIET_ZONE
+        val width = resources.displayMetrics.widthPixels - dp(96)
+        val image = ImageView(this).apply {
+            setImageBitmap(ConfigBarcode.bitmap(qr, (width / modules).coerceAtLeast(1)))
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = getString(R.string.export_barcode)
+        }
+        val info = TextView(this).apply {
+            text = getString(
+                R.string.export_barcode_info,
+                payload.length,
+                qr.version,
+                if (payload.startsWith(ConfigCodec.PREFIX)) getString(R.string.export_barcode_packed) else "JSON",
+            )
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setIcon(Dialogs.icon(this, R.drawable.ic_qr))
+            .setTitle(R.string.export_barcode)
+            .setMessage(R.string.export_barcode_message)
+            .setView(Dialogs.form(this, image, info))
+            .setPositiveButton(R.string.button_ok, null)
+            .show()
+    }
+
     private fun startBarcodeImport() {
         scanner.enabled = true
         barcodeImportDialog = MaterialAlertDialogBuilder(this)
@@ -591,33 +636,9 @@ class AdminActivity : AppCompatActivity() {
 
     // region view helpers
 
-    private fun section(@StringRes title: Int) = content.addView(TextView(this).apply {
-        setText(title)
-        setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge)
-        setTextColor(accent())
-        setPadding(dp(8), dp(24), dp(8), dp(8))
-    })
+    private fun section(@StringRes title: Int) = ui.section(getString(title))
 
-    private fun card(rows: List<View>) {
-        val card = MaterialCardView(this).apply {
-            radius = dp(20).toFloat()
-            cardElevation = 0f
-            strokeWidth = 0
-            setCardBackgroundColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerLow))
-        }
-        val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        rows.forEachIndexed { index, row ->
-            if (index > 0) {
-                column.addView(MaterialDivider(this).apply {
-                    dividerInsetStart = dp(72)
-                    dividerColor = MaterialColors.getColor(this, com.google.android.material.R.attr.colorOutlineVariant)
-                })
-            }
-            column.addView(row)
-        }
-        card.addView(column)
-        content.addView(card)
-    }
+    private fun card(rows: List<View>) = ui.card(rows)
 
     private fun row(
         @DrawableRes icon: Int,
@@ -625,21 +646,7 @@ class AdminActivity : AppCompatActivity() {
         subtitle: String?,
         trailing: View? = null,
         onClick: (() -> Unit)?,
-    ): LinearLayout = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        minimumHeight = dp(64)
-        setPadding(dp(16), dp(10), dp(16), dp(10))
-        if (onClick != null) {
-            setBackgroundResource(ripple())
-            setOnClickListener { onClick() }
-        }
-        addView(iconCircle(icon), LinearLayout.LayoutParams(dp(40), dp(40)))
-        addView(texts(title, subtitle), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-            marginStart = dp(16)
-        })
-        trailing?.let { addView(it) }
-    }
+    ): LinearLayout = ui.row(icon, title, subtitle, trailing, onClick)
 
     private fun profileRow(profile: Profile): View {
         val color = Brand.color(this, store.config, profile)
@@ -656,7 +663,7 @@ class AdminActivity : AppCompatActivity() {
             minimumHeight = dp(64)
             setPadding(dp(16), dp(10), dp(8), dp(10))
             setBackgroundResource(ripple())
-            setOnClickListener { editProfile(profile) }
+            setOnClickListener { ProfileSettingsActivity.open(this@AdminActivity, profile.id) }
             addView(TextView(context).apply {
                 text = Brand.initial(profile.name)
                 gravity = Gravity.CENTER
@@ -672,43 +679,13 @@ class AdminActivity : AppCompatActivity() {
         }
     }
 
-    private fun switchRow(@DrawableRes icon: Int, title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit): View {
-        val toggle = MaterialSwitch(this).apply {
-            isChecked = checked
-            setOnCheckedChangeListener { _, value -> onChange(value) }
-        }
-        return row(icon, title, subtitle, trailing = toggle) { toggle.toggle() }
-    }
+    private fun switchRow(@DrawableRes icon: Int, title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) =
+        ui.switchRow(icon, title, subtitle, checked, onChange)
 
     private fun switch(text: String, checked: Boolean) = MaterialSwitch(this).apply {
         this.text = text
         isChecked = checked
         setPadding(0, dp(4), 0, dp(4))
-    }
-
-    private fun texts(title: String, subtitle: String?) = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        addView(TextView(context).apply {
-            text = title
-            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
-        })
-        subtitle?.let {
-            addView(TextView(context).apply {
-                text = it
-                tag = SUBTITLE_TAG
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
-                setTextColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant))
-            })
-        }
-    }
-
-    private fun iconCircle(@DrawableRes icon: Int) = ImageView(this).apply {
-        setImageResource(icon)
-        scaleType = ImageView.ScaleType.CENTER
-        imageTintList = ColorStateList.valueOf(accent())
-        setBackgroundResource(R.drawable.bg_tile_icon)
-        backgroundTintList = ColorStateList.valueOf(ColorUtils.setAlphaComponent(brandColor, 0x1F))
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     private fun swatch(color: Int, sizeDp: Int) = ImageView(this).apply {
@@ -726,18 +703,11 @@ class AdminActivity : AppCompatActivity() {
         }
     }
 
-    /** Readable accent on light surfaces, even for very light brand colors. */
-    private fun accent(): Int = if (Brand.isLight(brandColor)) Brand.darker(brandColor, 0.45f) else brandColor
+    private fun texts(title: String, subtitle: String?) = ui.texts(title, subtitle)
 
-    private fun ripple(borderless: Boolean = false): Int = TypedValue().also {
-        theme.resolveAttribute(
-            if (borderless) android.R.attr.selectableItemBackgroundBorderless else android.R.attr.selectableItemBackground,
-            it,
-            true,
-        )
-    }.resourceId
+    private fun ripple(borderless: Boolean = false): Int = ui.ripple(borderless)
 
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    private fun dp(value: Int) = ui.dp(value)
 
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
@@ -753,7 +723,7 @@ class AdminActivity : AppCompatActivity() {
         private const val WEBSITE = "https://ict-baden.de/produkte/industrial-kiosk-browser/"
         private const val IMPRESSUM = "https://ict-baden.de/impressum/"
         private const val PRIVACY = "https://ict-baden.de/datenschutz/industrial-kiosk-browser/"
-        private const val SUBTITLE_TAG = "subtitle"
+        private const val SUBTITLE_TAG = SettingsUi.SUBTITLE_TAG
         private const val MAX_LOGO_BYTES = 1024 * 1024
         private val PALETTE = listOf(
             "#0D47A1", "#1565C0", "#00838F", "#00796B", "#2E7D32", "#558B2F",

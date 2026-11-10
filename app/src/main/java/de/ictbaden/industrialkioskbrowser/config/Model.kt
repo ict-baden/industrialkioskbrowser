@@ -66,6 +66,111 @@ data class ScannerSettings(
     val injectIntoFocusedField: Boolean = true,
     val genericIntent: GenericIntent = GenericIntent.AUTO,
     val engine: ScanEngine = ScanEngine.AUTO,
+    val camera: CameraSettings = CameraSettings(),
+    val data: ScanDataSettings = ScanDataSettings(),
+)
+
+/** Which codes in the camera picture count (`scanner.camera.aim`). */
+enum class AimMode(override val key: String) : Keyed {
+    /** Codes whose centre lies inside the aiming frame. */
+    FRAME("frame"),
+
+    /** Only the code under the crosshair (pick list, for labels with many codes). */
+    CENTER("center"),
+
+    /** The whole picture. */
+    ANYWHERE("anywhere"),
+}
+
+/** Camera scanner settings (`scanner.camera`); not used by the scan engine of the device. */
+data class CameraSettings(
+    /** Canonical symbology names (see `scanner/Symbologies`); empty = all. */
+    val symbologies: List<String> = emptyList(),
+    val aim: AimMode = AimMode.FRAME,
+    /** The camera stays open and enters every new code. */
+    val continuous: Boolean = false,
+    /** Continuous mode: the same code is accepted again only after this time. */
+    val duplicateDelayMs: Int = 1500,
+    /** The same code must be read in this many consecutive frames (1–3). */
+    val confirmReads: Int = 1,
+    /** Accepted text length, 0 = no limit. */
+    val minLength: Int = 0,
+    val maxLength: Int = 0,
+    /** Zoom ratio when the camera opens (1–4). */
+    val zoom: Double = 1.0,
+    val torch: Boolean = false,
+    /** Also light-on-dark codes. */
+    val inverted: Boolean = true,
+    val beep: Boolean = true,
+    val vibrate: Boolean = true,
+    /** Closes after this time without a code; 0 = never. */
+    val timeoutSeconds: Int = 60,
+)
+
+enum class TextCase(override val key: String) : Keyed {
+    NONE("none"),
+    UPPER("upper"),
+    LOWER("lower"),
+}
+
+/** How GS1 codes read by the camera are written. */
+enum class Gs1Mode(override val key: String) : Keyed {
+    /** Human readable: `(01)…(10)…`. */
+    HRI("hri"),
+
+    /** Raw, with the group separator U+001D between variable-length fields. */
+    RAW("raw"),
+}
+
+enum class RuleAction(override val key: String) : Keyed {
+    SEND("send"),
+    DROP("drop"),
+}
+
+/** One replacement of `scanner.data.replace`; with [regex] `find` is a Java regex and `with` may use `$1`. */
+data class Replacement(val find: String, val with: String, val regex: Boolean = false)
+
+/**
+ * A rule of `scanner.data.rules`: the first rule whose conditions match a code decides; its non-null
+ * fields override the defaults of [ScanDataSettings] for that code.
+ */
+data class ScanRule(
+    val name: String? = null,
+    val symbologies: List<String> = emptyList(),
+    val minLength: Int = 0,
+    val maxLength: Int = 0,
+    val startsWith: String? = null,
+    /** Java regex that must match the whole (trimmed) text. */
+    val pattern: String? = null,
+    val action: RuleAction = RuleAction.SEND,
+    val prefix: String? = null,
+    val suffix: String? = null,
+    val case: TextCase? = null,
+    val stripLeading: Int? = null,
+    val stripTrailing: Int? = null,
+    val removeSpaces: Boolean? = null,
+    val replace: List<Replacement>? = null,
+)
+
+/** Formatting of the barcode text before it is entered (`scanner.data`). */
+data class ScanDataSettings(
+    /** Plain text before the code. */
+    val prefix: String = "",
+    /** Plain text after the code; the keys after it stay [ScannerSettings.terminator]. */
+    val suffix: String? = null,
+    val trim: Boolean = true,
+    val removeSpaces: Boolean = false,
+    val case: TextCase = TextCase.NONE,
+    val stripLeading: Int = 0,
+    val stripTrailing: Int = 0,
+    val replace: List<Replacement> = emptyList(),
+    /** Camera only. */
+    val gs1: Gs1Mode = Gs1Mode.HRI,
+    /** Replaces the group separator U+001D in any scanned text; null keeps it. */
+    val gsReplacement: String? = null,
+    val rules: List<ScanRule> = emptyList(),
+    /** When [rules] exist and none matches. */
+    val unmatched: RuleAction = RuleAction.SEND,
 )
 
 data class KioskSettings(

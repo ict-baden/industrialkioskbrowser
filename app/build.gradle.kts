@@ -95,6 +95,8 @@ dependencies {
         exclude(group = "androidx.media3")
     }
     implementation("io.github.zxing-cpp:android:3.1.1")
+    // QR code of the configuration for "Export as barcode" (MIT).
+    implementation("io.nayuki:qrcodegen:1.8.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20260814")
