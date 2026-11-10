@@ -16,11 +16,13 @@ class ConfigCodecTest {
     )
 
     @Test
-    fun `short configurations stay plain minified JSON`() {
+    fun `the shorter form wins and parses again`() {
         val json = ConfigJson.write(config(1))
         val packed = ConfigCodec.pack(json)
-        assertFalse(packed.startsWith(ConfigCodec.PREFIX))
+        assertTrue(packed.length <= org.json.JSONObject(json).toString().length)
         assertFalse(packed.contains("\n"))
+        // A tiny text compresses worse than it is: it stays plain JSON.
+        assertEquals("{\"a\":1}", ConfigCodec.pack("{ \"a\": 1 }"))
         assertEquals(config(1), ConfigJson.parse(packed))
     }
 

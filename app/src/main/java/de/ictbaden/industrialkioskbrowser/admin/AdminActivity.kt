@@ -542,7 +542,8 @@ class AdminActivity : AppCompatActivity() {
 
     /** "Export as barcode": QR code of the current configuration, packed when it is long (ConfigCodec). */
     private fun showConfigBarcode() {
-        val payload = ConfigCodec.pack(ConfigJson.write(store.config))
+        // Without default values: a shorter payload gives a coarser code that scans more easily.
+        val payload = ConfigCodec.pack(ConfigJson.writeCompact(store.config))
         val qr = ConfigBarcode.encode(payload)
         if (qr == null) {
             MaterialAlertDialogBuilder(this)
@@ -707,7 +708,7 @@ class AdminActivity : AppCompatActivity() {
 
     private fun ripple(borderless: Boolean = false): Int = ui.ripple(borderless)
 
-    private fun dp(value: Int) = ui.dp(value)
+    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 

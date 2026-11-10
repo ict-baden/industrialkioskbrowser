@@ -156,9 +156,11 @@ missing or wrong, locked after wrong passwords, or unmanaged device without a pa
 ## QR code
 
 **Export:** *Settings → Export as barcode* shows the configuration of this device as a QR code,
-ready to be scanned by the next device. Short configurations (up to 1 800 characters) are plain
-JSON. Longer ones are compressed: `ICTZ1:` followed by base64url (without padding) of raw DEFLATE
-of the JSON. A QR code holds a little under 3 KB; when even the compressed configuration does not
+ready to be scanned by the next device. Values that equal the defaults are left out (the import
+fills them in again), so a typical configuration fits a small, easily scanned code. The code holds
+whichever is shorter: the minified JSON or
+the compressed form `ICTZ1:` followed by base64url (without padding) of raw DEFLATE of the JSON –
+a shorter payload gives a coarser code that scans more easily from a screen. A QR code holds a little under 3 KB; when even the compressed configuration does not
 fit (usually because of a logo or other resources), the app says so (`IKB-0104`) and offers the
 JSON file instead. Like the JSON export the code contains the password hashes, never the
 passwords.

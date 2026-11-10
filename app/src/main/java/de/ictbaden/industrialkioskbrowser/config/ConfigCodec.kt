@@ -10,13 +10,11 @@ import java.util.zip.Inflater
 
 /**
  * Packs a configuration for a barcode and unpacks it again (same format as Industrial Keyboard):
- * minified JSON when it is short, otherwise `ICTZ1:` + base64url (no padding) of raw DEFLATE.
+ * minified JSON, or `ICTZ1:` + base64url (no padding) of raw DEFLATE when that is shorter – a
+ * shorter payload gives a coarser QR code that scans more easily from a screen.
  */
 object ConfigCodec {
     const val PREFIX = "ICTZ1:"
-
-    /** Minified JSON up to this length goes into the barcode as it is (readable by any scanner). */
-    const val PLAIN_LIMIT = 1800
 
     /** Limit for the unpacked text, against "zip bombs". */
     const val MAX_UNPACKED = 1024 * 1024
@@ -28,7 +26,6 @@ object ConfigCodec {
         } catch (_: JSONException) {
             json.trim()
         }
-        if (minified.length <= PLAIN_LIMIT) return minified
         val deflater = Deflater(Deflater.BEST_COMPRESSION, true)
         deflater.setInput(minified.toByteArray(Charsets.UTF_8))
         deflater.finish()
@@ -36,7 +33,8 @@ object ConfigCodec {
         val buffer = ByteArray(8192)
         while (!deflater.finished()) out.write(buffer, 0, deflater.deflate(buffer))
         deflater.end()
-        return PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(out.toByteArray())
+        val packed = PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(out.toByteArray())
+        return if (packed.length < minified.length) packed else minified
     }
 
     /** Plain JSON stays as it is; an `ICTZ1:` payload is unpacked. */
