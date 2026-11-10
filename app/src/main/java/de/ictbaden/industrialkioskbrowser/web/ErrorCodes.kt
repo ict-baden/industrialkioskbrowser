@@ -23,4 +23,5 @@ object ErrorCodes {
     const val IMPORT_INVALID = "IKB-0101"
     const val FILE_UNREADABLE = "IKB-0102"
     const val EXPORT_FAILED = "IKB-0103"
+    const val CONFIG_TOO_LARGE = "IKB-0104"
 }

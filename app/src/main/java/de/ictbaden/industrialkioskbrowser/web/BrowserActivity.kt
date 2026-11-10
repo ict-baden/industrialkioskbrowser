@@ -75,9 +75,12 @@ import de.ictbaden.industrialkioskbrowser.provisioning.Provisioning
 import de.ictbaden.industrialkioskbrowser.config.ScanTerminator
 import de.ictbaden.industrialkioskbrowser.config.ScreenOrientation
 import de.ictbaden.industrialkioskbrowser.scanner.CameraScanActivity
+import de.ictbaden.industrialkioskbrowser.scanner.CameraScanBus
 import de.ictbaden.industrialkioskbrowser.scanner.NoScanner
+import de.ictbaden.industrialkioskbrowser.scanner.ScanFormatter
 import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import de.ictbaden.industrialkioskbrowser.scanner.ScannerManager
+import de.ictbaden.industrialkioskbrowser.scanner.Symbologies
 import de.ictbaden.industrialkioskbrowser.ui.ActionSheet
 import de.ictbaden.industrialkioskbrowser.ui.Brand
 import de.ictbaden.industrialkioskbrowser.ui.Dialogs
@@ -137,6 +140,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private val cameraScan = registerForActivityResult(CameraScanActivity.Contract()) { scan ->
         scan?.let(scanner::deliver)
     }
+
+    /** Codes of the camera in continuous mode, while the camera screen stays open. */
+    private val continuousScan: (ScanResult) -> Unit = { scan -> scanner.deliver(scan) }
 
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         pendingPermission?.let { if (granted) it.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE)) else it.deny() }
@@ -228,10 +234,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             this,
             genericIntent = profile.scanner.genericIntent,
             engine = profile.scanner.engine,
-            launchCamera = { cameraScan.launch(requestedOrientation) },
+            launchCamera = { cameraScan.launch(CameraScanActivity.Request(requestedOrientation, profile.id)) },
             onScannerChanged = { scanButton.isVisible = scanner.scanner !is NoScanner },
             onScan = ::onScan,
         )
+        CameraScanBus.listener = continuousScan
         sounds = Sounds(this, config)
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()
@@ -291,6 +298,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     override fun onDestroy() {
+        CameraScanBus.clear(continuousScan)
         bridge?.release()
         if (::webView.isInitialized) {
             (webView.parent as? ViewGroup)?.removeView(webView)
@@ -506,7 +514,14 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     // region scanning
 
-    private fun onScan(scan: ScanResult) {
+    private fun onScan(raw: ScanResult) {
+        // scanner.data: prefix, suffix, rules … – for every scanner, not only the camera.
+        val formatted = ScanFormatter.format(raw.data, Symbologies.of(raw.symbology), profile.scanner.data)
+        if (formatted == null) {
+            Log.i(TAG, "Scan dropped by scanner.data")
+            return
+        }
+        val scan = raw.copy(data = formatted)
         val template = pagePolicy.navigateTemplate
         if (template != null) {
             when (val target = ScanScripts.navigationTarget(template, scan.data, webView.url)) {

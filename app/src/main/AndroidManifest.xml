@@ -56,6 +56,11 @@
             android:name=".admin.AdminActivity"
             android:exported="false" />
 
+        <!-- All settings of one profile; opened from the admin screen only. -->
+        <activity
+            android:name=".admin.ProfileSettingsActivity"
+            android:exported="false" />
+
         <!-- Camera scanning on devices without a scan engine; same task as the browser (lock task). -->
         <activity
             android:name=".scanner.CameraScanActivity"
