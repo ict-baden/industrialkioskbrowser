@@ -34,7 +34,11 @@
     scanner: Object.freeze({
       enable: function () { return call('scanner.enable'); },
       disable: function () { return call('scanner.disable'); },
-      trigger: function (start) { return call('scanner.trigger', { start: start === undefined ? null : !!start }); },
+      // trigger() toggles, trigger(true/false) starts/stops, trigger({mode: 'text'}) opens text recognition (OCR).
+      trigger: function (start) {
+        if (start && typeof start === 'object') return call('scanner.trigger', { start: null, mode: String(start.mode || '') });
+        return call('scanner.trigger', { start: start === undefined ? null : !!start });
+      },
       status: function () { return call('scanner.status'); }
     }),
     // handler(scan, event); call event.preventDefault() to stop insertion into the focused field.

@@ -298,4 +298,47 @@
         <item quantity="many">%d entrées · se règle dans la configuration JSON</item>
         <item quantity="other">%d entrées · se règle dans la configuration JSON</item>
     </plurals>
+    <!-- OCR and NFC (issues #49, #50) -->
+    <string name="action_ocr">Reconnaître du texte (OCR)</string>
+    <string name="ocr_unavailable">La reconnaissance de texte n’est pas disponible sur cet appareil.</string>
+    <string name="nfc_no_data">La puce NFC ne contient aucune donnée à saisir.</string>
+    <string name="camera_mode_barcode">Code-barres</string>
+    <string name="camera_mode_text">Texte</string>
+    <string name="camera_hint_text_pick">Touchez la ligne à saisir</string>
+    <string name="camera_hint_text">Placez le texte dans le cadre</string>
+    <string name="section_ocr">Reconnaissance de texte (OCR)</string>
+    <string name="ocr_enabled">Reconnaissance de texte</string>
+    <string name="ocr_enabled_summary">Sélecteur Code-barres | Texte dans la caméra et dans le menu</string>
+    <string name="ocr_mode">Prise du texte</string>
+    <string name="ocr_mode_pick">Toucher une ligne</string>
+    <string name="ocr_mode_pattern">Automatique selon un motif</string>
+    <string name="ocr_pattern">Motif (expression régulière)</string>
+    <string name="ocr_pattern_helper">La ligne entière doit correspondre, p. ex. [A-Z]{2}\\d{6}</string>
+    <string name="ocr_pattern_required">Le mode automatique a besoin d’un motif.</string>
+    <string name="ocr_pattern_invalid">Expression régulière non valide.</string>
+    <string name="ocr_start_in_text">La caméra s’ouvre en mode texte</string>
+    <string name="ocr_confirm_reads">Confirmer les lectures (mode automatique)</string>
+    <string name="ocr_charset">Caractères</string>
+    <string name="charset_any">Tous</string>
+    <string name="charset_digits">Chiffres , . -</string>
+    <string name="charset_alnum">Lettres et chiffres</string>
+    <string name="charset_upper">Lettres et chiffres, en majuscules</string>
+    <string name="section_nfc">NFC</string>
+    <string name="nfc_status">NFC sur cet appareil</string>
+    <string name="nfc_status_on">Disponible et activé</string>
+    <string name="nfc_status_off">Désactivé – touchez pour ouvrir les réglages NFC</string>
+    <string name="nfc_status_missing">Cet appareil n’a pas de NFC</string>
+    <string name="nfc_enabled">Lire les puces NFC</string>
+    <string name="nfc_read">Saisir</string>
+    <string name="nfc_read_uid">ID de la puce (UID)</string>
+    <string name="nfc_read_ndef">Texte ou lien enregistré (NDEF)</string>
+    <string name="nfc_read_ndef_or_uid">Texte enregistré, sinon ID de la puce</string>
+    <string name="nfc_uid_format">Format de l’UID</string>
+    <string name="uid_hex">Hexadécimal</string>
+    <string name="uid_decimal">Décimal</string>
+    <string name="nfc_uid_reversed">Inverser l’ordre des octets</string>
+    <string name="nfc_uid_separator">Séparateur entre les octets</string>
+    <string name="nfc_ndef_record">Enregistrements NDEF</string>
+    <string name="ndef_first">Premier enregistrement</string>
+    <string name="ndef_all">Tous les enregistrements, un par ligne</string>
 </resources>

@@ -38,6 +38,8 @@ sequenceDiagram
 window.addEventListener('industrialkioskbrowser:scan', (event) => {
   const { data, symbology, source, timestamp } = event.detail;
   // data: "4006381333931", symbology: "EAN13", source: "Zebra DataWedge"
+  // source is "Camera" for the camera scanner, "ocr" (symbology "ocr") for recognised text and
+  // "nfc" (symbology "nfc") for NFC tags
   if (data.startsWith('LOC-')) {
     event.preventDefault();                 // don't type it, no terminator key
     location.href = '/location/' + encodeURIComponent(data);
@@ -75,6 +77,7 @@ IndustrialKioskBrowser.onScan((scan, event) => { /* same as the scan event */ })
 
 await Industrial Kiosk Browser.scanner.trigger();       // start scanning (soft trigger)
 await Industrial Kiosk Browser.scanner.trigger(false);  // stop scanning
+await Industrial Kiosk Browser.scanner.trigger({ mode: "text" }); // text recognition (OCR) with the camera
 await Industrial Kiosk Browser.scanner.disable();       // scanner off until the next page load
 await Industrial Kiosk Browser.scanner.enable();
 const { name, enabled } = await Industrial Kiosk Browser.scanner.status();

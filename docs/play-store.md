@@ -85,7 +85,11 @@ the administrator usually limits it to an allow list.
   transmits what the user enters into a web page to that web page's server – the servers the
   device owner configures as start URL and allow list (an empty allow list allows every host).
   Google Safe Browsing in the Android System WebView stays on (a function of Android, not of the
-  app). Re-check this answer against the current Play definitions before submitting.
+  app). The text recognition library Google ML Kit may send anonymous usage statistics to Google
+  (no pictures, no recognised text); declare this as Google's SDK data collection in the form
+  ("App info and performance → diagnostics", collected, not shared, not optional) if the current
+  Play definitions require it for SDKs. Re-check this answer against the current Play definitions
+  before submitting.
 - Encryption in transit: the configured web apps decide (HTTPS recommended; the app enforces
   strict TLS checks).
 - Data deletion: no account, nothing to delete on our side; *Clear storage* removes everything
@@ -98,6 +102,7 @@ the administrator usually limits it to an allow list.
 | `INTERNET`, `ACCESS_NETWORK_STATE` | Loading the configured web apps, error pages without network |
 | `CAMERA` | Scanning with the camera on devices without a scan engine (or with `scanner.engine: "camera"`), and when a web page of an allowed host asks for the camera (e.g. a camera barcode scan in the web app); the user is asked first |
 | `VIBRATE` | Feedback after a scan |
+| `NFC` | Reading NFC tags while the browser is in front (`scanner.nfc`) |
 
 No sensitive permissions that need a declaration form (no SMS, call log, location,
 accessibility, all-files access, package queries beyond the two scanner services).

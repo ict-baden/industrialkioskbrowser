@@ -15,7 +15,8 @@ checked against the app by the automated tests.
 - [Profiles](#profiles) – start URL, allow list, basics
 - [`viewport`](#viewport) · [`keyboard`](#keyboard) · [`injections`](#injections) ·
   [`errorPages` and `sounds`](#errorpages-and-sounds) · [`kiosk`](#kiosk) · [`scanner`](#scanner) ·
-  [`scanner.camera`](#scannercamera) · [`scanner.data`](#scannerdata) (scan data formatting)
+  [`scanner.camera`](#scannercamera) · [`scanner.ocr`](#scannerocr) (text recognition) ·
+  [`scanner.nfc`](#scannernfc) · [`scanner.data`](#scannerdata) (scan data formatting)
 - [Resources](#resources)
 - [Custom design](#custom-design)
 
@@ -241,6 +242,64 @@ DataWedge or the Honeywell settings. The same fields exist in Industrial Keyboar
 A configuration barcode (*Settings → Import from barcode*) is always read with the defaults
 above, in the whole picture and at a higher resolution.
 
+## `scanner.ocr`
+
+Text recognition (OCR) with the camera – serial numbers, batch numbers, best-before dates, meter
+readings that have no barcode. Recognition with Google ML Kit (bundled Latin model) on the device;
+see [Data and privacy](data-and-privacy.md#text-recognition-ml-kit) for what ML Kit sends to
+Google. The camera screen gets a switch **Barcode | Text**. Text recognition is also in the menu
+(*Recognise text*) and in the JS bridge (`scanner.trigger({mode: "text"})`) – on devices with a
+scan engine too, as long as there is a camera. The recognised text goes through
+[`scanner.data`](#scannerdata) with the type `ocr` and reaches the page with `source: "ocr"`.
+The camera settings `continuous`, `duplicateDelayMs`, `beep`, `vibrate`, `torch`, `zoom` and
+`timeoutSeconds` apply in text mode as well.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | Text recognition is offered (switch on the camera screen, menu, JS bridge) |
+| `mode` | `pick` | `pick`: the recognised lines inside the frame are shown as yellow boxes, tap one to take it. `pattern`: the first line inside the frame that fully matches `pattern` is taken by itself |
+| `pattern` | `null` | Java regular expression the whole (cleaned) line must match. Required for `pattern`; in `pick` mode it limits the lines offered |
+| `startInOcr` | `false` | The camera opens in text mode instead of barcode mode |
+| `confirmReads` | `2` | `pattern` mode: the same text must be read in this many frames in a row (1–5) – OCR misreads single characters more often than a barcode decoder |
+| `minLength`, `maxLength` | `0` | Accepted line length after the clean-up (0–999, 0 = no limit) |
+| `charset` | `any` | Clean-up of each line before length and pattern: `any` (spaces collapsed), `digits` (only `0-9 , . -`), `alnum` (letters and digits), `upper` (letters and digits, upper case) |
+
+Examples:
+
+```json
+"ocr": { "mode": "pattern", "pattern": "[A-Z]{2}\\d{6}", "charset": "upper" }
+```
+
+takes serial numbers like `AB123456` by itself (in JSON the backslash is written twice).
+
+```json
+"ocr": { "mode": "pattern", "pattern": "\\d{2}\\.\\d{2}\\.\\d{4}", "startInOcr": true }
+```
+
+reads a best-before date like `31.12.2027` as soon as the camera opens. A meter reading:
+`{ "charset": "digits", "minLength": 4 }`.
+
+## `scanner.nfc`
+
+Reading NFC tags (badges, containers, storage locations) while the browser is in front, with
+Android's reader mode – no other app gets the tag meanwhile. Only when the profile's scanner is
+active and the device has NFC switched on (*Settings → profile → NFC* shows the state and opens
+the system settings). The value goes through [`scanner.data`](#scannerdata) with the type `nfc` and
+reaches the page like a scan with `source: "nfc"`.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | Read NFC tags |
+| `read` | `ndefOrUid` | `uid`: the tag ID. `ndef`: the text or link stored on the tag (NDEF Text, URI, `text/…` records). `ndefOrUid`: the stored text, the tag ID when there is none |
+| `uidFormat` | `hex` | `hex`: upper-case hexadecimal (`04A23B7F`); `decimal`: the bytes as one unsigned number (`77740927`) |
+| `uidReversed` | `false` | Reverse the byte order – many badge readers show the UID reversed |
+| `uidSeparator` | `""` | Between hex bytes, e.g. `":"` → `04:A2:3B:7F` |
+| `ndefRecord` | `first` | `first`: the first readable record; `allLines`: all readable records, one per line |
+| `beep`, `vibrate` | `true` | Feedback for every tag read |
+
+A tag without the data `read` asks for shows `IKB-0034`. Example for badge numbers as an
+access-control reader prints them: `{ "read": "uid", "uidFormat": "decimal", "uidReversed": true }`.
+
 ## `scanner.data`
 
 Formatting of the barcode text before it is entered – for every scan the app receives: camera,
@@ -281,6 +340,8 @@ that has to match the whole trimmed text). `action`: `send` or `drop`. A code th
 not entered; the camera ignores it and keeps looking.
 
 ### Examples
+
+Rules can also name `ocr` (text recognition) and `nfc` (NFC tags) in `symbologies`.
 
 Strip the check digit of EAN-13 codes, leave everything else as it is:
 

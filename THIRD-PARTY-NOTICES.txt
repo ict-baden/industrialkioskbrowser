@@ -4,8 +4,13 @@ THIRD-PARTY NOTICES
 Industrial Kiosk Browser contains the following third-party software. Each part keeps its own licence; the licence text follows below.
 Industrial Kiosk Browser enthält die folgende Software Dritter. Jeder Teil behält seine eigene Lizenz; der Lizenztext folgt unten.
 
-All parts are compiled into the APK (classes.dex, resources and, for zxing-cpp, native libraries).
-Alle Teile sind in die APK einkompiliert (classes.dex, Ressourcen und, bei zxing-cpp, native Bibliotheken).
+All parts are compiled into the APK (classes.dex, resources and, for zxing-cpp and ML Kit, native libraries).
+Alle Teile sind in die APK einkompiliert (classes.dex, Ressourcen und, bei zxing-cpp und ML Kit, native Bibliotheken).
+
+Parts 12 and 13 are NOT open source: Google ML Kit text recognition and the Google Play services
+libraries it needs, under Google's terms. Everything else is open source.
+Teil 12 und 13 sind KEINE Open-Source-Software: Google ML Kit (Texterkennung) und die dafür nötigen
+Google-Play-services-Bibliotheken unter Googles Bedingungen. Alles andere ist Open Source.
 
 1. AndroidX libraries - Android support libraries (UI, compatibility, lifecycle)
    Source: https://developer.android.com/jetpack/androidx (https://android.googlesource.com/platform/frameworks/support)
@@ -85,6 +90,39 @@ Alle Teile sind in die APK einkompiliert (classes.dex, Ressourcen und, bei zxing
    Copyright (c) Project Nayuki
    Licence: MIT (section D)
 
+12. Google ML Kit text recognition 16.0.1 (bundled Latin model) - text recognition (OCR) with the camera
+   Files: lib/*/libmlkit_google_ocr_pipeline.so, assets/mlkit-google-ocr-models/, classes in classes.dex
+   Artifacts: com.google.mlkit:text-recognition 16.0.1, text-recognition-bundled-common 17.0.0, common 18.11.0,
+   vision-common 17.3.0, vision-interfaces 16.3.0;
+   com.google.android.gms:play-services-mlkit-text-recognition 19.0.1,
+   play-services-mlkit-text-recognition-common 19.1.0; com.google.android.odml:image 1.0.0-beta1
+   Copyright Google LLC
+   Licence: ML Kit Terms of Service, https://developers.google.com/ml-kit/terms (not open source).
+   ML Kit runs on the device. It may send anonymous usage and performance statistics to Google
+   (see docs/data-and-privacy.md); the recognised text is not sent.
+   ML Kit itself contains open-source parts (among others TensorFlow Lite Support, Guava, Dagger,
+   Checker Framework annotations, JSR 305/330, Kotlin, AndroidX); Google lists them with their licence
+   texts in third_party_licenses.txt inside the ML Kit libraries.
+
+13. Google Play services libraries - base, basement and tasks, required by ML Kit
+   Artifacts: com.google.android.gms:play-services-base 18.5.0, play-services-basement 18.4.0,
+   play-services-tasks 18.2.0
+   Copyright Google LLC
+   Licence: Android Software Development Kit License, https://developer.android.com/studio/terms (not open source)
+
+14. Firebase components and encoders, Google datatransport - used by ML Kit (usage statistics)
+   Artifacts: com.google.firebase:firebase-components 16.1.0, firebase-annotations 16.0.0,
+   firebase-encoders 16.1.0, firebase-encoders-json 17.1.0; com.google.android.datatransport:transport-api 2.2.1,
+   transport-backend-cct 2.3.3, transport-runtime 2.2.6
+   Source: https://github.com/firebase/firebase-android-sdk
+   Copyright Google LLC
+   Licence: Apache-2.0 (section A)
+
+15. javax.inject 1 (JSR 330) - used by the Firebase components
+   Source: https://github.com/javax-inject/javax-inject
+   Copyright The JSR-330 Expert Group
+   Licence: Apache-2.0 (section A)
+
 Components (checked by the CI)
 Komponenten (von der CI geprüft)
 
@@ -161,12 +199,31 @@ Komponenten (von der CI geprüft)
    androidx.viewpager2:viewpager2:1.1.0-beta02
    androidx.viewpager:viewpager:1.0.0
    androidx.webkit:webkit:1.14.0
+   com.google.android.datatransport:transport-api:2.2.1
+   com.google.android.datatransport:transport-backend-cct:2.3.3
+   com.google.android.datatransport:transport-runtime:2.2.6
+   com.google.android.gms:play-services-base:18.5.0
+   com.google.android.gms:play-services-basement:18.4.0
+   com.google.android.gms:play-services-mlkit-text-recognition-common:19.1.0
+   com.google.android.gms:play-services-mlkit-text-recognition:19.0.1
+   com.google.android.gms:play-services-tasks:18.2.0
    com.google.android.material:material:1.14.0
+   com.google.android.odml:image:1.0.0-beta1
    com.google.auto.value:auto-value-annotations:1.6.3
    com.google.errorprone:error_prone_annotations:2.15.0
+   com.google.firebase:firebase-annotations:16.0.0
+   com.google.firebase:firebase-components:16.1.0
+   com.google.firebase:firebase-encoders-json:17.1.0
+   com.google.firebase:firebase-encoders:16.1.0
    com.google.guava:listenablefuture:1.0
+   com.google.mlkit:common:18.11.0
+   com.google.mlkit:text-recognition-bundled-common:17.0.0
+   com.google.mlkit:text-recognition:16.0.1
+   com.google.mlkit:vision-common:17.3.0
+   com.google.mlkit:vision-interfaces:16.3.0
    io.github.zxing-cpp:android:3.1.1
    io.nayuki:qrcodegen:1.8.0
+   javax.inject:javax.inject:1
    org.jetbrains.kotlin:kotlin-stdlib:2.4.21
    org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0
    org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0

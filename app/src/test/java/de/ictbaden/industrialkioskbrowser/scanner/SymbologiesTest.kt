@@ -31,7 +31,7 @@ class SymbologiesTest {
     @Test
     fun `every canonical name has zxing formats that exist`() {
         val known = BarcodeReader.Format.entries.map { it.name }.toSet()
-        for (name in Symbologies.ALL) {
+        for (name in Symbologies.BARCODES) {
             val formats = Symbologies.toZxing(listOf(name))
             assertTrue("$name has no zxing format", formats.isNotEmpty())
             assertTrue("$name: $formats not all known", known.containsAll(formats))
@@ -39,6 +39,15 @@ class SymbologiesTest {
             formats.forEach { assertEquals(name, Symbologies.fromZxing(it)) }
         }
         assertTrue(Symbologies.toZxing(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun `ocr and nfc are known for rules but no barcode format`() {
+        assertTrue(Symbologies.isKnown("ocr") && Symbologies.isKnown("nfc"))
+        assertTrue("ocr" in Symbologies.ALL && "ocr" !in Symbologies.BARCODES)
+        assertTrue(Symbologies.toZxing(listOf("ocr", "nfc")).isEmpty())
+        assertEquals("nfc", Symbologies.of("nfc"))
+        assertEquals("Text (OCR)", Symbologies.displayName("ocr"))
     }
 
     @Test

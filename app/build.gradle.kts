@@ -95,6 +95,9 @@ dependencies {
         exclude(group = "androidx.media3")
     }
     implementation("io.github.zxing-cpp:android:3.1.1")
+    // Text recognition (OCR, issue #49): Google ML Kit with the bundled Latin model, runs offline.
+    // Not open source (ML Kit Terms of Service) – Till decided for it; see THIRD-PARTY-NOTICES.txt.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     // QR code of the configuration for "Export as barcode" (MIT).
     implementation("io.nayuki:qrcodegen:1.8.0")
 
