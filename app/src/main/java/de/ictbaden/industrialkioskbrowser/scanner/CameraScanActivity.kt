@@ -10,6 +10,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -25,6 +26,7 @@ import android.util.Log
 import android.util.Size
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -56,8 +58,14 @@ import de.ictbaden.industrialkioskbrowser.config.AimMode
 import de.ictbaden.industrialkioskbrowser.config.CameraSettings
 import de.ictbaden.industrialkioskbrowser.config.ConfigStore
 import de.ictbaden.industrialkioskbrowser.config.Gs1Mode
+import de.ictbaden.industrialkioskbrowser.config.OcrMode
+import de.ictbaden.industrialkioskbrowser.config.OcrSettings
 import de.ictbaden.industrialkioskbrowser.config.ScanDataSettings
 import de.ictbaden.industrialkioskbrowser.web.ErrorCodes
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import zxingcpp.BarcodeReader
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -71,6 +79,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Single scan: the first code ends the screen with the result. Continuous mode: every new code goes
  * to [CameraScanBus] at once and the screen stays open until ✕ or the timeout. Not exported; it runs
  * in the task of the browser, so it also works in lock task (kiosk) mode.
+ *
+ * Text mode (`scanner.ocr`, issue #49): Google ML Kit reads the lines inside the frame instead of
+ * barcodes. `pick` shows them as boxes to tap, `pattern` takes the first matching line by itself.
  */
 class CameraScanActivity : AppCompatActivity() {
 
@@ -82,6 +93,17 @@ class CameraScanActivity : AppCompatActivity() {
     private lateinit var analysisExecutor: ExecutorService
     private lateinit var settings: CameraSettings
     private lateinit var data: ScanDataSettings
+    private lateinit var ocr: OcrSettings
+    private lateinit var modeSwitch: LinearLayout
+    private lateinit var barcodeTab: TextView
+    private lateinit var textTab: TextView
+    private lateinit var hint: TextView
+
+    /** Text mode (OCR) instead of barcodes; written on the main thread, read by the analyser. */
+    @Volatile
+    private var textMode = false
+    private var recognizer: TextRecognizer? = null
+    private var ocrConfirmer = OcrFilter.Confirmer(1)
     private var configImport = false
     private val reader by lazy { BarcodeReader(readerOptions()) }
     private val done = AtomicBoolean(false)
@@ -116,6 +138,9 @@ class CameraScanActivity : AppCompatActivity() {
         // A configuration barcode is read with the plain defaults: anywhere in the picture, any type.
         settings = if (configImport) CameraSettings(aim = AimMode.ANYWHERE) else profile?.scanner?.camera ?: CameraSettings()
         data = if (configImport) ScanDataSettings(trim = false) else profile?.scanner?.data ?: ScanDataSettings()
+        ocr = if (configImport) OcrSettings(enabled = false) else profile?.scanner?.ocr ?: OcrSettings()
+        textMode = ocr.enabled && intent.getBooleanExtra(EXTRA_TEXT, false)
+        ocrConfirmer = OcrFilter.Confirmer(ocr.confirmReads)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         analysisExecutor = Executors.newSingleThreadExecutor()
@@ -132,6 +157,7 @@ class CameraScanActivity : AppCompatActivity() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         analysisExecutor.shutdown()
+        recognizer?.close()
         tone?.release()
         super.onDestroy()
     }
@@ -184,8 +210,7 @@ class CameraScanActivity : AppCompatActivity() {
             addView(zoomButton, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(12) })
             addView(torchButton, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
-        val hint = TextView(this).apply {
-            text = getString(if (settings.aim == AimMode.CENTER) R.string.camera_hint_center else R.string.camera_hint)
+        hint = TextView(this).apply {
             setTextColor(Color.WHITE)
             textSize = 16f
             gravity = Gravity.CENTER
@@ -200,12 +225,25 @@ class CameraScanActivity : AppCompatActivity() {
             isVisible = false
             maxLines = 2
         }
+        // Barcode | Text, only when text recognition is allowed.
+        barcodeTab = modeTab(R.string.camera_mode_barcode) { setTextMode(false) }
+        textTab = modeTab(R.string.camera_mode_text) { setTextMode(true) }
+        modeSwitch = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            isVisible = ocr.enabled
+            addView(barcodeTab, LinearLayout.LayoutParams(dp(112), dp(40)))
+            addView(textTab, LinearLayout.LayoutParams(dp(112), dp(40)).apply { marginStart = dp(8) })
+        }
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(16), dp(24), dp(32))
             addView(status)
             addView(hint)
+            addView(modeSwitch, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(16) })
         }
+        viewfinder.onTapLine = { text -> if (textMode) acceptText(text) }
+        updateModeViews()
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
             addView(previewView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
@@ -250,6 +288,11 @@ class CameraScanActivity : AppCompatActivity() {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
         analysis.setAnalyzer(analysisExecutor) { image ->
+            // Text recognition runs asynchronously and closes the frame itself when it is done.
+            if (textMode && !done.get()) {
+                analyseText(image)
+                return@setAnalyzer
+            }
             try {
                 if (!done.get()) analyse(image)
             } catch (e: Exception) {
@@ -332,10 +375,123 @@ class CameraScanActivity : AppCompatActivity() {
         }
     }
 
-    private fun deliverContinuous(text: String, format: String, count: Int) {
+    /**
+     * Analyser thread: hands the frame to ML Kit. The result arrives on the main thread; the frame is
+     * closed only then, so the camera skips frames while one is being read (KEEP_ONLY_LATEST).
+     */
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+    private fun analyseText(image: ImageProxy) {
+        val media = image.image
+        val client = textRecognizer()
+        if (media == null || client == null) {
+            image.close()
+            return
+        }
+        val rotation = image.imageInfo.rotationDegrees
+        val turned = rotation % 180 != 0
+        val imageW = if (turned) image.height else image.width
+        val imageH = if (turned) image.width else image.height
+        client.process(InputImage.fromMediaImage(media, rotation))
+            .addOnSuccessListener(ContextCompat.getMainExecutor(this)) { text ->
+                if (!textMode || done.get() || isFinishing) return@addOnSuccessListener
+                val lines = text.textBlocks.flatMap { it.lines }.mapNotNull { line ->
+                    line.boundingBox?.let { box -> line.text to box }
+                }
+                onTextLines(lines, imageW, imageH)
+            }
+            .addOnFailureListener { e -> Log.w(TAG, "Text recognition failed", e) }
+            .addOnCompleteListener { image.close() }
+    }
+
+    private fun textRecognizer(): TextRecognizer? {
+        recognizer?.let { return it }
+        return try {
+            TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS).also { recognizer = it }
+        } catch (e: Exception) {
+            Log.e(TAG, "Text recognition unavailable", e)
+            runOnUiThread { fail(R.string.ocr_unavailable, ErrorCodes.OCR_UNAVAILABLE) }
+            null
+        }
+    }
+
+    /** Main thread: keeps the lines inside the frame, then shows them (pick) or takes a match (pattern). */
+    private fun onTextLines(lines: List<Pair<String, Rect>>, imageW: Int, imageH: Int) {
+        val viewW = previewView.width.toFloat()
+        val viewH = previewView.height.toFloat()
+        if (viewW == 0f || viewH == 0f) return
+        val frame = AimGeometry.frame(viewW, viewH, resources.displayMetrics.density)
+        val inFrame = lines.mapNotNull { (raw, box) ->
+            val viewBox = OcrFilter.toViewBox(box.left, box.top, box.right, box.bottom, imageW, imageH, viewW, viewH)
+            if (!frame.contains(AimGeometry.Point(viewBox.centerX, viewBox.centerY))) return@mapNotNull null
+            val cleaned = OcrFilter.clean(raw, ocr.charset)
+            // Lines the length, the pattern or the rules of scanner.data reject are not offered.
+            if (!OcrFilter.accepts(cleaned, ocr) || ScanFormatter.format(cleaned, Symbologies.OCR, data) == null) return@mapNotNull null
+            cleaned to viewBox
+        }
+        when (ocr.mode) {
+            OcrMode.PICK -> viewfinder.showLines(inFrame)
+            OcrMode.PATTERN -> ocrConfirmer.offer(OcrFilter.closest(inFrame, frame))?.let(::acceptText)
+        }
+    }
+
+    /** A recognised line is taken: like a barcode, single shot or continuous. */
+    private fun acceptText(text: String) {
+        if (isFinishing || done.get()) return
+        if (settings.continuous) {
+            val now = SystemClock.elapsedRealtime()
+            val last = lastAccepted[text]
+            if (last != null && now - last < settings.duplicateDelayMs) return
+            lastAccepted[text] = now
+            accepted++
+            viewfinder.showLines(emptyList())
+            deliverContinuous(text, Symbologies.OCR, accepted, SOURCE_OCR)
+        } else if (done.compareAndSet(false, true)) {
+            feedback()
+            setResult(RESULT_OK, Intent().putExtra(EXTRA_DATA, text).putExtra(EXTRA_FORMAT, Symbologies.OCR).putExtra(EXTRA_SOURCE, SOURCE_OCR))
+            finish()
+        }
+    }
+
+    private fun setTextMode(on: Boolean) {
+        if (textMode == on) return
+        textMode = on
+        candidate = null
+        candidateCount = 0
+        ocrConfirmer = OcrFilter.Confirmer(ocr.confirmReads)
+        viewfinder.showLines(emptyList())
+        updateModeViews()
+    }
+
+    private fun updateModeViews() {
+        hint.text = getString(
+            when {
+                textMode && ocr.mode == OcrMode.PICK -> R.string.camera_hint_text_pick
+                textMode -> R.string.camera_hint_text
+                settings.aim == AimMode.CENTER -> R.string.camera_hint_center
+                else -> R.string.camera_hint
+            },
+        )
+        listOf(barcodeTab to !textMode, textTab to textMode).forEach { (tab, selected) ->
+            tab.isSelected = selected
+            tab.setTextColor(if (selected) Color.BLACK else Color.WHITE)
+            tab.background.mutate().setTint(if (selected) Color.WHITE else Color.argb(110, 0, 0, 0))
+        }
+        // In text mode the frame always counts; the crosshair of `center` is for barcodes.
+        viewfinder.textMode = textMode
+    }
+
+    private fun modeTab(label: Int, onClick: () -> Unit) = TextView(this).apply {
+        text = getString(label)
+        gravity = Gravity.CENTER
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+        setBackgroundResource(R.drawable.bg_camera_button)
+        setOnClickListener { onClick() }
+    }
+
+    private fun deliverContinuous(text: String, format: String, count: Int, source: String = CameraScanner.NAME) {
         if (isFinishing) return
         feedback()
-        CameraScanBus.deliver(ScanResult(text, format, CameraScanner.NAME))
+        CameraScanBus.deliver(ScanResult(text, format, source))
         status.isVisible = true
         status.text = getString(R.string.camera_continuous_status, count, text.take(STATUS_LENGTH))
         restartTimeout()
@@ -405,6 +561,37 @@ class CameraScanActivity : AppCompatActivity() {
      * crosshair in the middle for `center`; nothing for `anywhere`.
      */
     private class ViewfinderView(context: Context, private val aim: AimMode) : View(context) {
+        /** Text mode: always the frame, no crosshair. */
+        var textMode = false
+            set(value) {
+                field = value
+                invalidate()
+            }
+
+        /** Pick mode: the recognised lines (view coordinates) a tap can take. */
+        private var lines: List<Pair<String, AimGeometry.Box>> = emptyList()
+        var onTapLine: ((String) -> Unit)? = null
+        private val lineFill = Paint().apply { color = Color.argb(70, 255, 214, 0) }
+        private val lineStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 2 * resources.displayMetrics.density
+            color = Color.rgb(255, 214, 0)
+        }
+
+        fun showLines(list: List<Pair<String, AimGeometry.Box>>) {
+            lines = list
+            invalidate()
+        }
+
+        @SuppressLint("ClickableViewAccessibility") // The boxes are an extra; pattern mode needs no tap.
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            if (!textMode || lines.isEmpty()) return false
+            if (event.action == MotionEvent.ACTION_UP) {
+                OcrFilter.lineAt(lines, event.x, event.y, 12 * resources.displayMetrics.density)?.let { onTapLine?.invoke(it) }
+            }
+            return true
+        }
+
         private val density = resources.displayMetrics.density
         private val shade = Paint().apply { color = Color.argb(140, 0, 0, 0) }
         private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -421,7 +608,7 @@ class CameraScanActivity : AppCompatActivity() {
         private val path = Path()
 
         override fun onDraw(canvas: Canvas) {
-            if (aim == AimMode.ANYWHERE) return
+            if (aim == AimMode.ANYWHERE && !textMode) return
             val w = width.toFloat()
             val h = height.toFloat()
             val frame = AimGeometry.frame(w, h, density)
@@ -433,6 +620,14 @@ class CameraScanActivity : AppCompatActivity() {
             path.addRoundRect(rect, radius, radius, Path.Direction.CW)
             canvas.drawPath(path, shade)
             canvas.drawRoundRect(rect, radius, radius, stroke)
+            if (textMode) {
+                lines.forEach { (_, b) ->
+                    rect.set(b.left, b.top, b.right, b.bottom)
+                    canvas.drawRect(rect, lineFill)
+                    canvas.drawRect(rect, lineStroke)
+                }
+                return
+            }
             if (aim == AimMode.CENTER) {
                 val arm = 18 * density
                 val cx = frame.centerX
@@ -444,7 +639,7 @@ class CameraScanActivity : AppCompatActivity() {
     }
 
     /** What opens the camera: the orientation of the caller (a kiosk lock stays), the profile, or a configuration import. */
-    data class Request(val orientation: Int, val profileId: String? = null, val configImport: Boolean = false)
+    data class Request(val orientation: Int, val profileId: String? = null, val configImport: Boolean = false, val text: Boolean = false)
 
     /** Opens the camera scanner; the result is the single code read, `null` when cancelled or in continuous mode. */
     class Contract : ActivityResultContract<Request, ScanResult?>() {
@@ -453,11 +648,12 @@ class CameraScanActivity : AppCompatActivity() {
                 .putExtra(EXTRA_ORIENTATION, input.orientation)
                 .putExtra(EXTRA_PROFILE, input.profileId)
                 .putExtra(EXTRA_CONFIG_IMPORT, input.configImport)
+                .putExtra(EXTRA_TEXT, input.text)
 
         override fun parseResult(resultCode: Int, intent: Intent?): ScanResult? {
             if (resultCode != RESULT_OK) return null
             val data = intent?.getStringExtra(EXTRA_DATA) ?: return null
-            return ScanResult(data, intent.getStringExtra(EXTRA_FORMAT), CameraScanner.NAME)
+            return ScanResult(data, intent.getStringExtra(EXTRA_FORMAT), intent.getStringExtra(EXTRA_SOURCE) ?: CameraScanner.NAME)
         }
     }
 
@@ -468,6 +664,11 @@ class CameraScanActivity : AppCompatActivity() {
         private const val EXTRA_ORIENTATION = "orientation"
         private const val EXTRA_PROFILE = "profile"
         private const val EXTRA_CONFIG_IMPORT = "configImport"
+        private const val EXTRA_TEXT = "text"
+        private const val EXTRA_SOURCE = "source"
+
+        /** Scan source of recognised text, for the page (`source: "ocr"`). */
+        const val SOURCE_OCR = "ocr"
         private const val VIBRATION_MS = 60L
         private const val BEEP_MS = 120
         private const val BEEP_VOLUME = 80

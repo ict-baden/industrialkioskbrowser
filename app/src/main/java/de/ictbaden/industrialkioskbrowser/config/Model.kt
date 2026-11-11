@@ -68,6 +68,80 @@ data class ScannerSettings(
     val engine: ScanEngine = ScanEngine.AUTO,
     val camera: CameraSettings = CameraSettings(),
     val data: ScanDataSettings = ScanDataSettings(),
+    val ocr: OcrSettings = OcrSettings(),
+    val nfc: NfcSettings = NfcSettings(),
+)
+
+/** How text recognition picks the text (`scanner.ocr.mode`). */
+enum class OcrMode(override val key: String) : Keyed {
+    /** Recognised lines in the frame are shown as boxes; a tap takes one. */
+    PICK("pick"),
+
+    /** The first line matching [OcrSettings.pattern] is taken automatically. */
+    PATTERN("pattern"),
+}
+
+/** Clean-up of each recognised line before the length and pattern checks (`scanner.ocr.charset`). */
+enum class OcrCharset(override val key: String) : Keyed {
+    ANY("any"),
+
+    /** Digits and `, . -` (meter readings, quantities). */
+    DIGITS("digits"),
+
+    /** Letters and digits only. */
+    ALNUM("alnum"),
+
+    /** Letters and digits, upper case. */
+    UPPER("upper"),
+}
+
+/** Text recognition (OCR) with the camera (`scanner.ocr`, issue #49). */
+data class OcrSettings(
+    val enabled: Boolean = true,
+    val mode: OcrMode = OcrMode.PICK,
+    /** Java regex the whole (cleaned) line must match; required for [OcrMode.PATTERN]. */
+    val pattern: String? = null,
+    /** The camera opens in text mode instead of barcode mode. */
+    val startInOcr: Boolean = false,
+    /** Pattern mode: the same text in this many consecutive frames (1–5). */
+    val confirmReads: Int = 2,
+    val minLength: Int = 0,
+    val maxLength: Int = 0,
+    val charset: OcrCharset = OcrCharset.ANY,
+)
+
+/** What an NFC tag gives (`scanner.nfc.read`). */
+enum class NfcRead(override val key: String) : Keyed {
+    UID("uid"),
+    NDEF("ndef"),
+
+    /** The NDEF text or URI, the UID when the tag has none. */
+    NDEF_OR_UID("ndefOrUid"),
+}
+
+enum class UidFormat(override val key: String) : Keyed {
+    HEX("hex"),
+    DECIMAL("decimal"),
+}
+
+/** Which NDEF records are entered (`scanner.nfc.ndefRecord`). */
+enum class NdefRecordMode(override val key: String) : Keyed {
+    FIRST("first"),
+    ALL_LINES("allLines"),
+}
+
+/** Reading NFC tags (`scanner.nfc`, issue #50). */
+data class NfcSettings(
+    val enabled: Boolean = true,
+    val read: NfcRead = NfcRead.NDEF_OR_UID,
+    val uidFormat: UidFormat = UidFormat.HEX,
+    /** Reverse byte order (many badge readers show the UID reversed). */
+    val uidReversed: Boolean = false,
+    /** Between hex bytes, e.g. `:`. */
+    val uidSeparator: String = "",
+    val ndefRecord: NdefRecordMode = NdefRecordMode.FIRST,
+    val beep: Boolean = true,
+    val vibrate: Boolean = true,
 )
 
 /** Which codes in the camera picture count (`scanner.camera.aim`). */

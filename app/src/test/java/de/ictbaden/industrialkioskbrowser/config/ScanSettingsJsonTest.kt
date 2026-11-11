@@ -92,6 +92,58 @@ class ScanSettingsJsonTest {
     }
 
     @Test
+    fun `ocr and nfc defaults and round trip`() {
+        val empty = parse("{}")
+        assertEquals(OcrSettings(), empty.ocr)
+        assertEquals(NfcSettings(), empty.nfc)
+        val scanner = ScannerSettings(
+            ocr = OcrSettings(
+                enabled = false,
+                mode = OcrMode.PATTERN,
+                pattern = "[A-Z]{2}\\d{6}",
+                startInOcr = true,
+                confirmReads = 3,
+                minLength = 4,
+                maxLength = 20,
+                charset = OcrCharset.UPPER,
+            ),
+            nfc = NfcSettings(
+                enabled = false,
+                read = NfcRead.UID,
+                uidFormat = UidFormat.DECIMAL,
+                uidReversed = true,
+                uidSeparator = ":",
+                ndefRecord = NdefRecordMode.ALL_LINES,
+                beep = false,
+                vibrate = false,
+            ),
+            data = ScanDataSettings(rules = listOf(ScanRule(symbologies = listOf("ocr", "nfc"), prefix = "T:"))),
+        )
+        val config = AppConfig(profiles = listOf(Profile(id = "p", name = "P", startUrl = "https://example.com", scanner = scanner)))
+        assertEquals(config, ConfigJson.parse(ConfigJson.write(config)))
+        assertEquals(config, ConfigJson.parse(ConfigJson.writeCompact(config)))
+    }
+
+    @Test
+    fun `ocr pattern mode needs a valid pattern`() {
+        for ((scanner, where) in mapOf(
+            """{"ocr":{"mode":"pattern"}}""" to "profiles[0].scanner.ocr.pattern",
+            """{"ocr":{"pattern":"[a-"}}""" to "profiles[0].scanner.ocr.pattern",
+            """{"ocr":{"confirmReads":6}}""" to "profiles[0].scanner.ocr.confirmReads",
+            """{"ocr":{"charset":"latin"}}""" to "profiles[0].scanner.ocr.charset",
+            """{"nfc":{"read":"all"}}""" to "profiles[0].scanner.nfc.read",
+            """{"nfc":{"uidFormat":"octal"}}""" to "profiles[0].scanner.nfc.uidFormat",
+        )) {
+            try {
+                parse(scanner)
+                fail("accepted $scanner")
+            } catch (e: ConfigException) {
+                assertTrue("${e.message} should name $where", e.message!!.contains(where))
+            }
+        }
+    }
+
+    @Test
     fun `invalid values name the field`() {
         val cases = mapOf(
             """{"camera":{"symbologies":["ean14"]}}""" to "profiles[0].scanner.camera.symbologies",

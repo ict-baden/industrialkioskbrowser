@@ -294,4 +294,47 @@
     <plurals name="json_entries">
         <item quantity="other">%d 项 · 在 JSON 配置中设置</item>
     </plurals>
+    <!-- OCR and NFC (issues #49, #50) -->
+    <string name="action_ocr">识别文字 (OCR)</string>
+    <string name="ocr_unavailable">此设备不支持文字识别。</string>
+    <string name="nfc_no_data">NFC 标签中没有可输入的数据。</string>
+    <string name="camera_mode_barcode">条码</string>
+    <string name="camera_mode_text">文字</string>
+    <string name="camera_hint_text_pick">点击要输入的那一行</string>
+    <string name="camera_hint_text">将文字置于框内</string>
+    <string name="section_ocr">文字识别 (OCR)</string>
+    <string name="ocr_enabled">文字识别</string>
+    <string name="ocr_enabled_summary">在相机和菜单中切换 条码 | 文字</string>
+    <string name="ocr_mode">获取文字的方式</string>
+    <string name="ocr_mode_pick">点击一行</string>
+    <string name="ocr_mode_pattern">按模式自动获取</string>
+    <string name="ocr_pattern">模式（正则表达式）</string>
+    <string name="ocr_pattern_helper">整行必须匹配，例如 [A-Z]{2}\\d{6}</string>
+    <string name="ocr_pattern_required">自动模式需要一个模式。</string>
+    <string name="ocr_pattern_invalid">不是有效的正则表达式。</string>
+    <string name="ocr_start_in_text">相机以文字模式打开</string>
+    <string name="ocr_confirm_reads">确认读取次数（自动模式）</string>
+    <string name="ocr_charset">字符</string>
+    <string name="charset_any">全部</string>
+    <string name="charset_digits">数字 , . -</string>
+    <string name="charset_alnum">字母和数字</string>
+    <string name="charset_upper">字母和数字，大写</string>
+    <string name="section_nfc">NFC</string>
+    <string name="nfc_status">此设备的 NFC</string>
+    <string name="nfc_status_on">可用且已开启</string>
+    <string name="nfc_status_off">已关闭 – 点击打开 NFC 设置</string>
+    <string name="nfc_status_missing">此设备没有 NFC</string>
+    <string name="nfc_enabled">读取 NFC 标签</string>
+    <string name="nfc_read">输入内容</string>
+    <string name="nfc_read_uid">标签 ID (UID)</string>
+    <string name="nfc_read_ndef">存储的文本或链接 (NDEF)</string>
+    <string name="nfc_read_ndef_or_uid">存储的文本，否则为标签 ID</string>
+    <string name="nfc_uid_format">UID 格式</string>
+    <string name="uid_hex">十六进制</string>
+    <string name="uid_decimal">十进制</string>
+    <string name="nfc_uid_reversed">反转字节顺序</string>
+    <string name="nfc_uid_separator">字节之间的分隔符</string>
+    <string name="nfc_ndef_record">NDEF 记录</string>
+    <string name="ndef_first">第一条记录</string>
+    <string name="ndef_all">所有记录，每条一行</string>
 </resources>

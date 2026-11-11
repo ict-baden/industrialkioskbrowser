@@ -31,11 +31,20 @@ object Symbologies {
         "upce" to "UPC-E",
     )
 
-    val ALL: List<String> get() = NAMES.keys.toList()
+    /** Text recognition and NFC: not barcode formats, but usable in `scanner.data.rules[].symbologies`. */
+    const val OCR = "ocr"
+    const val NFC = "nfc"
+    private val PSEUDO: Map<String, String> = linkedMapOf(OCR to "Text (OCR)", NFC to "NFC")
 
-    fun isKnown(name: String) = name in NAMES
+    /** Barcode formats only (camera filter, the barcode type dialog). */
+    val BARCODES: List<String> get() = NAMES.keys.toList()
 
-    fun displayName(name: String) = NAMES[name] ?: name
+    /** Everything a rule can name: the barcode formats plus [OCR] and [NFC]. */
+    val ALL: List<String> get() = BARCODES + PSEUDO.keys
+
+    fun isKnown(name: String) = name in NAMES || name in PSEUDO
+
+    fun displayName(name: String) = NAMES[name] ?: PSEUDO[name] ?: name
 
     /** zxing-cpp `BarcodeReader.Format` name → canonical name, `null` if unknown. */
     fun fromZxing(format: String?): String? {
@@ -65,7 +74,7 @@ object Symbologies {
         }
     }
 
-    /** zxing-cpp format names to read for a set of canonical names; empty = all formats. */
+    /** zxing-cpp format names to read for a set of canonical names; empty = all formats. [OCR]/[NFC] are ignored. */
     fun toZxing(names: Collection<String>): Set<String> = names.flatMapTo(linkedSetOf()) { name ->
         when (name) {
             "aztec" -> listOf("AZTEC")

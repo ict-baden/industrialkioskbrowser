@@ -33,6 +33,12 @@ class BridgeHandler(private val context: Context, private val host: Host) : WebV
         val scannerEnabled: Boolean
         fun setScannerEnabledByPage(enabled: Boolean)
         fun softTrigger(start: Boolean?)
+
+        /** Text recognition is configured and the device has a camera. */
+        val ocrAvailable: Boolean
+        val nfcAvailable: Boolean
+        val nfcOn: Boolean
+        fun startOcr()
     }
 
     private val tones = runCatching { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80) }.getOrNull()
@@ -82,8 +88,21 @@ class BridgeHandler(private val context: Context, private val host: Host) : WebV
         }
         "scanner.enable" -> host.setScannerEnabledByPage(true).let { null }
         "scanner.disable" -> host.setScannerEnabledByPage(false).let { null }
-        "scanner.trigger" -> host.softTrigger(if (args.isNull("start")) null else args.optBoolean("start")).let { null }
-        "scanner.status" -> JSONObject().put("name", host.scannerName).put("enabled", host.scannerEnabled)
+        "scanner.trigger" -> when (args.optString("mode")) {
+            // {mode: "text"}: text recognition (OCR) with the camera.
+            "text" -> {
+                if (!host.ocrAvailable) throw IllegalStateException("Text recognition is not available (scanner.ocr.enabled, camera)")
+                host.startOcr()
+                null
+            }
+            else -> host.softTrigger(if (args.isNull("start")) null else args.optBoolean("start")).let { null }
+        }
+        "scanner.status" -> JSONObject()
+            .put("name", host.scannerName)
+            .put("enabled", host.scannerEnabled)
+            .put("ocr", host.ocrAvailable)
+            .put("nfc", host.nfcAvailable)
+            .put("nfcOn", host.nfcOn)
         else -> throw IllegalArgumentException("Unknown command: $cmd")
     }
 

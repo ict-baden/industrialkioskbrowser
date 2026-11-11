@@ -4,6 +4,22 @@
 
 ### Added
 
+- **Text recognition (OCR)** with the camera ([#49](https://github.com/ict-baden/industrialkioskbrowser/issues/49)):
+  switch *Barcode | Text* on the camera screen, menu entry *Recognise text*, JS bridge
+  `scanner.trigger({mode: "text"})`. `scanner.ocr`: tap a recognised line (`pick`) or take the first line that
+  matches a regular expression by itself (`pattern`, confirmed over several frames), clean-up to digits/letters,
+  length limits, start in text mode. Result through `scanner.data` with the type `ocr`, `source: "ocr"` for the
+  page. Recognition with **Google ML Kit** 16.0.1 (bundled Latin model, offline) – the first component that is
+  not open source; ML Kit may send anonymous usage statistics to Google (docs/data-and-privacy.md). The APK grows
+  from about 14 to about 57 MB (ML Kit's native OCR library for four processor types; an app bundle from Google
+  Play only carries the one of the device, about +11 MB). New error code `IKB-0032`.
+- **NFC tags** ([#50](https://github.com/ict-baden/industrialkioskbrowser/issues/50)): reader mode while the
+  browser is in front. `scanner.nfc`: tag ID (hex or decimal, reversed byte order, separator), stored NDEF text
+  or link, or "NDEF, otherwise ID". Delivered like a scan through `scanner.data` with the type `nfc`,
+  `source: "nfc"` for the page. Profile settings show whether NFC is on. New permission `NFC`, error codes
+  `IKB-0033`, `IKB-0034`.
+- `scanner.status()` of the JS bridge also reports `ocr`, `nfc` and `nfcOn`.
+
 - **Scanning with the camera** on devices without a scan engine ([#48](https://github.com/ict-baden/industrialkioskbrowser/issues/48)):
   the app detects whether the device has one (Zebra: DataWedge's scanner list, Honeywell: scanner service) and
   otherwise opens a full-screen camera view with aiming frame and torch from the scan button and from

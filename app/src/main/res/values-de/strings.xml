@@ -296,4 +296,47 @@
         <item quantity="one">%d Eintrag · in der JSON-Konfiguration</item>
         <item quantity="other">%d Einträge · in der JSON-Konfiguration</item>
     </plurals>
+    <!-- OCR and NFC (issues #49, #50) -->
+    <string name="action_ocr">Text erkennen (OCR)</string>
+    <string name="ocr_unavailable">Die Texterkennung ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="nfc_no_data">Der NFC-Tag enthält keine Daten zum Eingeben.</string>
+    <string name="camera_mode_barcode">Barcode</string>
+    <string name="camera_mode_text">Text</string>
+    <string name="camera_hint_text_pick">Auf die gewünschte Zeile tippen</string>
+    <string name="camera_hint_text">Text in den Rahmen halten</string>
+    <string name="section_ocr">Texterkennung (OCR)</string>
+    <string name="ocr_enabled">Texterkennung</string>
+    <string name="ocr_enabled_summary">Umschalter Barcode | Text in der Kamera und im Menü</string>
+    <string name="ocr_mode">Text übernehmen</string>
+    <string name="ocr_mode_pick">Zeile antippen</string>
+    <string name="ocr_mode_pattern">Automatisch nach Muster</string>
+    <string name="ocr_pattern">Muster (regulärer Ausdruck)</string>
+    <string name="ocr_pattern_helper">Die ganze Zeile muss passen, z. B. [A-Z]{2}\\d{6}</string>
+    <string name="ocr_pattern_required">Der automatische Modus braucht ein Muster.</string>
+    <string name="ocr_pattern_invalid">Kein gültiger regulärer Ausdruck.</string>
+    <string name="ocr_start_in_text">Kamera startet im Textmodus</string>
+    <string name="ocr_confirm_reads">Lesungen bestätigen (automatischer Modus)</string>
+    <string name="ocr_charset">Zeichen</string>
+    <string name="charset_any">Alle</string>
+    <string name="charset_digits">Ziffern , . -</string>
+    <string name="charset_alnum">Buchstaben und Ziffern</string>
+    <string name="charset_upper">Buchstaben und Ziffern, groß</string>
+    <string name="section_nfc">NFC</string>
+    <string name="nfc_status">NFC auf diesem Gerät</string>
+    <string name="nfc_status_on">Vorhanden und eingeschaltet</string>
+    <string name="nfc_status_off">Ausgeschaltet – tippen für die NFC-Einstellungen</string>
+    <string name="nfc_status_missing">Dieses Gerät hat kein NFC</string>
+    <string name="nfc_enabled">NFC-Tags lesen</string>
+    <string name="nfc_read">Eingeben</string>
+    <string name="nfc_read_uid">Tag-ID (UID)</string>
+    <string name="nfc_read_ndef">Gespeicherter Text oder Link (NDEF)</string>
+    <string name="nfc_read_ndef_or_uid">Gespeicherter Text, sonst Tag-ID</string>
+    <string name="nfc_uid_format">UID-Format</string>
+    <string name="uid_hex">Hexadezimal</string>
+    <string name="uid_decimal">Dezimal</string>
+    <string name="nfc_uid_reversed">Byte-Reihenfolge umdrehen</string>
+    <string name="nfc_uid_separator">Trennzeichen zwischen den Bytes</string>
+    <string name="nfc_ndef_record">NDEF-Einträge</string>
+    <string name="ndef_first">Erster Eintrag</string>
+    <string name="ndef_all">Alle Einträge, je eine Zeile</string>
 </resources>

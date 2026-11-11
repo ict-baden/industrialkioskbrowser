@@ -76,7 +76,9 @@ import de.ictbaden.industrialkioskbrowser.config.ScanTerminator
 import de.ictbaden.industrialkioskbrowser.config.ScreenOrientation
 import de.ictbaden.industrialkioskbrowser.scanner.CameraScanActivity
 import de.ictbaden.industrialkioskbrowser.scanner.CameraScanBus
+import de.ictbaden.industrialkioskbrowser.scanner.NfcReader
 import de.ictbaden.industrialkioskbrowser.scanner.NoScanner
+import de.ictbaden.industrialkioskbrowser.scanner.ScanEngineDetector
 import de.ictbaden.industrialkioskbrowser.scanner.ScanFormatter
 import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import de.ictbaden.industrialkioskbrowser.scanner.ScannerManager
@@ -100,6 +102,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private lateinit var scanButton: ImageButton
     private lateinit var keyboardButton: ImageButton
     private lateinit var scanner: ScannerManager
+    private lateinit var nfc: NfcReader
     private lateinit var config: AppConfig
     private lateinit var keyboard: KeyboardController
     private lateinit var sounds: Sounds
@@ -159,6 +162,16 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     override fun softTrigger(start: Boolean?) = scanner.softTrigger(start)
+
+    override val ocrAvailable get() = profile.scanner.ocr.enabled && ScanEngineDetector.hasCamera(this)
+    override val nfcAvailable get() = nfc.available
+    override val nfcOn get() = nfc.switchedOn
+
+    /** Text recognition with the camera (`scanner.ocr`), whatever scanner the profile reads barcodes with. */
+    override fun startOcr() {
+        if (!scannerWanted || !ocrAvailable) return
+        cameraScan.launch(CameraScanActivity.Request(requestedOrientation, profile.id, text = true))
+    }
 
     /** A new managed configuration from the MDM, applied while the browser is in front; [configListener] restarts. */
     private val restrictionsReceiver = object : BroadcastReceiver() {
@@ -234,11 +247,19 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             this,
             genericIntent = profile.scanner.genericIntent,
             engine = profile.scanner.engine,
-            launchCamera = { cameraScan.launch(CameraScanActivity.Request(requestedOrientation, profile.id)) },
+            launchCamera = {
+                val ocr = profile.scanner.ocr
+                cameraScan.launch(CameraScanActivity.Request(requestedOrientation, profile.id, text = ocr.enabled && ocr.startInOcr))
+            },
             onScannerChanged = { scanButton.isVisible = scanner.scanner !is NoScanner },
             onScan = ::onScan,
         )
         CameraScanBus.listener = continuousScan
+        nfc = NfcReader(
+            this,
+            onScan = { scan -> scanner.deliver(scan) },
+            onEmpty = { toast(withCode(getString(R.string.nfc_no_data), ErrorCodes.NFC_NO_DATA)) },
+        )
         sounds = Sounds(this, config)
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()
@@ -283,6 +304,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         mainHandler.postDelayed(fileCheck, FILE_CHECK_INTERVAL_MS)
         webView.onResume()
         scanner.start()
+        if (profile.scanner.enabled) nfc.start(profile.scanner.nfc)
         if (profile.kiosk.immersive) hideSystemBars()
     }
 
@@ -292,6 +314,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         mainHandler.removeCallbacks(configCheck)
         mainHandler.removeCallbacks(fileCheck)
         scanner.stop()
+        nfc.stop()
         webView.onPause()
         CookieManager.getInstance().flush()
         super.onPause()
@@ -299,6 +322,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     override fun onDestroy() {
         CameraScanBus.clear(continuousScan)
+        if (::nfc.isInitialized) nfc.release()
         bridge?.release()
         if (::webView.isInitialized) {
             (webView.parent as? ViewGroup)?.removeView(webView)
@@ -565,6 +589,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             add(ActionSheet.Action(getString(R.string.action_reload), R.drawable.ic_refresh) { webView.reload() })
             add(ActionSheet.Action(getString(R.string.action_forward), R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
             add(ActionSheet.Action(getString(R.string.action_scanner), R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
+            if (ocrAvailable && scannerWanted) {
+                add(ActionSheet.Action(getString(R.string.action_ocr), R.drawable.ic_title) { startOcr() })
+            }
             if (keyboard.softKeyboardAvailable) {
                 add(ActionSheet.Action(getString(R.string.action_keyboard), R.drawable.ic_keyboard) { keyboard.toggleSoftKeyboard() })
             }

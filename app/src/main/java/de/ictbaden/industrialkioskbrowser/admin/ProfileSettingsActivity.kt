@@ -3,6 +3,7 @@ package de.ictbaden.industrialkioskbrowser.admin
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.text.InputType
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -24,6 +25,12 @@ import de.ictbaden.industrialkioskbrowser.config.CameraSettings
 import de.ictbaden.industrialkioskbrowser.config.ConfigStore
 import de.ictbaden.industrialkioskbrowser.config.GenericIntent
 import de.ictbaden.industrialkioskbrowser.config.Gs1Mode
+import de.ictbaden.industrialkioskbrowser.config.NdefRecordMode
+import de.ictbaden.industrialkioskbrowser.config.NfcRead
+import de.ictbaden.industrialkioskbrowser.config.NfcSettings
+import de.ictbaden.industrialkioskbrowser.config.OcrCharset
+import de.ictbaden.industrialkioskbrowser.config.OcrMode
+import de.ictbaden.industrialkioskbrowser.config.OcrSettings
 import de.ictbaden.industrialkioskbrowser.config.Profile
 import de.ictbaden.industrialkioskbrowser.config.RuleAction
 import de.ictbaden.industrialkioskbrowser.config.ScanDataSettings
@@ -32,11 +39,14 @@ import de.ictbaden.industrialkioskbrowser.config.ScanTerminator
 import de.ictbaden.industrialkioskbrowser.config.ScreenOrientation
 import de.ictbaden.industrialkioskbrowser.config.SoftKeyboard
 import de.ictbaden.industrialkioskbrowser.config.TextCase
+import de.ictbaden.industrialkioskbrowser.config.UidFormat
 import de.ictbaden.industrialkioskbrowser.config.ViewportMode
+import de.ictbaden.industrialkioskbrowser.scanner.NfcReader
 import de.ictbaden.industrialkioskbrowser.scanner.Symbologies
 import de.ictbaden.industrialkioskbrowser.ui.Brand
 import de.ictbaden.industrialkioskbrowser.ui.Dialogs
 import de.ictbaden.industrialkioskbrowser.ui.value
+import de.ictbaden.industrialkioskbrowser.web.ErrorCodes
 
 /**
  * Every setting of one profile that can sensibly be changed on the device, grouped like the JSON
@@ -106,6 +116,8 @@ class ProfileSettingsActivity : AppCompatActivity() {
         soundsAndErrors(p)
         scanner(p)
         camera(p.scanner.camera)
+        ocr(p.scanner.ocr)
+        nfc(p.scanner.nfc)
         scanData(p.scanner.data)
     }
 
@@ -325,6 +337,111 @@ class ProfileSettingsActivity : AppCompatActivity() {
         )
     }
 
+    private fun ocr(o: OcrSettings) {
+        fun change(transform: (OcrSettings) -> OcrSettings) = update { it.copy(scanner = it.scanner.copy(ocr = transform(it.scanner.ocr))) }
+        section(R.string.section_ocr)
+        ui.card(
+            listOf(
+                switchRow(R.drawable.ic_title, R.string.ocr_enabled, o.enabled, R.string.ocr_enabled_summary) { on -> change { it.copy(enabled = on) } },
+                ui.row(R.drawable.ic_title, getString(R.string.ocr_mode), getString(if (o.mode == OcrMode.PICK) R.string.ocr_mode_pick else R.string.ocr_mode_pattern)) {
+                    val labels = listOf(getString(R.string.ocr_mode_pick), getString(R.string.ocr_mode_pattern))
+                    choose(getString(R.string.ocr_mode), labels, o.mode.ordinal) { i ->
+                        val mode = OcrMode.entries[i]
+                        // The pattern mode needs a pattern: ask for it right away.
+                        if (mode == OcrMode.PATTERN && o.pattern == null) editOcrPattern(o) { pattern -> change { it.copy(mode = mode, pattern = pattern) } }
+                        else change { it.copy(mode = mode) }
+                    }
+                },
+                ui.row(R.drawable.ic_title, getString(R.string.ocr_pattern), o.pattern ?: getString(R.string.value_empty)) {
+                    editOcrPattern(o) { pattern -> change { it.copy(pattern = pattern) } }
+                },
+                switchRow(R.drawable.ic_title, R.string.ocr_start_in_text, o.startInOcr) { on -> change { it.copy(startInOcr = on) } },
+                numberRow(R.drawable.ic_check, R.string.ocr_confirm_reads, o.confirmReads, 1, 5) { n -> change { it.copy(confirmReads = n) } },
+                numberRow(R.drawable.ic_title, R.string.min_length, o.minLength, 0, 999, zeroLabel = R.string.value_no_limit) { n -> change { it.copy(minLength = n) } },
+                numberRow(R.drawable.ic_title, R.string.max_length, o.maxLength, 0, 999, zeroLabel = R.string.value_no_limit) { n -> change { it.copy(maxLength = n) } },
+                choiceRow(
+                    R.drawable.ic_title,
+                    R.string.ocr_charset,
+                    OcrCharset.entries,
+                    listOf(R.string.charset_any, R.string.charset_digits, R.string.charset_alnum, R.string.charset_upper),
+                    o.charset,
+                ) { charset -> change { it.copy(charset = charset) } },
+            ),
+        )
+    }
+
+    /** Pattern of the OCR: must be a valid regex; empty removes it (then the pattern mode is left). */
+    private fun editOcrPattern(o: OcrSettings, onSave: (String?) -> Unit) {
+        val field = Dialogs.textField(this, getString(R.string.ocr_pattern), o.pattern.orEmpty(), helper = getString(R.string.ocr_pattern_helper))
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.ocr_pattern)
+            .setView(Dialogs.form(this, field))
+            .setPositiveButton(R.string.button_save, null)
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val text = field.value.trim()
+            if (text.isEmpty() && o.mode == OcrMode.PATTERN) {
+                field.error = getString(R.string.ocr_pattern_required)
+                return@setOnClickListener
+            }
+            if (text.isNotEmpty() && runCatching { Regex(text) }.isFailure) {
+                field.error = getString(R.string.ocr_pattern_invalid)
+                return@setOnClickListener
+            }
+            dialog.dismiss()
+            onSave(text.ifEmpty { null })
+        }
+    }
+
+    private fun nfc(n: NfcSettings) {
+        fun change(transform: (NfcSettings) -> NfcSettings) = update { it.copy(scanner = it.scanner.copy(nfc = transform(it.scanner.nfc))) }
+        section(R.string.section_nfc)
+        val status = when {
+            !NfcReader.hasNfc(this) -> getString(R.string.nfc_status_missing)
+            NfcReader.isOn(this) -> getString(R.string.nfc_status_on)
+            else -> getString(R.string.message_with_code, getString(R.string.nfc_status_off), ErrorCodes.NFC_OFF)
+        }
+        val openSettings: (() -> Unit)? = if (NfcReader.hasNfc(this) && !NfcReader.isOn(this)) {
+            { runCatching { startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) } }
+        } else {
+            null
+        }
+        ui.card(
+            listOf(
+                ui.row(R.drawable.ic_info, getString(R.string.nfc_status), status, onClick = openSettings),
+                switchRow(R.drawable.ic_scan, R.string.nfc_enabled, n.enabled) { on -> change { it.copy(enabled = on) } },
+                choiceRow(
+                    R.drawable.ic_scan,
+                    R.string.nfc_read,
+                    NfcRead.entries,
+                    listOf(R.string.nfc_read_uid, R.string.nfc_read_ndef, R.string.nfc_read_ndef_or_uid),
+                    n.read,
+                ) { read -> change { it.copy(read = read) } },
+                choiceRow(
+                    R.drawable.ic_key,
+                    R.string.nfc_uid_format,
+                    UidFormat.entries,
+                    listOf(R.string.uid_hex, R.string.uid_decimal),
+                    n.uidFormat,
+                ) { format -> change { it.copy(uidFormat = format) } },
+                switchRow(R.drawable.ic_swap, R.string.nfc_uid_reversed, n.uidReversed) { on -> change { it.copy(uidReversed = on) } },
+                textRow(R.drawable.ic_key, R.string.nfc_uid_separator, n.uidSeparator.ifEmpty { getString(R.string.value_empty) }, n.uidSeparator, trim = false) { v ->
+                    change { it.copy(uidSeparator = v) }
+                },
+                choiceRow(
+                    R.drawable.ic_title,
+                    R.string.nfc_ndef_record,
+                    NdefRecordMode.entries,
+                    listOf(R.string.ndef_first, R.string.ndef_all),
+                    n.ndefRecord,
+                ) { mode -> change { it.copy(ndefRecord = mode) } },
+                switchRow(R.drawable.ic_info, R.string.beep, n.beep) { on -> change { it.copy(beep = on) } },
+                switchRow(R.drawable.ic_info, R.string.vibrate, n.vibrate) { on -> change { it.copy(vibrate = on) } },
+            ),
+        )
+    }
+
     private fun scanData(d: ScanDataSettings) {
         fun change(transform: (ScanDataSettings) -> ScanDataSettings) = update { it.copy(scanner = it.scanner.copy(data = transform(it.scanner.data))) }
         section(R.string.section_scan_data)
@@ -455,7 +572,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
     ) { v -> onSave(v.toInt()) }
 
     private fun chooseSymbologies(current: List<String>, onSave: (List<String>) -> Unit) {
-        val names = Symbologies.ALL
+        val names = Symbologies.BARCODES
         // Empty means all: then every type starts ticked.
         val checked = BooleanArray(names.size) { current.isEmpty() || names[it] in current }
         MaterialAlertDialogBuilder(this)

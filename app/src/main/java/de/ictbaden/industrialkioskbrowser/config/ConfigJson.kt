@@ -230,6 +230,8 @@ object ConfigJson {
                 engine = ScanEngine.parse(scanner.optNonBlank("engine")),
                 camera = parseCamera(scanner.optJSONObject("camera") ?: JSONObject(), "$where.scanner.camera"),
                 data = parseData(scanner.optJSONObject("data") ?: JSONObject(), "$where.scanner.data"),
+                ocr = parseOcr(scanner.optJSONObject("ocr") ?: JSONObject(), "$where.scanner.ocr"),
+                nfc = parseNfc(scanner.optJSONObject("nfc") ?: JSONObject(), "$where.scanner.nfc"),
             ),
         )
         checkResourceReferences(profile, resources, where)
@@ -332,6 +334,38 @@ object ConfigJson {
             beep = json.optBoolean("beep", d.beep),
             vibrate = json.optBoolean("vibrate", d.vibrate),
             timeoutSeconds = intIn(json, "timeoutSeconds", where, d.timeoutSeconds, 0, 600),
+        )
+    }
+
+    private fun parseOcr(json: JSONObject, where: String): OcrSettings {
+        val d = OcrSettings()
+        val mode = enumOf(json, "mode", where, d.mode)
+        val pattern = json.optNonBlank("pattern")
+        if (pattern != null) regex(pattern, "$where.pattern")
+        if (mode == OcrMode.PATTERN && pattern == null) throw ConfigException("$where.pattern is required for mode \"pattern\"")
+        return OcrSettings(
+            enabled = json.optBoolean("enabled", d.enabled),
+            mode = mode,
+            pattern = pattern,
+            startInOcr = json.optBoolean("startInOcr", d.startInOcr),
+            confirmReads = intIn(json, "confirmReads", where, d.confirmReads, 1, 5),
+            minLength = intIn(json, "minLength", where, d.minLength, 0, 999),
+            maxLength = intIn(json, "maxLength", where, d.maxLength, 0, 999),
+            charset = enumOf(json, "charset", where, d.charset),
+        )
+    }
+
+    private fun parseNfc(json: JSONObject, where: String): NfcSettings {
+        val d = NfcSettings()
+        return NfcSettings(
+            enabled = json.optBoolean("enabled", d.enabled),
+            read = enumOf(json, "read", where, d.read),
+            uidFormat = enumOf(json, "uidFormat", where, d.uidFormat),
+            uidReversed = json.optBoolean("uidReversed", d.uidReversed),
+            uidSeparator = text(json, "uidSeparator") ?: d.uidSeparator,
+            ndefRecord = enumOf(json, "ndefRecord", where, d.ndefRecord),
+            beep = json.optBoolean("beep", d.beep),
+            vibrate = json.optBoolean("vibrate", d.vibrate),
         )
     }
 
@@ -498,7 +532,31 @@ object ConfigJson {
             put("engine", profile.scanner.engine.key)
             put("camera", writeCamera(profile.scanner.camera))
             put("data", writeData(profile.scanner.data))
+            put("ocr", writeOcr(profile.scanner.ocr))
+            put("nfc", writeNfc(profile.scanner.nfc))
         })
+    }
+
+    private fun writeOcr(o: OcrSettings) = JSONObject().apply {
+        put("enabled", o.enabled)
+        put("mode", o.mode.key)
+        put("pattern", o.pattern ?: JSONObject.NULL)
+        put("startInOcr", o.startInOcr)
+        put("confirmReads", o.confirmReads)
+        put("minLength", o.minLength)
+        put("maxLength", o.maxLength)
+        put("charset", o.charset.key)
+    }
+
+    private fun writeNfc(n: NfcSettings) = JSONObject().apply {
+        put("enabled", n.enabled)
+        put("read", n.read.key)
+        put("uidFormat", n.uidFormat.key)
+        put("uidReversed", n.uidReversed)
+        put("uidSeparator", n.uidSeparator)
+        put("ndefRecord", n.ndefRecord.key)
+        put("beep", n.beep)
+        put("vibrate", n.vibrate)
     }
 
     private fun writeCamera(c: CameraSettings) = JSONObject().apply {
