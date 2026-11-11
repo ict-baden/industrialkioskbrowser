@@ -337,4 +337,17 @@
     <string name="nfc_ndef_record">NDEF 记录</string>
     <string name="ndef_first">第一条记录</string>
     <string name="ndef_all">所有记录，每条一行</string>
+    <string name="trusted_certificates">受信任的证书</string>
+    <string name="trusted_certificates_empty">没有自定义证书。MDM 安装的企业 CA 仍然受信任。</string>
+    <string name="trusted_certificates_import">导入证书</string>
+    <string name="trusted_certificate_pin">服务器证书 SHA-256 %1$s</string>
+    <string name="trusted_certificate_ca">CA %1$s · 有效期至 %2$s</string>
+    <string name="trusted_certificate_remove">移除证书</string>
+    <string name="trusted_certificate_invalid">该文件不是证书（PEM 或 DER）。</string>
+    <plurals name="trusted_certificates_count">
+        <item quantity="other">%d 个证书</item>
+    </plurals>
+    <plurals name="trusted_certificates_imported">
+        <item quantity="other">已导入 %d 个证书</item>
+    </plurals>
 </resources>

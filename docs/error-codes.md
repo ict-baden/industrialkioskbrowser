@@ -29,6 +29,7 @@ any of the five languages. Source: [`ErrorCodes.kt`](../app/src/main/java/de/ict
 | `IKB-0102` | Could not read the file | Import file not readable |
 | `IKB-0103` | Export failed | Target not writable |
 | `IKB-0104` | Configuration too large for a barcode | *Export as barcode*: even compressed the configuration does not fit into a QR code (about 2.9 KB), usually because of a logo or other resources. Export it as a file |
+| `IKB-0105` | The file is not a certificate | *Settings → Trusted certificates → Import*: the file is not a PEM or DER X.509 certificate (`.crt`, `.cer`, `.pem`) or larger than 256 KB |
 
 Validation details of a configuration (e.g. `global.language: unknown language "tlh"`) stay in
 English because they quote JSON field names.

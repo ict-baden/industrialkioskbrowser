@@ -8,6 +8,8 @@
 
 ### Added
 
+- Own CA certificates: `global.trustedCertificates` takes company CAs (PEM or resource) and SHA-256 fingerprints of self-signed server certificates, for devices where the CA cannot be installed into the Android certificate store. Import a `.crt`/`.pem` file under *Settings → Security → Trusted certificates*. Only an unknown CA is overridden; expired certificates and wrong host names are still refused. New error code `IKB-0105`.
+
 - **Text recognition (OCR)** with the camera ([#49](https://github.com/ict-baden/industrialkioskbrowser/issues/49)):
   switch *Barcode | Text* on the camera screen, menu entry *Recognise text*, JS bridge
   `scanner.trigger({mode: "text"})`. `scanner.ocr`: tap a recognised line (`pick`) or take the first line that

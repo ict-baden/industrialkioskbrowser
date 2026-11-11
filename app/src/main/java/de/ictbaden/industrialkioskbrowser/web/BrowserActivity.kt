@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslCertificate
 import android.net.http.SslError
 import android.os.Bundle
 import android.os.Environment
@@ -222,6 +223,23 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private fun withoutPasswords(config: AppConfig) = config.global.copy(adminPasswordHash = null, exitPasswordHash = null)
+
+    /**
+     * A certificate error is overridden only when "unknown CA" is the sole problem and the server
+     * certificate is signed by a CA from `global.trustedCertificates` or pinned there. Expired
+     * certificates, wrong host names and the like are never accepted.
+     */
+    private fun trustedByConfig(error: SslError): Boolean {
+        val entries = config.global.trustedCertificates
+        if (entries.isEmpty() || error.primaryError != SslError.SSL_UNTRUSTED) return false
+        val other = listOf(SslError.SSL_NOTYETVALID, SslError.SSL_EXPIRED, SslError.SSL_IDMISMATCH, SslError.SSL_DATE_INVALID, SslError.SSL_INVALID)
+        if (other.any(error::hasError)) return false
+        val der = SslCertificate.saveState(error.certificate).getByteArray("x509-certificate") ?: return false
+        return runCatching {
+            val server = CustomTrust.parseCertificates(der).first()
+            CustomTrust.from(entries, config.resources).accepts(server)
+        }.onFailure { Log.w(TAG, "Checking the server certificate failed", it) }.getOrDefault(false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -778,6 +796,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+            if (trustedByConfig(error)) {
+                Log.i(TAG, "Certificate of ${error.url} accepted by global.trustedCertificates")
+                handler.proceed()
+                return
+            }
             handler.cancel()
             val reason = when (error.primaryError) {
                 SslError.SSL_UNTRUSTED -> R.string.error_cert_untrusted

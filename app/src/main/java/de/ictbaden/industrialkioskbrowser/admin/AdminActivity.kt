@@ -59,7 +59,9 @@ import de.ictbaden.industrialkioskbrowser.ui.AppLanguage
 import de.ictbaden.industrialkioskbrowser.ui.Brand
 import de.ictbaden.industrialkioskbrowser.ui.Dialogs
 import de.ictbaden.industrialkioskbrowser.ui.value
+import de.ictbaden.industrialkioskbrowser.web.CustomTrust
 import de.ictbaden.industrialkioskbrowser.web.ErrorCodes
+import java.text.DateFormat
 
 /** Admin screen (behind the admin password): profiles, design, import/export, security. */
 class AdminActivity : AppCompatActivity() {
@@ -92,6 +94,10 @@ class AdminActivity : AppCompatActivity() {
 
     private val pickLogo = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::importLogo)
+    }
+
+    private val pickCertificate = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let(::importCertificate)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,6 +207,11 @@ class AdminActivity : AppCompatActivity() {
                 switchRow(R.drawable.ic_shield, getString(R.string.kiosk_mode), getString(R.string.kiosk_mode_summary), config.global.hideExit) { checked ->
                     store.update { it.copy(global = it.global.copy(hideExit = checked)) }
                 },
+                row(
+                    R.drawable.ic_lock,
+                    getString(R.string.trusted_certificates),
+                    resources.getQuantityString(R.plurals.trusted_certificates_count, config.global.trustedCertificates.size, config.global.trustedCertificates.size),
+                ) { showTrustedCertificates() },
             ),
         )
 
@@ -222,7 +233,7 @@ class AdminActivity : AppCompatActivity() {
                 row(R.drawable.ic_info, getString(R.string.about_licence), getString(R.string.about_licence_summary)) {
                     showText(getString(R.string.about_licence), "LICENSE")
                 },
-                row(R.drawable.ic_info, getString(R.string.about_third_party), "AndroidX, Material Components, Kotlin, zxing-cpp, QR Code generator") {
+                row(R.drawable.ic_info, getString(R.string.about_third_party), "AndroidX, Material Components, Kotlin, zxing-cpp, QR Code generator, Google ML Kit") {
                     showText(getString(R.string.about_third_party), "THIRD-PARTY-NOTICES.txt")
                 },
                 row(R.drawable.ic_globe, getString(R.string.about_source), SOURCE) { openLink(SOURCE) },
@@ -501,6 +512,68 @@ class AdminActivity : AppCompatActivity() {
             .show()
     }
 
+    /** List of `global.trustedCertificates`: tap an entry to remove it, or import a certificate file. */
+    private fun showTrustedCertificates() {
+        val entries = store.config.global.trustedCertificates
+        val labels = entries.map(::certificateLabel).toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setIcon(Dialogs.icon(this, R.drawable.ic_lock))
+            .setTitle(R.string.trusted_certificates)
+            .apply {
+                if (labels.isEmpty()) setMessage(R.string.trusted_certificates_empty) else setItems(labels) { _, which -> confirmRemoveCertificate(which) }
+            }
+            .setPositiveButton(R.string.trusted_certificates_import) { _, _ ->
+                pickCertificate.launch(arrayOf("application/x-x509-ca-cert", "application/x-pem-file", "application/pkix-cert", "application/octet-stream", "text/plain"))
+            }
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
+    }
+
+    private fun certificateLabel(entry: String): String {
+        val trimmed = entry.trim()
+        if (trimmed.startsWith(CustomTrust.PIN_PREFIX, ignoreCase = true)) {
+            return getString(R.string.trusted_certificate_pin, trimmed.substring(CustomTrust.PIN_PREFIX.length).take(16) + "…")
+        }
+        if (trimmed.startsWith(AppConfig.RES_PREFIX)) return trimmed
+        val cert = runCatching { CustomTrust.parseCertificates(trimmed.toByteArray()).first() }.getOrNull() ?: return "?"
+        val name = cert.subjectX500Principal.name.split(',').firstOrNull { it.trim().startsWith("CN=") }?.substringAfter("CN=") ?: cert.subjectX500Principal.name
+        return getString(R.string.trusted_certificate_ca, name, DateFormat.getDateInstance().format(cert.notAfter))
+    }
+
+    private fun confirmRemoveCertificate(index: Int) {
+        val entry = store.config.global.trustedCertificates.getOrNull(index) ?: return
+        MaterialAlertDialogBuilder(this)
+            .setIcon(Dialogs.icon(this, R.drawable.ic_delete))
+            .setTitle(R.string.trusted_certificate_remove)
+            .setMessage(certificateLabel(entry))
+            .setPositiveButton(R.string.trusted_certificate_remove) { _, _ ->
+                store.update { it.copy(global = it.global.copy(trustedCertificates = it.global.trustedCertificates - entry)) }
+                render()
+            }
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
+    }
+
+    /** A PEM or DER file; every certificate in it is stored as PEM in the configuration. */
+    private fun importCertificate(uri: Uri) {
+        val certificates = runCatching {
+            val bytes = contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+            require(bytes.size <= MAX_CERTIFICATE_BYTES)
+            CustomTrust.parseCertificates(bytes)
+        }.getOrNull()
+        if (certificates.isNullOrEmpty()) {
+            toast(withCode(getString(R.string.trusted_certificate_invalid), ErrorCodes.CERTIFICATE_IMPORT))
+            return
+        }
+        val pems = certificates.map(CustomTrust::toPem)
+        store.update { config ->
+            val known = config.global.trustedCertificates
+            config.copy(global = config.global.copy(trustedCertificates = known + pems.filter { it !in known }))
+        }
+        toast(resources.getQuantityString(R.plurals.trusted_certificates_imported, pems.size, pems.size))
+        render()
+    }
+
     private fun importLogo(uri: Uri) {
         val bytes = runCatching { contentResolver.openInputStream(uri)!!.use { it.readBytes() } }.getOrNull()
         if (bytes == null || bytes.size > MAX_LOGO_BYTES || BitmapFactory.decodeByteArray(bytes, 0, bytes.size) == null) {
@@ -726,6 +799,7 @@ class AdminActivity : AppCompatActivity() {
         private const val PRIVACY = "https://ict-baden.de/datenschutz/industrial-kiosk-browser/"
         private const val SUBTITLE_TAG = SettingsUi.SUBTITLE_TAG
         private const val MAX_LOGO_BYTES = 1024 * 1024
+        private const val MAX_CERTIFICATE_BYTES = 256 * 1024
         private val PALETTE = listOf(
             "#0D47A1", "#1565C0", "#00838F", "#00796B", "#2E7D32", "#558B2F",
             "#F57C00", "#E64A19", "#C62828", "#AD1457", "#6A1B9A", "#37474F",

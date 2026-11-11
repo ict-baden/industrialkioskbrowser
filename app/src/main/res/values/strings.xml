@@ -356,4 +356,19 @@
     <string name="nfc_ndef_record">NDEF records</string>
     <string name="ndef_first">First record</string>
     <string name="ndef_all">All records, one per line</string>
+    <string name="trusted_certificates">Trusted certificates</string>
+    <string name="trusted_certificates_empty">No own certificates. Company CAs installed by the MDM are trusted anyway.</string>
+    <string name="trusted_certificates_import">Import certificate</string>
+    <string name="trusted_certificate_pin">Server certificate SHA-256 %1$s</string>
+    <string name="trusted_certificate_ca">CA %1$s · valid until %2$s</string>
+    <string name="trusted_certificate_remove">Remove certificate</string>
+    <string name="trusted_certificate_invalid">The file is not a certificate (PEM or DER).</string>
+    <plurals name="trusted_certificates_count">
+        <item quantity="one">%d certificate</item>
+        <item quantity="other">%d certificates</item>
+    </plurals>
+    <plurals name="trusted_certificates_imported">
+        <item quantity="one">%d certificate imported</item>
+        <item quantity="other">%d certificates imported</item>
+    </plurals>
 </resources>

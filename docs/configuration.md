@@ -77,6 +77,35 @@ passwords that are not set keep their current value.
 | `branding.subtitle` | Subtitle (default: device manufacturer and model) |
 | `branding.color` | Brand color `#RRGGBB` for the start screen, toolbars and error pages |
 | `branding.logo` | Logo as a resource, e.g. `res:logo.png` (PNG/JPEG/WebP) |
+| `trustedCertificates` | Own certificates trusted in addition to the Android certificate store, see [Own CA certificates](#own-ca-certificates). Also in the app under **Settings → Security → Trusted certificates** (import a `.crt`/`.pem` file). |
+
+### Own CA certificates
+
+The browser trusts the Android system CAs and the CAs in the user certificate store – that is where an
+EMM installs a company CA, and that remains the preferred way. Where this is not possible (no EMM;
+Android 11 and later no longer let apps or users install a CA easily), put the certificates into
+`global.trustedCertificates`. Each entry is one of:
+
+- PEM text of a CA certificate (`-----BEGIN CERTIFICATE-----…`, `\n` for line breaks in JSON),
+- `res:<name>` – a [resource](#resources) with a PEM or DER certificate,
+- `sha256:<fingerprint>` – the SHA-256 fingerprint of one server certificate (64 hex digits, colons
+  allowed), for a self-signed device such as a printer or PLC web page.
+
+A page is shown despite an unknown CA only when that is the **only** problem with its certificate and
+the server certificate is signed directly by one of the listed CAs or is pinned. Expired or not yet
+valid certificates and certificates for another host name are always refused (`IKB-0007`). The
+WebView reports only the server certificate, not the chain: list the CA that issued it – the
+intermediate CA when there is one, not only the root.
+
+```json
+"global": {
+  "trustedCertificates": [
+    "res:company-issuing-ca.pem",
+    "sha256:d1:56:ea:65:66:00:cb:11:f0:f3:36:3b:ad:9f:03:2e:80:19:74:12:91:c4:2a:b0:65:2a:5d:01:ae:56:e6:88"
+  ]
+},
+"resources": { "company-issuing-ca.pem": { "text": "-----BEGIN CERTIFICATE-----\nMIID…\n-----END CERTIFICATE-----\n" } }
+```
 
 ## Profiles
 

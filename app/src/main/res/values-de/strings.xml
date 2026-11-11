@@ -339,4 +339,19 @@
     <string name="nfc_ndef_record">NDEF-Einträge</string>
     <string name="ndef_first">Erster Eintrag</string>
     <string name="ndef_all">Alle Einträge, je eine Zeile</string>
+    <string name="trusted_certificates">Vertrauenswürdige Zertifikate</string>
+    <string name="trusted_certificates_empty">Keine eigenen Zertifikate. Vom MDM installierte Firmen-CAs gelten trotzdem.</string>
+    <string name="trusted_certificates_import">Zertifikat importieren</string>
+    <string name="trusted_certificate_pin">Server-Zertifikat SHA-256 %1$s</string>
+    <string name="trusted_certificate_ca">CA %1$s · gültig bis %2$s</string>
+    <string name="trusted_certificate_remove">Zertifikat entfernen</string>
+    <string name="trusted_certificate_invalid">Die Datei ist kein Zertifikat (PEM oder DER).</string>
+    <plurals name="trusted_certificates_count">
+        <item quantity="one">%d Zertifikat</item>
+        <item quantity="other">%d Zertifikate</item>
+    </plurals>
+    <plurals name="trusted_certificates_imported">
+        <item quantity="one">%d Zertifikat importiert</item>
+        <item quantity="other">%d Zertifikate importiert</item>
+    </plurals>
 </resources>

@@ -1,6 +1,7 @@
 package de.ictbaden.industrialkioskbrowser.config
 
 import de.ictbaden.industrialkioskbrowser.scanner.Symbologies
+import de.ictbaden.industrialkioskbrowser.web.CustomTrust
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -90,6 +91,7 @@ object ConfigJson {
             putOpt("exitPasswordHash", config.global.exitPasswordHash)
             put("hideExit", config.global.hideExit)
             put("language", config.global.language)
+            put("trustedCertificates", JSONArray(config.global.trustedCertificates))
             val branding = config.global.branding
             put("branding", JSONObject().apply {
                 putOpt("title", branding.title)
@@ -121,7 +123,15 @@ object ConfigJson {
         if (logo != null && (!logo.startsWith(AppConfig.RES_PREFIX) || logo.removePrefix(AppConfig.RES_PREFIX) !in resources)) {
             throw ConfigException("global.branding.logo must reference a resource (res:<name>)")
         }
+        val trusted = json.optJSONArray("trustedCertificates")?.let { array ->
+            (0 until array.length()).map { i ->
+                array.opt(i) as? String ?: throw ConfigException("global.trustedCertificates[$i] must be a string")
+            }
+        }.orEmpty()
+        // Fails with the index of the broken entry.
+        CustomTrust.from(trusted, resources)
         return GlobalSettings(
+            trustedCertificates = trusted,
             adminPasswordHash = passwordHash(json, "adminPassword"),
             exitPasswordHash = passwordHash(json, "exitPassword"),
             hideExit = json.optBoolean("hideExit", false),

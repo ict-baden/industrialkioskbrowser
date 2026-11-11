@@ -26,7 +26,8 @@ examples, URL policy, scan delivery, provisioning rules, back navigation, store 
 These are deliberate, because many warehouse and production web apps run in an intranet:
 
 - **Plain HTTP is allowed** and **user-installed CA certificates are trusted** (the EMM installs
-  company CAs into the user store). On an untrusted network an attacker could change HTTP pages.
+  company CAs into the user store), as are the CAs and pinned certificates in
+  `global.trustedCertificates`. On an untrusted network an attacker could change HTTP pages.
   Use HTTPS wherever possible.
 - **The JavaScript API (`window.IndustrialKioskBrowser`) is also offered to `http://` pages** of the allowed hosts.
   It can only beep, vibrate, show a toast, report device and scanner information and switch the
