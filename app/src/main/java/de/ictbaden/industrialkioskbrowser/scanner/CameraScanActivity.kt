@@ -474,7 +474,7 @@ class CameraScanActivity : AppCompatActivity() {
         listOf(barcodeTab to !textMode, textTab to textMode).forEach { (tab, selected) ->
             tab.isSelected = selected
             tab.setTextColor(if (selected) Color.BLACK else Color.WHITE)
-            tab.background.mutate().setTint(if (selected) Color.WHITE else Color.argb(110, 0, 0, 0))
+            (tab.background as? android.graphics.drawable.GradientDrawable)?.setColor(if (selected) Color.WHITE else Color.argb(140, 0, 0, 0))
         }
         // In text mode the frame always counts; the crosshair of `center` is for barcodes.
         viewfinder.textMode = textMode
@@ -484,7 +484,11 @@ class CameraScanActivity : AppCompatActivity() {
         text = getString(label)
         gravity = Gravity.CENTER
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-        setBackgroundResource(R.drawable.bg_camera_button)
+        // A pill per tab: white when selected, dark and see-through otherwise.
+        background = android.graphics.drawable.GradientDrawable().apply {
+            cornerRadius = dp(20).toFloat()
+            setStroke(dp(1), Color.WHITE)
+        }
         setOnClickListener { onClick() }
     }
 
