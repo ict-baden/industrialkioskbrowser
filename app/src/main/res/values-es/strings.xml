@@ -341,4 +341,19 @@
     <string name="nfc_ndef_record">Registros NDEF</string>
     <string name="ndef_first">Primer registro</string>
     <string name="ndef_all">Todos los registros, uno por línea</string>
+    <string name="trusted_certificates">Certificados de confianza</string>
+    <string name="trusted_certificates_empty">Sin certificados propios. Las CA de empresa instaladas por el MDM se aceptan igualmente.</string>
+    <string name="trusted_certificates_import">Importar certificado</string>
+    <string name="trusted_certificate_pin">Certificado del servidor SHA-256 %1$s</string>
+    <string name="trusted_certificate_ca">CA %1$s · válido hasta %2$s</string>
+    <string name="trusted_certificate_remove">Quitar certificado</string>
+    <string name="trusted_certificate_invalid">El archivo no es un certificado (PEM o DER).</string>
+    <plurals name="trusted_certificates_count">
+        <item quantity="one">%d certificado</item>
+        <item quantity="other">%d certificados</item>
+    </plurals>
+    <plurals name="trusted_certificates_imported">
+        <item quantity="one">%d certificado importado</item>
+        <item quantity="other">%d certificados importados</item>
+    </plurals>
 </resources>

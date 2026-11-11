@@ -398,6 +398,11 @@ data class GlobalSettings(
     val branding: Branding = Branding(),
     /** `auto` (follow the device) or one of [Languages.SUPPORTED]. */
     val language: String = Languages.AUTO,
+    /**
+     * Company CAs (PEM or `res:<name>`) and pinned server certificates (`sha256:<hex>`) trusted in
+     * addition to the Android certificate store, see [de.ictbaden.industrialkioskbrowser.web.CustomTrust].
+     */
+    val trustedCertificates: List<String> = emptyList(),
 )
 
 /** User interface languages (richtlinien/13-sprachen.md); tags as in `global.language`. */

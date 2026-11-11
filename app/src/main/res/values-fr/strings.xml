@@ -341,4 +341,19 @@
     <string name="nfc_ndef_record">Enregistrements NDEF</string>
     <string name="ndef_first">Premier enregistrement</string>
     <string name="ndef_all">Tous les enregistrements, un par ligne</string>
+    <string name="trusted_certificates">Certificats de confiance</string>
+    <string name="trusted_certificates_empty">Aucun certificat propre. Les AC d’entreprise installées par le MDM restent acceptées.</string>
+    <string name="trusted_certificates_import">Importer un certificat</string>
+    <string name="trusted_certificate_pin">Certificat du serveur SHA-256 %1$s</string>
+    <string name="trusted_certificate_ca">AC %1$s · valable jusqu’au %2$s</string>
+    <string name="trusted_certificate_remove">Retirer le certificat</string>
+    <string name="trusted_certificate_invalid">Le fichier n’est pas un certificat (PEM ou DER).</string>
+    <plurals name="trusted_certificates_count">
+        <item quantity="one">%d certificat</item>
+        <item quantity="other">%d certificats</item>
+    </plurals>
+    <plurals name="trusted_certificates_imported">
+        <item quantity="one">%d certificat importé</item>
+        <item quantity="other">%d certificats importés</item>
+    </plurals>
 </resources>
