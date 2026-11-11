@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- The release APK contains only ARM code (`arm64-v8a`, `armeabi-v7a`); rugged Android devices are ARM only. With ML Kit for OCR the APK would otherwise be 57 MB instead of 30 MB. Debug builds keep x86 for the emulator.
+
 ### Added
 
 - **Text recognition (OCR)** with the camera ([#49](https://github.com/ict-baden/industrialkioskbrowser/issues/49)):

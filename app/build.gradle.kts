@@ -6,6 +6,11 @@ plugins {
 }
 
 android {
+    lint {
+        // Release is ARM only on purpose (see buildTypes.release.ndk): no rugged ChromeOS devices.
+        disable += "ChromeOsAbiSupport"
+    }
+
     namespace = "de.ictbaden.industrialkioskbrowser"
     compileSdk = 37
 
@@ -39,6 +44,12 @@ android {
         release {
             isMinifyEnabled = false
             if (keystore != null) signingConfig = signingConfigs.getByName("release")
+            // Rugged Android devices are ARM only. Without x86 the OCR library of ML Kit (about 11 MB
+            // per ABI) and zxing-cpp are in the APK twice instead of four times – same as Industrial
+            // Keyboard. Debug builds keep x86/x86_64 for the emulator.
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
         }
     }
 
