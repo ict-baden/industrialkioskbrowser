@@ -31,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       signed: ${{ env.SIGN }}
+      version: ${{ steps.version.outputs.version }}
+      code: ${{ steps.version.outputs.code }}
+      track: ${{ steps.version.outputs.track }}
     steps:
       - uses: actions/checkout@v7
 
@@ -56,7 +59,15 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
           echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
-          echo "Version: $v (Code $GITHUB_RUN_NUMBER), Signieren: $SIGN"
+          # Google-Play-Track (Job „play“): main -> interner Test, Tag vX.Y.Z-… -> geschlossener Test, Tag vX.Y.Z -> Produktion
+          track=""
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            case "$GITHUB_REF_NAME" in *-*) track=alpha;; *) track=production;; esac
+          elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/main ]; then
+            track=internal
+          fi
+          echo "track=$track" >> "$GITHUB_OUTPUT"
+          echo "Version: $v (Code $GITHUB_RUN_NUMBER), Signieren: $SIGN, Play-Track: ${track:-keiner}"
 
       - name: Release-Text aus dem CHANGELOG (nur bei Tag v*)
         if: github.ref_type == 'tag'
@@ -118,6 +129,29 @@ jobs:
           jarsigner -verify "dist/$APP${{ steps.version.outputs.suffix }}.aab" | grep -q "jar verified" || { echo "::error::App Bundle ist nicht signiert"; exit 1; }
           rm "$RUNNER_TEMP/release.jks"
 
+      - name: Release-Notes für Google Play (höchstens 500 Zeichen)
+        if: env.SIGN == 'true' && steps.version.outputs.track != ''
+        shell: bash
+        run: |
+          # Tag: der Abschnitt aus dem CHANGELOG als Klartext; main: Commit und Betreff für die internen Tester
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            python3 .github/scripts/play-notes.py "$RUNNER_TEMP/changes.md" > dist/play-notes.txt
+          else
+            git log -1 --format="Build from main (%h): %s" | python3 .github/scripts/play-notes.py - > dist/play-notes.txt
+          fi
+          cat dist/play-notes.txt
+
+      - name: App Bundle für Google Play bereitstellen
+        if: env.SIGN == 'true' && steps.version.outputs.track != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: play-bundle
+          retention-days: 1
+          path: |
+            dist/*.aab
+            dist/play-notes.txt
+          if-no-files-found: error
+
       - name: Ohne Schlüssel keine APK
         if: env.SIGN != 'true' && github.event_name != 'pull_request'
         run: echo "::notice::Kein Keystore in den Secrets (ANDROID_KEYSTORE …) – gebaut und getestet, aber keine APK veröffentlicht."
@@ -131,7 +165,9 @@ jobs:
       - name: Prüfsummen
         if: github.event_name != 'pull_request'
         working-directory: dist
-        run: sha256sum $(ls | grep -v '^SHA256SUMS.txt$') | tee SHA256SUMS.txt
+        run: |
+          rm -f play-notes.txt
+          sha256sum $(ls | grep -v '^SHA256SUMS.txt$') | tee SHA256SUMS.txt
 
       - name: Herkunftsnachweis (nur bei öffentlichem Repo)
         # GitHub-Attestierungen gibt es für private Repos nur mit Enterprise; ab dem Umschalten auf öffentlich läuft der Schritt
@@ -221,3 +257,70 @@ jobs:
             gh workflow run build.yml -R "$GITHUB_REPOSITORY" --ref main
             echo "::notice::Build von main angestoßen, er legt das Release 'latest' an."
           fi
+
+  # Google Play (docs/play-store.md, „Publishing a version“). Läuft nur mit signiertem App Bundle und mit dem Secret
+  # PLAY_SERVICE_ACCOUNT_JSON; ohne Secret nur ein Hinweis. Produktion nur, wenn ein Release-Verantwortlicher den Tag
+  # gesetzt hat (Repo-Variable PLAY_RELEASERS, GitHub-Logins durch Leerzeichen getrennt) – der kostenlose GitHub-Plan
+  # kennt für private Repos keine Tag-Regeln.
+  play:
+    needs: build
+    if: needs.build.outputs.signed == 'true' && needs.build.outputs.track != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: google-play
+      cancel-in-progress: false
+    env:
+      PACKAGE: de.ictbaden.industrialkioskbrowser
+      TRACK: ${{ needs.build.outputs.track }}
+      CODE: ${{ needs.build.outputs.code }}
+      HAS_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      RELEASERS: ${{ vars.PLAY_RELEASERS || 'pieewiee gear1900' }}
+      ROLLOUT: ${{ vars.PLAY_ROLLOUT || '0.2' }}
+    steps:
+      - name: Ohne Play-Zugang nur ein Hinweis
+        if: env.HAS_KEY != 'true'
+        run: echo "::notice::Kein Secret PLAY_SERVICE_ACCOUNT_JSON – App Bundle gebaut, aber nicht zu Google Play hochgeladen (Track $TRACK)."
+
+      - name: Wer veröffentlicht?
+        if: env.HAS_KEY == 'true' && env.TRACK == 'production'
+        run: |
+          case " $RELEASERS " in *" $GITHUB_ACTOR "*) echo "Produktion freigegeben durch $GITHUB_ACTOR." ;;
+            *) echo "::error::$GITHUB_ACTOR darf nicht in Produktion veröffentlichen (PLAY_RELEASERS: $RELEASERS)"; exit 1 ;; esac
+
+      - uses: actions/checkout@v7
+        if: env.HAS_KEY == 'true'
+
+      - uses: actions/download-artifact@v7
+        if: env.HAS_KEY == 'true'
+        with:
+          name: play-bundle
+          path: play
+
+      - name: fastlane installieren
+        if: env.HAS_KEY == 'true'
+        run: sudo gem install fastlane --no-document --quiet && fastlane --version | tail -1
+
+      - name: Zu Google Play hochladen
+        if: env.HAS_KEY == 'true'
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          FASTLANE_HIDE_CHANGELOG: '1'
+        shell: bash
+        run: |
+          aab=$(ls play/*.aab)
+          # Release-Notes: englisch für alle Sprachen (Play zeigt die Standardsprache, wo keine Übersetzung da ist)
+          for l in en-US de-DE; do mkdir -p "fastlane/metadata/android/$l/changelogs"; cp play/play-notes.txt "fastlane/metadata/android/$l/changelogs/$CODE.txt"; done
+          args=(--package_name "$PACKAGE" --json_key_data "$PLAY_JSON" --aab "$aab" --track "$TRACK"
+                --metadata_path fastlane/metadata/android --skip_upload_apk true)
+          if [ "$TRACK" = production ]; then
+            # Gestaffelt: erst ROLLOUT (Standard 20 %), dann per Workflow „Google Play Rollout“ weiter; Store-Texte und Bilder mit
+            args+=(--release_status inProgress --rollout "$ROLLOUT")
+          else
+            # Test-Tracks: sofort für alle Tester; Store-Texte bleiben unverändert (sie gelten sonst sofort öffentlich)
+            args+=(--release_status completed --skip_upload_metadata true --skip_upload_images true --skip_upload_screenshots true)
+          fi
+          fastlane supply "${args[@]}"
+          echo "::notice::Version-Code $CODE ist im Track $TRACK."
