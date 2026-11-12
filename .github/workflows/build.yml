@@ -1,11 +1,19 @@
 # Nach der Vorlage aus ict-baden/richtlinien, für eine Android-App (Gradle statt .NET, APK statt MSI).
 name: Build
 
+# Wann wie viel gebaut wird, steht in Richtlinie 04 („Wann die CI baut“). Kurz: Pushs und PRs bauen, testen und prüfen
+# nur (Debug-APK, Unit-Tests, Lint). Signiert und veröffentlicht wird nur im vollen Build: nachts (nur wenn main neu ist),
+# bei Tags, von Hand und mit [voll] in der Commit-Nachricht. Reine Doku startet nichts.
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ['v*'] # Pfadfilter gelten für Tags nicht, ein Tag baut immer
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE', '.github/ISSUE_TEMPLATE/**']
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE', '.github/ISSUE_TEMPLATE/**']
+  schedule:
+    - cron: '7 3 * * *' # Minute je Repo anders, damit nicht alle gleichzeitig starten
   workflow_dispatch:
 
 permissions:
@@ -13,21 +21,78 @@ permissions:
   id-token: write # Herkunftsnachweis (attest-build-provenance), nur bei öffentlichem Repo genutzt
   attestations: write
 
-# Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen
+# Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen.
+# In PRs bricht ein neuer Push den alten Lauf ab.
 concurrency:
   group: build-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   APP: IndustrialKioskBrowser
-  # Signieren nur mit dem Keystore aus den Secrets (siehe richtlinien/05-signieren.md) und nicht bei Pull Requests.
-  # Ohne Schlüssel wird gebaut und getestet, aber keine APK veröffentlicht: Eine unsignierte APK lässt sich nicht installieren,
-  # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren. Auch keine Debug-APK: Sie ist
-  # ein anderes Paket (….debug) mit WebView-Debugging, und Richtlinie 05 sieht für Android nur den Release-Schlüssel vor.
-  SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
 
 jobs:
+  # Entscheidet, wie viel dieser Lauf baut. run=false: nichts zu tun (Nachtlauf ohne neue Commits).
+  # full=true: signierter Release-Build, SBOM, Releases (bei Android das Einzige, was der volle Build zusätzlich macht).
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      full: ${{ steps.gate.outputs.full }}
+    steps:
+      - name: Umfang bestimmen
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          MSG: ${{ github.event.head_commit.message }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          PR: ${{ github.event.pull_request.number }}
+          # Geänderte Dateien, bei denen ein PR voll bauen soll. Android baut nur unter Linux, und Signieren und Releases
+          # laufen in PRs ohnehin nie: voll heißt im PR dasselbe wie sonst. Bleibt für Workflow-Änderungen (Richtlinie 04).
+          FULL_PATHS: '^\.github/'
+          # Reine Doku, wie paths-ignore oben
+          DOC_PATHS: '(\.md$|^docs/|^LICENSE$|^\.github/ISSUE_TEMPLATE/)'
+        run: |
+          set -euo pipefail
+          run=true; full=false
+          case "$EVENT" in
+            workflow_dispatch) full=true ;;
+            push)
+              # Bei mehreren Commits in einem Push zählt die Nachricht des letzten
+              if [ "$GITHUB_REF_TYPE" = tag ] || [[ "$MSG" == *"[voll]"* ]]; then full=true; fi ;;
+            pull_request)
+              files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename')
+              if [[ ",$LABELS," == *",voll-bauen,"* ]] || grep -qE "$FULL_PATHS" <<< "$files"; then full=true; fi ;;
+            schedule)
+              # Der Tag 'latest' steht auf dem Commit des letzten vollen Builds von main
+              built=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq .object.sha 2>/dev/null || true)
+              if [ "$built" = "$GITHUB_SHA" ]; then
+                run=false
+              else
+                # Scheitert der Vergleich (kein 'latest', Verlauf umgeschrieben), wird voll gebaut
+                changed=$(gh api "repos/$GITHUB_REPOSITORY/compare/$built...$GITHUB_SHA" --jq '.files[].filename' 2>/dev/null || echo '?')
+                if [ -n "$built" ] && ! grep -qvE "$DOC_PATHS" <<< "$changed"; then run=false; else full=true; fi # sonst nur Doku
+              fi ;;
+          esac
+          echo "Ereignis: $EVENT  run=$run  full=$full"
+          { echo "run=$run"; echo "full=$full"; } >> "$GITHUB_OUTPUT"
+
+  # Läuft bei jedem Push und PR. Signieren, SBOM und Releases nur im vollen Build (FULL, SIGN).
   build:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    env:
+      FULL: ${{ needs.gate.outputs.full }}
+      # Signieren nur im vollen Build, mit dem Keystore aus den Secrets (siehe richtlinien/05-signieren.md) und nicht bei
+      # Pull Requests. Ohne Schlüssel wird gebaut und getestet, aber keine APK veröffentlicht: Eine unsignierte APK lässt sich
+      # nicht installieren, und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren. Auch
+      # keine Debug-APK: Sie ist ein anderes Paket (….debug) mit WebView-Debugging, und Richtlinie 05 sieht für Android nur
+      # den Release-Schlüssel vor.
+      SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' && needs.gate.outputs.full == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       signed: ${{ env.SIGN }}
@@ -74,8 +139,9 @@ jobs:
           fi
           grep -q '[^[:space:]]' "$RUNNER_TEMP/changes.md" || { echo "::error::CHANGELOG.md hat keinen Abschnitt [$version]"; exit 1; }
 
-      - name: Tests und Lint
-        run: ./gradlew testDebugUnitTest lintDebug --console=plain
+      - name: Tests, Lint und Debug-Build
+        # Debug-APK nur als Probe, dass sich die App bauen lässt (wird nicht veröffentlicht, Release-Build nur im vollen Build)
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --console=plain
 
       - name: Drittanbieter-Lizenzen prüfen (THIRD-PARTY-NOTICES.txt gegen die Bibliotheken der APK)
         run: ./.github/scripts/check-notices.sh
@@ -119,17 +185,17 @@ jobs:
           rm "$RUNNER_TEMP/release.jks"
 
       - name: Ohne Schlüssel keine APK
-        if: env.SIGN != 'true' && github.event_name != 'pull_request'
+        if: env.SIGN != 'true' && env.FULL == 'true' && github.event_name != 'pull_request'
         run: echo "::notice::Kein Keystore in den Secrets (ANDROID_KEYSTORE …) – gebaut und getestet, aber keine APK veröffentlicht."
 
       - name: SBOM (CycloneDX)
-        if: github.event_name != 'pull_request'
+        if: env.FULL == 'true' && github.event_name != 'pull_request'
         run: |
           mkdir -p dist
           python3 .github/scripts/sbom.py "${{ steps.version.outputs.version }}" build/release-dependencies.txt "dist/$APP${{ steps.version.outputs.suffix }}.cdx.json"
 
       - name: Prüfsummen
-        if: github.event_name != 'pull_request'
+        if: env.FULL == 'true' && github.event_name != 'pull_request'
         working-directory: dist
         run: sha256sum $(ls | grep -v '^SHA256SUMS.txt$') | tee SHA256SUMS.txt
 
@@ -186,7 +252,8 @@ jobs:
           esac
 
       - name: "Release 'latest' aktualisieren (main)"
-        if: env.SIGN == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        # Auch nachts und bei [voll]-Pushs (Richtlinie 04); SIGN gibt es nur im vollen Build
+        if: env.SIGN == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
