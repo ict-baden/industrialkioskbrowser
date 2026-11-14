@@ -70,4 +70,24 @@ class UrlPolicyTest {
             UrlPolicy.bridgeOriginRules(profile),
         )
     }
+
+    @Test
+    fun `user info before the host cannot spoof an allowed host`() {
+        val restricted = open.copy(allowList = listOf("erlaubt.de"))
+        // Chromium keeps | ^ { } unescaped; java.net.URI rejects them and the fallback must still see the real host.
+        for (url in listOf(
+            "https://erlaubt.de:443@boese.de/?q=a|b",
+            "https://erlaubt.de:443@boese.de/path^x",
+            "https://erlaubt.de:443@boese.de/{x}",
+            "https://erlaubt.de@boese.de/",
+            "https://erlaubt.de@bo_se.de/",
+            "http://erlaubt.de:80@[fd00::1]/?a|b",
+        )) {
+            assertFalse(url, UrlPolicy.isAllowed(url, restricted))
+        }
+        assertEquals("boese.de", UrlPolicy.hostOf("https://erlaubt.de:443@boese.de/?q=a|b"))
+        assertEquals("fd00::1", UrlPolicy.hostOf("http://erlaubt.de:80@[fd00::1]/?a|b"))
+        assertTrue(UrlPolicy.isAllowed("https://erlaubt.de/?a|b", restricted))
+        assertTrue(UrlPolicy.isAllowed("https://user:pw@erlaubt.de/", restricted))
+    }
 }
