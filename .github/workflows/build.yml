@@ -25,6 +25,9 @@ env:
   # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren. Auch keine Debug-APK: Sie ist
   # ein anderes Paket (….debug) mit WebView-Debugging, und Richtlinie 05 sieht für Android nur den Release-Schlüssel vor.
   SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
+  # Google Play nur mit dem JSON-Schlüssel eines Service-Kontos (Secret PLAY_SERVICE_ACCOUNT_JSON, docs/play-store.md):
+  # main -> interner Test, Tag v1.2.3 -> Produktion (Google prüft vorher), Tag mit Bindestrich (v1.2.3-rc1) -> interner Test.
+  PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
 
 jobs:
   build:
@@ -151,6 +154,31 @@ jobs:
           retention-days: 7
           path: dist/*
           if-no-files-found: error
+
+      - name: Play-Versionshinweise prüfen
+        if: env.PLAY == 'true' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
+        run: |
+          # Kurztexte für Play in play/whatsnew/whatsnew-<Sprache>, höchstens 500 Zeichen; vor jedem Release pflegen
+          for f in play/whatsnew/whatsnew-*; do
+            n=$(wc -m < "$f"); [ "$n" -le 500 ] || { echo "::error::$f hat $n Zeichen, Play erlaubt 500"; exit 1; }
+          done
+
+      - name: Google Play (main → interner Test, Tag → Produktion)
+        if: env.PLAY == 'true' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
+        # Fester Commit statt Tag: die Action bekommt den Play-Schlüssel
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: de.ictbaden.industrialkioskbrowser
+          releaseFiles: dist/*.aab
+          releaseName: ${{ steps.version.outputs.version }}
+          track: ${{ (github.ref_type == 'tag' && !contains(github.ref_name, '-')) && 'production' || 'internal' }}
+          status: completed
+          whatsNewDirectory: play/whatsnew
+
+      - name: Ohne Play-Schlüssel nichts zu Google Play
+        if: env.SIGN == 'true' && env.PLAY != 'true' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
+        run: echo "::notice::Kein PLAY_SERVICE_ACCOUNT_JSON in den Secrets – nichts zu Google Play hochgeladen."
 
       - name: Release erstellen oder ergänzen (nur bei Tag v*)
         if: github.ref_type == 'tag'

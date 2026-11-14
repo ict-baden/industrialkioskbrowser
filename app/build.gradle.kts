@@ -7,7 +7,7 @@ plugins {
 
 android {
     lint {
-        // Release is ARM only on purpose (see buildTypes.release.ndk): no rugged ChromeOS devices.
+        // Release has no 32-bit x86 on purpose (see buildTypes.release.ndk).
         disable += "ChromeOsAbiSupport"
     }
 
@@ -44,11 +44,12 @@ android {
         release {
             isMinifyEnabled = false
             if (keystore != null) signingConfig = signingConfigs.getByName("release")
-            // Rugged Android devices are ARM only. Without x86 the OCR library of ML Kit (about 11 MB
-            // per ABI) and zxing-cpp are in the APK twice instead of four times – same as Industrial
-            // Keyboard. Debug builds keep x86/x86_64 for the emulator.
+            // Rugged Android devices are ARM; x86_64 is for Chromebooks (without it Play drops nearly
+            // all of them). 32-bit x86 is left out: the OCR library of ML Kit is about 11 MB per ABI in
+            // the universal APK, Play delivers only the device's ABI from the bundle. Same as Industrial
+            // Keyboard. Debug builds keep all four for the emulator.
             ndk {
-                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
             }
         }
     }

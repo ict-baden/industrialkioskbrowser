@@ -9,6 +9,7 @@ How Industrial Kiosk Browser gets into Google Play, and what to answer in the Pl
 - [App signing](#app-signing)
 - [Play Console answers](#play-console-answers)
 - [Publishing a version](#publishing-a-version)
+  - [Automatic upload](#automatic-upload)
 
 ## What is in the repo
 
@@ -109,11 +110,48 @@ accessibility, all-files access, package queries beyond the two scanner services
 
 ## Publishing a version
 
-1. Update `CHANGELOG.md`, push the tag `vX.Y.Z`.
-2. The CI builds and signs APK and App Bundle and attaches both to the GitHub release.
-3. Play Console → *Testing → Internal testing* → create a release → upload the `.aab`
-   → release notes from the changelog → roll out to the internal testers.
-4. Check the pre-launch report, then promote the release to *Production*.
+The CI uploads to Google Play by itself once the secret `PLAY_SERVICE_ACCOUNT_JSON` exists
+(see [Automatic upload](#automatic-upload)):
+
+| Push | Google Play |
+|---|---|
+| to `main` | *Internal testing*, rolled out to the internal testers at once |
+| tag `vX.Y.Z` | *Production*, full rollout once Google has reviewed it (usually within days) |
+| tag with a hyphen (`vX.Y.Z-rc1`) | *Internal testing* |
+
+Every push to `main` therefore reaches the internal testers; the production devices only get a tagged version.
+
+1. Update `CHANGELOG.md` and the short Play release notes in `play/whatsnew/whatsnew-de-DE` and
+   `whatsnew-en-US` (at most 500 characters each; the CI fails on longer ones).
+2. Push the tag `vX.Y.Z` – only with the explicit go of the release owner, it reaches
+   every device with the app from Google Play.
+3. The CI builds and signs APK and App Bundle, attaches both to the GitHub release and uploads the
+   bundle to *Production*. Google reviews it; the review status is under *Publishing overview*.
+
+Without the secret nothing goes to Play: upload the `.aab` from the GitHub release by hand under
+*Testing → Internal testing*, then promote it to *Production*.
+
+Before the first production upload of a new version, check *Release dashboard → supported devices*
+in the internal test: a permission without `<uses-feature android:required="false">` (camera, microphone)
+or a missing processor type silently drops devices.
 
 The `versionCode` is the CI run number, so every build is higher than the one before. Play
 refuses an App Bundle whose `versionCode` was uploaded already – use a new tag, not a re-run.
+
+### Automatic upload
+
+Done once, by a person with admin access to the Play Console:
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → a project for ICT-Baden → enable the
+   *Google Play Android Developer API*.
+2. *IAM & Admin → Service accounts* → create one (e.g. `play-upload`) → *Keys → Add key → JSON*.
+3. Play Console → *Users and permissions* → invite the service account's e-mail address, access
+   to **Industrial Kiosk Browser** only, permissions *Release to production, exclude devices, and use Play App
+   Signing* and *Release apps to testing tracks*.
+4. GitHub → repository → *Settings → Secrets and variables → Actions* → new secret
+   `PLAY_SERVICE_ACCOUNT_JSON` with the content of the JSON file. Delete the file afterwards.
+
+One service account can serve both apps (Industrial Keyboard and Industrial Kiosk Browser): give it
+access to both and store the same secret in both repositories, or once as an organisation secret.
+The upload uses [r0adkll/upload-google-play](https://github.com/r0adkll/upload-google-play), pinned
+to a commit because it handles the key.
