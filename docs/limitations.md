@@ -17,6 +17,7 @@
 | Other Android devices | Run as a plain kiosk browser; scans only from a scanner app that sends the generic broadcast |
 | SOTI MobiControl, Intune, Workspace ONE | Managed configuration follows the Android standard; not tested against each EMM |
 | Android 8–10 | Only in unit tests (Robolectric), not on a device |
+| Fast scanning (3–19 scans/s) | Measured on an Android 15 emulator with the generic scan broadcast, not on a Zebra device: [Scan stress test](testing-scan-stress.md) |
 
 Everything else is covered by unit tests (`./gradlew testDebugUnitTest`): configuration format and
 examples, URL policy, scan delivery, provisioning rules, back navigation, store texts.
