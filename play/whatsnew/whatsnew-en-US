@@ -1,0 +1,1 @@
+New: scanning with the camera on devices without a scan engine, scan settings (barcode types, aiming, continuous scanning, prefix/suffix, rules), text recognition (OCR) and NFC tags, own CA certificates and fingerprints for servers with self-signed certificates, settings per profile, and configuration export and import as a QR code.

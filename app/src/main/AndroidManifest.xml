@@ -9,8 +9,13 @@
     <!-- NFC tags (scanner.nfc): reader mode while the browser is in front. -->
     <uses-permission android:name="android.permission.NFC" />
 
+    <!-- Optional, also autofocus: otherwise the CAMERA permission makes Play require it (Industrial
+         Keyboard 2.2.4 would have lost 455 devices). -->
     <uses-feature
         android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
         android:required="false" />
     <uses-feature
         android:name="android.hardware.nfc"

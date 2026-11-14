@@ -4,7 +4,7 @@
 
 ### Changed
 
-- The release APK contains only ARM code (`arm64-v8a`, `armeabi-v7a`); rugged Android devices are ARM only. With ML Kit for OCR the APK would otherwise be 57 MB instead of 30 MB. Debug builds keep x86 for the emulator.
+- The release APK contains ARM code (`arm64-v8a`, `armeabi-v7a`) and `x86_64` for Chromebooks, but no 32-bit x86: with ML Kit for OCR every processor type adds about 11 MB. Google Play delivers only the device's code from the app bundle. Camera and autofocus are declared optional, so Play keeps offering the app on devices without them. Debug builds keep all four for the emulator.
 
 ### Added
 
