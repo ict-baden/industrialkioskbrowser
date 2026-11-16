@@ -25,6 +25,9 @@ env:
   # und eine mit einem anderen Schlüssel signierte ließe sich später nicht mehr aktualisieren. Auch keine Debug-APK: Sie ist
   # ein anderes Paket (….debug) mit WebView-Debugging, und Richtlinie 05 sieht für Android nur den Release-Schlüssel vor.
   SIGN: ${{ secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
+  # SHA-256-Fingerabdruck des Release-Zertifikats. Er ist öffentlich (steht in jeder APK). Der Build bricht ab, wenn die
+  # signierte APK ein anderes Zertifikat trägt. Nur bei einem bewussten Schlüsselwechsel anpassen.
+  RELEASE_CERT_SHA256: 09ecfbc5891c919ce2262919b67ca83f15f2bcd4b7913ec9b14b7e6fc2935201
   # Google Play nur mit dem JSON-Schlüssel eines Service-Kontos (Secret PLAY_SERVICE_ACCOUNT_JSON, docs/play-store.md):
   # main -> interner Test, Tag v1.2.3 -> Produktion (Google prüft vorher), Tag mit Bindestrich (v1.2.3-rc1) -> interner Test.
   PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && secrets.ANDROID_KEYSTORE != '' && github.event_name != 'pull_request' }}
@@ -119,8 +122,13 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "dist/$APP${{ steps.version.outputs.suffix }}.apk"
           # Das App Bundle ist für Google Play (mit unserem Schlüssel als Upload-Schlüssel, siehe docs/play-store.md)
           cp app/build/outputs/bundle/release/app-release.aab "dist/$APP${{ steps.version.outputs.suffix }}.aab"
-          # Prüfen, dass wirklich mit dem Release-Schlüssel signiert wurde
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "dist/$APP${{ steps.version.outputs.suffix }}.apk" | head -3
+          # Prüfen, dass wirklich mit dem Release-Schlüssel signiert wurde: Zertifikat ausgeben und mit RELEASE_CERT_SHA256
+          # vergleichen. Auf dem Runner liegen mehrere build-tools-Versionen, deshalb gezielt die neueste nehmen.
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          [ -x "$apksigner" ] || { echo "::error::apksigner nicht gefunden"; exit 1; }
+          certs=$("$apksigner" verify --print-certs "dist/$APP${{ steps.version.outputs.suffix }}.apk")
+          echo "$certs" | head -n 3
+          echo "$certs" | grep -qiF "certificate SHA-256 digest: $RELEASE_CERT_SHA256" || { echo "::error::APK trägt nicht das Release-Zertifikat (erwartet $RELEASE_CERT_SHA256)"; exit 1; }
           jarsigner -verify "dist/$APP${{ steps.version.outputs.suffix }}.aab" | grep -q "jar verified" || { echo "::error::App Bundle ist nicht signiert"; exit 1; }
           rm "$RUNNER_TEMP/release.jks"
 
