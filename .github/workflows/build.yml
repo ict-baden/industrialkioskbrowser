@@ -48,18 +48,21 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Tag v1.2.3 -> 1.2.3, sonst Basisversion aus app/build.gradle.kts mit Laufnummer
+          # Tag v1.2.3 -> 1.2.3, sonst Basisversion aus app/build.gradle.kts mit Laufnummer.
+          # Die Laufnummer hat in diesem Repository einmal neu bei 1 begonnen. Der Aufschlag hält sie über allen
+          # früheren Builds (zuletzt 75, bei Google Play 50). Nie verkleinern.
+          n=$((GITHUB_RUN_NUMBER + 100))
           if [ "$GITHUB_REF_TYPE" = tag ]; then
             v="${GITHUB_REF_NAME#v}"; suffix="-$v"
           else
             base=$(grep -oP 'versionName = .*?"\K[0-9.]+' app/build.gradle.kts)
-            v="$base-ci.$GITHUB_RUN_NUMBER"; suffix=""
+            v="$base-ci.$n"; suffix=""
           fi
           # versionCode muss bei jedem Build steigen, sonst verweigern Android und das MDM das Update
           echo "version=$v" >> "$GITHUB_OUTPUT"
-          echo "code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "code=$n" >> "$GITHUB_OUTPUT"
           echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
-          echo "Version: $v (Code $GITHUB_RUN_NUMBER), Signieren: $SIGN"
+          echo "Version: $v (Code $n), Signieren: $SIGN"
 
       - name: Release-Text aus dem CHANGELOG (nur bei Tag v*)
         if: github.ref_type == 'tag'

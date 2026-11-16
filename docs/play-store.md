@@ -135,7 +135,8 @@ Before the first production upload of a new version, check *Release dashboard â†
 in the internal test: a permission without `<uses-feature android:required="false">` (camera, microphone)
 or a missing processor type silently drops devices.
 
-The `versionCode` is the CI run number, so every build is higher than the one before. Play
+The `versionCode` is the CI run number plus 100 (the run number started again at 1 once; the
+offset keeps it above every earlier build), so every build is higher than the one before. Play
 refuses an App Bundle whose `versionCode` was uploaded already â€“ use a new tag, not a re-run.
 
 ### Automatic upload

@@ -18,7 +18,7 @@ android {
         applicationId = "de.ictbaden.industrialkioskbrowser"
         minSdk = 26
         targetSdk = 36
-        // The CI passes -PversionCode (run number) and -PversionName (e.g. 0.6.2-ci.12).
+        // The CI passes -PversionCode (run number plus an offset, see build.yml) and -PversionName (e.g. 0.6.2-ci.112).
         versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 9
         versionName = findProperty("versionName") as String? ?: "0.7.1"
         buildConfigField("String", "COMMIT", "\"${System.getenv("GITHUB_SHA")?.take(7) ?: "local"}\"")

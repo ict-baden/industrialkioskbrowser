@@ -4,6 +4,8 @@
 
 ### Changed
 
+- **Build: `versionCode` with an offset.** The CI run number started again at 1; the `versionCode` is now the run number plus 100 and so stays above every earlier build (latest 75, Google Play has 50). The app itself behaves the same.
+
 - The release APK contains ARM code (`arm64-v8a`, `armeabi-v7a`) and `x86_64` for Chromebooks, but no 32-bit x86: with ML Kit for OCR every processor type adds about 11 MB. Google Play delivers only the device's code from the app bundle. Camera and autofocus are declared optional, so Play keeps offering the app on devices without them. Debug builds keep all four for the emulator.
 
 ### Added
