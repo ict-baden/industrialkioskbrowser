@@ -210,6 +210,7 @@ docs/            documentation and images
 - [Data and privacy](docs/data-and-privacy.md) – what is stored where, which connections are made
 - [Error codes](docs/error-codes.md) – `IKB-0001` … with causes
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
+- [Scan stress test](docs/testing-scan-stress.md) – 1 600 scans at 2.6–19 scans/s on an emulator, numbers and how to repeat it
 - [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
 - [Changelog](CHANGELOG.md)
