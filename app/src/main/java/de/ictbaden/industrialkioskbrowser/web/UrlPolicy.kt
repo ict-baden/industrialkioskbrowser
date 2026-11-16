@@ -13,9 +13,16 @@ object UrlPolicy {
             URI(url.trim()).host
         } catch (_: Exception) {
             null
-        } ?: Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://([^/:?#]+)").find(url.trim())?.groupValues?.get(1)
+        } ?: FALLBACK_HOST.find(url.trim())?.groupValues?.get(1)
         return host?.lowercase()?.trim('.', '[', ']')?.ifEmpty { null }
     }
+
+    /**
+     * Host of a URL that `java.net.URI` rejects (Chromium leaves `|`, `^`, `{`, `}` unescaped, URI
+     * does not accept them). The user info before `@` is skipped: `https://allowed.de:443@evil.de/`
+     * would otherwise look like `allowed.de`.
+     */
+    private val FALLBACK_HOST = Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://(?:[^/?#]*@)?(\\[[^\\]]*]|[^/:?#@]+)")
 
     /** Reduces an allow-list entry (`example.com`, `*.example.com`, `https://example.com/x`) to its host. */
     fun normalizeEntry(entry: String): String? {
