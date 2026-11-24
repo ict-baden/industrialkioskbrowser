@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [0.8.0] – 2026-11-24
+
 ### Changed
 
 - **Build: `versionCode` with an offset.** The CI run number started again at 1; the `versionCode` is now the run number plus 100 and so stays above every earlier build (latest 75, Google Play has 50). The app itself behaves the same.
@@ -56,6 +58,10 @@
   device; long configurations are compressed (`ICTZ1:` + base64url of DEFLATE). All imports (barcode, file,
   broadcast, managed configuration) accept this form. Too large for a QR code: `IKB-0104`. QR codes are made with
   the QR Code generator library by Project Nayuki (MIT).
+
+### Fixed
+
+- **Text recognition in R8 release builds:** R8 removed the no-arg constructors ML Kit uses to create its components by reflection, so OCR did not start in a release build (`NoSuchMethodException …Registrar.<init>`, seen on a Zebra HC20). Keep rule in `app/proguard-rules.pro`.
 
 ### Docs
 
