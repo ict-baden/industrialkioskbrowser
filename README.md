@@ -22,7 +22,7 @@
 <p align="center">
   <sub>🇩🇪 Industrial Kiosk Browser bringt Web-Apps auf robuste Android-Geräte (Zebra, Honeywell …): Barcode-Scan direkt ins Webformular,
   Kiosk-Modus, Konfiguration zentral per MDM. Oberfläche auf Deutsch und Englisch; Spanisch, Französisch und Chinesisch sind
-  maschinell übersetzt.</sub>
+  maschinell übersetzt. Produktseite: <a href="https://ict-baden.de/produkte/industrial-kiosk-browser/">ict-baden.de/produkte/industrial-kiosk-browser</a></sub>
 </p>
 
 <p align="center">
@@ -30,7 +30,8 @@
   <a href="docs/configuration.md">Configuration</a> ·
   <a href="docs/deployment.md">Deployment (SOTI, Intune, StageNow)</a> ·
   <a href="docs/web-integration.md">Web integration</a> ·
-  <a href="#%EF%B8%8F-limitations">Limitations</a>
+  <a href="#%EF%B8%8F-limitations">Limitations</a> ·
+  <a href="https://ict-baden.de/en/products/industrial-kiosk-browser/">Product page</a>
 </p>
 
 ---
@@ -222,6 +223,7 @@ Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/en/products/industrial-kiosk-browser/">Product page</a> &nbsp;·&nbsp;
 <a href="https://ict-baden.de/datenschutz/industrial-kiosk-browser/">Privacy</a> &nbsp;·&nbsp;
 <a href="https://ict-baden.de/impressum/">Impressum</a>
 </sub>

@@ -52,6 +52,10 @@
   broadcast, managed configuration) accept this form. Too large for a QR code: `IKB-0104`. QR codes are made with
   the QR Code generator library by Project Nayuki (MIT).
 
+### Docs
+
+- README links the product page on ict-baden.de (link row at the top, German note, footer).
+
 ## [0.7.0] – 2026-11-06
 
 ### Changed
