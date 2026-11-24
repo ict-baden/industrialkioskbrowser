@@ -49,6 +49,9 @@ These are deliberate, because many warehouse and production web apps run in an i
 - Lock task (real kiosk) needs a device owner, i.e. an EMM in *dedicated device* mode. Without it
   `hideExit` only hides the exit; the Android home and recents buttons still work.
 - Pages that open new windows (`target="_blank"`, `window.open`) stay in the same view.
+- An embedded resource (image, script, frame) from another host with an invalid certificate is not
+  loaded; the page itself stays. Only a certificate error of the page, or of a resource on the same
+  host, shows the error page `IKB-0007`.
 - Downloads go to the app folder and need `allowDownloads`; `blob:` downloads are not supported.
 - Some features (document-start injections, JavaScript API) need a recent Android System WebView;
   on old WebViews injections run after the page has loaded, and the API is missing.

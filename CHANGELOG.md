@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- **A certificate error of an embedded resource no longer replaces the page** ([#27](https://github.com/ict-baden/industrialkioskbrowser/issues/27)):
+  one image, script or frame from a host with an invalid or expired certificate turned the whole page into the
+  error page `IKB-0007` – a single third-party resource, or a network attacker forging one certificate, made a web
+  app unusable. The resource is still refused, but the page stays. **Behaviour change:** the error page now
+  appears only when the certificate error concerns the page itself or a resource on the same host.
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

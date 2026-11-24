@@ -13,7 +13,7 @@ any of the five languages. Source: [`ErrorCodes.kt`](../app/src/main/java/de/ict
 | `IKB-0004` | Insecure connection (handshake) | TLS version or cipher not supported |
 | `IKB-0005` | Page not available | Other load errors; the technical reason (`net::ERR_…`) is shown in brackets |
 | `IKB-0006` | Error *n* | The server answered with HTTP ≥ 400 (only with `errorPages.showHttpErrors`) |
-| `IKB-0007` | Insecure connection (certificate) | Certificate untrusted, expired or for another name – install the CA through the MDM |
+| `IKB-0007` | Insecure connection (certificate) | Certificate untrusted, expired or for another name – install the CA through the MDM. Shown for the page and for resources on its host; an embedded resource from another host is skipped without this page |
 | `IKB-0010` | Page not allowed | Navigation to a host outside `allowList` |
 | `IKB-0011` | Scan target not allowed | `ScannerNavigate` points to a host outside `allowList` |
 | `IKB-0012` | Downloads are disabled | `allowDownloads` is off |
