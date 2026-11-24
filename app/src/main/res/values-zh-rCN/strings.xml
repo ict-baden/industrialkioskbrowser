@@ -350,4 +350,19 @@
     <plurals name="trusted_certificates_imported">
         <item quantity="other">已导入 %d 个证书</item>
     </plurals>
+    <!-- Scan queue (scanner.queue) -->
+    <string name="scan_queue">扫描队列</string>
+    <string name="scan_queue_summary">扫描会等待页面加载完成或表单提交完毕</string>
+    <string name="scan_queue_timeout">每次扫描最长等待时间（毫秒）</string>
+    <string name="scan_discarded_single">扫描“%1$s”已丢弃：%2$s</string>
+    <plurals name="scan_discarded_multiple">
+        <item quantity="other">已丢弃 %1$d 次扫描：%2$s</item>
+    </plurals>
+    <string name="scan_drop_full">等待的扫描过多</string>
+    <string name="scan_drop_timeout">页面未能及时就绪</string>
+    <string name="scan_drop_page_left">已离开页面</string>
+    <string name="scan_drop_closed">会话已关闭</string>
+    <plurals name="scan_pending">
+        <item quantity="other">%d 次扫描等待中</item>
+    </plurals>
 </resources>

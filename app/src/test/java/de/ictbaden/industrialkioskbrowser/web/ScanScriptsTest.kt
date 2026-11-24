@@ -72,4 +72,21 @@ class ScanScriptsTest {
             ScanScripts.navigationTarget("https://other.example.org/%s", "<x>", null),
         )
     }
+
+    @Test
+    fun `a retry only inserts, without dispatching the scan event again`() {
+        val first = ScanScripts.deliver(ScanResult("A", null, "test", 1), injectIntoFocusedField = true)
+        val retry = ScanScripts.deliver(ScanResult("A", null, "test", 1), injectIntoFocusedField = true, dispatch = false)
+        assertTrue(first.trimEnd().endsWith(", true, true)"))
+        assertTrue(retry.trimEnd().endsWith(", true, false)"))
+        assertTrue(retry.contains("if (dispatch)"))
+    }
+
+    @Test
+    fun `parses the delivery result with the busy hint`() {
+        assertEquals(ScanScripts.Delivery("inserted", false), ScanScripts.parseDelivery("\"inserted\""))
+        assertEquals(ScanScripts.Delivery("handled", true), ScanScripts.parseDelivery("\"handled busy\""))
+        assertEquals(ScanScripts.Delivery("nofield", false), ScanScripts.parseDelivery("\"nofield\""))
+        assertEquals(ScanScripts.Delivery(null, false), ScanScripts.parseDelivery("null"))
+    }
 }

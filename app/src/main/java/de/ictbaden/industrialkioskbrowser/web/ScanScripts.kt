@@ -24,6 +24,16 @@ object ScanScripts {
   return JSON.stringify(out);
 })()"""
 
+    /**
+     * `true` once the document has run its `DOMContentLoaded` handlers. Earlier than `onPageFinished`,
+     * which also waits for every image and slow sub-resource.
+     */
+    const val DOCUMENT_READY = """(function () {
+  if (document.readyState === 'complete') return true;
+  var nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+  return !!(nav && nav.domContentLoadedEventEnd > 0);
+})()"""
+
     fun scanPayload(scan: ScanResult): JSONObject = JSONObject().apply {
         put("data", scan.data)
         put("symbology", scan.symbology ?: JSONObject.NULL)
@@ -34,11 +44,17 @@ object ScanScripts {
     /**
      * Dispatches the cancelable `industrialkioskbrowser:scan` event on `window`. Unless a listener calls
      * `preventDefault()`, the data is inserted into the focused text field the way a keyboard wedge
-     * would. Evaluates to `"handled"`, `"inserted"`, `"event"` or `"nofield"`.
+     * would. Evaluates to `"handled"`, `"inserted"`, `"event"` or `"nofield"`, followed by `" busy"`
+     * when the page called `scanner.busy()` while handling it and not yet `ready()` ([parseDelivery]).
+     * [dispatch] false: the event went out on an earlier try on this page, only insert.
      */
-    fun deliver(scan: ScanResult, injectIntoFocusedField: Boolean): String = """(function (scan, inject) {
-  var event = new CustomEvent('$SCAN_EVENT', { detail: scan, cancelable: true });
-  if (!window.dispatchEvent(event)) return 'handled';
+    fun deliver(scan: ScanResult, injectIntoFocusedField: Boolean, dispatch: Boolean = true): String = """(function (scan, inject, dispatch) {
+  var busyBefore = window.$BUSY_FLAG || 0;
+  var result = (function () {
+  if (dispatch) {
+    var event = new CustomEvent('$SCAN_EVENT', { detail: scan, cancelable: true });
+    if (!window.dispatchEvent(event)) return 'handled';
+  }
   if (!inject) return 'event';
   var el = document.activeElement;
   for (;;) {
@@ -70,7 +86,22 @@ object ScanScripts {
     return 'inserted';
   }
   return 'nofield';
-})(${scanPayload(scan)}, $injectIntoFocusedField)"""
+  })();
+  var busyAfter = window.$BUSY_FLAG || 0;
+  return busyAfter && busyAfter !== busyBefore ? result + ' busy' : result;
+})(${scanPayload(scan)}, $injectIntoFocusedField, $dispatch)"""
+
+    /** Set by `assets/js/bridge.js`: number of the last `scanner.busy()` call, 0 after `scanner.ready()`. */
+    const val BUSY_FLAG = "__industrialKioskBrowserBusy"
+
+    /** Result of [deliver]: the outcome word and whether the page reported itself busy. */
+    data class Delivery(val result: String?, val busy: Boolean)
+
+    fun parseDelivery(value: String?): Delivery {
+        val text = decodeStringResult(value) ?: return Delivery(null, false)
+        val parts = text.split(' ')
+        return Delivery(parts.first(), parts.drop(1).contains("busy"))
+    }
 
     /** Fills `%s` in a ScannerNavigate template: JS string literal for `javascript:`, URL-encoded otherwise. */
     fun applyTemplate(template: String, data: String): String =
