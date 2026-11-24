@@ -90,4 +90,14 @@ class UrlPolicyTest {
         assertTrue(UrlPolicy.isAllowed("https://erlaubt.de/?a|b", restricted))
         assertTrue(UrlPolicy.isAllowed("https://user:pw@erlaubt.de/", restricted))
     }
+
+    @Test
+    fun `ipv6 hosts keep their brackets in origin rules`() {
+        val profile = open.copy(startUrl = "http://[fd00::1]:8080/app")
+        assertEquals(
+            setOf("https://${UrlPolicy.ASSET_HOST}", "http://[fd00::1]", "https://[fd00::1]"),
+            UrlPolicy.bridgeOriginRules(profile),
+        )
+        assertTrue(UrlPolicy.isBridgeOrigin("http://[fd00::1]:8080/x", profile))
+    }
 }
