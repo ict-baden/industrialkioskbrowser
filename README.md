@@ -212,6 +212,7 @@ docs/            documentation and images
 - [Error codes](docs/error-codes.md) – `IKB-0001` … with causes
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
 - [Scan stress test](docs/testing-scan-stress.md) – 1 600 scans at 2.6–19 scans/s on an emulator, numbers and how to repeat it
+- [Emulator tests](docs/testing-emulator.md) – manual test run on Android 11 and 15, what passed and what was found
 - [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers
 - [Changelog](CHANGELOG.md)
