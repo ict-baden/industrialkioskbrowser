@@ -196,18 +196,83 @@ class ScanQueueTest {
     }
 
     @Test
-    fun `scans that wait too long are dropped with a timeout`() {
+    fun `without progress only the head is dropped, then the next one gets the full time`() {
         val h = Harness()
-        h.queue.pageStarted()
+        h.queue.pageStarted() // the page hangs while loading
         h.queue.offer("A")
         h.advance(2_000)
         h.queue.offer("B")
-        h.advance(3_000)
+        h.advance(2_999)
+        assertEquals(emptyList<Pair<List<String>, DropReason>>(), h.dropped)
+        h.advance(1)
         assertEquals(listOf(listOf("A") to DropReason.TIMEOUT), h.dropped)
-        h.advance(2_000)
+        assertEquals(1, h.queue.pending)
+        // B waited 3 s already, but the clock starts again when it becomes the head.
+        h.advance(4_999)
+        assertEquals(1, h.dropped.size)
+        h.advance(1)
         assertEquals(listOf(listOf("A") to DropReason.TIMEOUT, listOf("B") to DropReason.TIMEOUT), h.dropped)
         assertEquals(0, h.queue.pending)
         assertEquals(emptyList<String>(), h.delivered)
+    }
+
+    @Test
+    fun `a long queue that moves on is never cut short by the timeout`() {
+        // 15 scans 0.2 s apart into a form whose every save takes 1 s: the last one waits far longer
+        // than timeoutMs (5 s) after it was read, but the queue never stands still that long.
+        val h = Harness(settings.copy(maxPending = 20))
+        h.loadedPage()
+        for (i in 1..15) {
+            h.queue.offer("S$i")
+            h.advance(200)
+        }
+        var guard = 0
+        while (h.delivered.size < 15 && guard++ < 100) {
+            h.queue.delivered(Outcome.SUBMITTED)
+            h.advance(100)
+            h.queue.navigationRequested()
+            h.advance(900)
+            h.queue.pageStarted()
+            h.queue.pageLoaded(acceptsScans = true)
+            h.advance(200)
+        }
+        assertEquals((1..15).map { "S$it" }, h.delivered)
+        assertEquals(emptyList<Pair<List<String>, DropReason>>(), h.dropped)
+    }
+
+    @Test
+    fun `a field that still holds the previous scan is checked again without dispatching the event`() {
+        val h = Harness()
+        h.loadedPage()
+        h.queue.offer("A")
+        h.queue.delivered(Outcome.SUBMITTED)
+        h.queue.offer("B")
+        h.advance(400)
+        assertEquals(listOf("A", "B"), h.delivered)
+        h.queue.delivered(Outcome.FIELD_NOT_CLEARED) // the page has not emptied the field yet
+        assertEquals(1, h.queue.pending)
+        h.advance(ScanQueue.RETRY_MS)
+        assertEquals(listOf("A", "B", "B"), h.delivered)
+        assertEquals(emptyList<String>(), h.retries) // the event still has to go out
+        h.queue.delivered(Outcome.SUBMITTED)
+        assertEquals(emptyList<Pair<List<String>, DropReason>>(), h.dropped)
+    }
+
+    @Test
+    fun `a field that is never emptied drops the scan after timeoutMs without progress`() {
+        val h = Harness()
+        h.loadedPage()
+        h.queue.offer("A")
+        h.queue.delivered(Outcome.SUBMITTED)
+        h.queue.offer("B")
+        h.advance(400)
+        while (h.dropped.isEmpty()) {
+            h.queue.delivered(Outcome.FIELD_NOT_CLEARED)
+            h.advance(ScanQueue.RETRY_MS)
+        }
+        assertEquals(listOf(listOf("B") to DropReason.TIMEOUT), h.dropped)
+        // Progress was A's delivery at 1 200 ms; B is tried from 1 600 to 6 100 ms, dropped at 6 200 ms.
+        assertEquals(19, h.delivered.count { it == "B" })
     }
 
     @Test

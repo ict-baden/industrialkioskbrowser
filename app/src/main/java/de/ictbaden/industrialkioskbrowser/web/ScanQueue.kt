@@ -15,9 +15,14 @@ import de.ictbaden.industrialkioskbrowser.config.ScanQueueSettings
  * - the page reported itself busy ([busy] until [ready], at most a safety limit),
  * - a scan is being delivered.
  *
- * A scan that finds no text field ([Outcome.NO_FIELD]) stays at the head and is tried again every
- * [RETRY_MS]. Scans that cannot be delivered – queue full, [ScanQueueSettings.timeoutMs] over, page
- * left, session closed – go to [Host.dropped], never silently.
+ * A scan that finds no text field ([Outcome.NO_FIELD]) or the field still holding the previous scan
+ * ([Outcome.FIELD_NOT_CLEARED]) stays at the head and is tried again every [RETRY_MS].
+ *
+ * [ScanQueueSettings.timeoutMs] counts from the last progress – the last delivery, or the moment the
+ * first scan became the head – not from when a scan was read: a long queue that moves on is never cut
+ * short, a head that cannot be delivered for that long is dropped and the clock starts again for the
+ * next one. [ScanQueueSettings.maxPending] stays the hard limit. Scans that cannot be delivered –
+ * queue full, timeout, page left, session closed – go to [Host.dropped], never silently.
  */
 class ScanQueue<T>(
     private val settings: ScanQueueSettings,
@@ -47,13 +52,16 @@ class ScanQueue<T>(
         /** Taken by the page (event handled, inserted without terminator, event only). */
         DONE,
 
-        /** No text field had the focus. */
+        /** No text field had the focus (the scan event was dispatched). */
         NO_FIELD,
+
+        /** The focused field still holds the previous scan: nothing done, not even the event. */
+        FIELD_NOT_CLEARED,
     }
 
     enum class DropReason { FULL, TIMEOUT, PAGE_LEFT, CLOSED }
 
-    private class Entry<T>(val scan: T, val deadline: Long) {
+    private class Entry<T>(val scan: T) {
         var tried = false
     }
 
@@ -68,6 +76,9 @@ class ScanQueue<T>(
     private var busyUntil = 0L
     private var retryAt = 0L
     private var closed = false
+
+    /** Last progress: a delivery, a dropped head, or the first scan of an idle queue arriving. */
+    private var progressAt = 0L
 
     /** Scans waiting (not the one being delivered right now). */
     val pending: Int get() = waiting.size
@@ -85,7 +96,8 @@ class ScanQueue<T>(
             host.dropped(listOf(scan), DropReason.FULL)
             return
         }
-        waiting.addLast(Entry(scan, clock() + settings.timeoutMs))
+        if (waiting.isEmpty() && inFlight == null) progressAt = clock()
+        waiting.addLast(Entry(scan))
         changed()
         pump()
     }
@@ -96,12 +108,16 @@ class ScanQueue<T>(
         inFlight = null
         val now = clock()
         when (outcome) {
-            Outcome.SUBMITTED -> graceUntil = now + settings.navigationGraceMs
-            Outcome.DONE -> Unit
-            Outcome.NO_FIELD -> if (entry.deadline <= now) {
+            Outcome.SUBMITTED -> {
+                graceUntil = now + settings.navigationGraceMs
+                progressAt = now
+            }
+            Outcome.DONE -> progressAt = now
+            Outcome.NO_FIELD, Outcome.FIELD_NOT_CLEARED -> if (now - progressAt >= settings.timeoutMs) {
                 host.dropped(listOf(entry.scan), DropReason.TIMEOUT)
+                progressAt = now
             } else {
-                entry.tried = true
+                if (outcome == Outcome.NO_FIELD) entry.tried = true
                 waiting.addFirst(entry)
                 retryAt = now + RETRY_MS
             }
@@ -177,20 +193,20 @@ class ScanQueue<T>(
     fun pump() {
         if (closed) return
         val now = clock()
-        val expired = waiting.filter { it.deadline <= now }
-        if (expired.isNotEmpty()) {
-            waiting.removeAll(expired)
-            host.dropped(expired.map { it.scan }, DropReason.TIMEOUT)
-            changed()
-        }
-        val current = inFlight
-        if (current != null) {
+        if (inFlight != null) {
             // A delivery whose answer never came (renderer stuck) must not block the queue for ever.
             if (now - inFlightSince < settings.timeoutMs) {
-                schedule(now, inFlightSince + settings.timeoutMs)
+                host.wakeUpIn(inFlightSince + settings.timeoutMs - now)
                 return
             }
             inFlight = null
+            progressAt = now
+        }
+        // No progress for timeoutMs: the head goes, the next one gets the full time again.
+        if (waiting.isNotEmpty() && now - progressAt >= settings.timeoutMs) {
+            host.dropped(listOf(waiting.removeFirst().scan), DropReason.TIMEOUT)
+            progressAt = now
+            changed()
         }
         val head = waiting.firstOrNull() ?: run {
             host.wakeUpIn(-1)
@@ -222,9 +238,9 @@ class ScanQueue<T>(
         return listOf(navigationUntil, settleUntil, graceUntil, busyUntil).filter { it > now }.maxOrNull()
     }
 
-    /** Wakes up at [until] or at the next deadline, whatever comes first. */
+    /** Wakes up at [until] or when the head times out, whatever comes first. */
     private fun schedule(now: Long, until: Long?) {
-        val deadline = waiting.minOfOrNull { it.deadline }
+        val deadline = progressAt + settings.timeoutMs
         val next = listOfNotNull(until?.takeIf { it != Long.MAX_VALUE }, deadline).minOrNull()
         host.wakeUpIn(next?.let { maxOf(0, it - now) } ?: -1)
     }
