@@ -140,6 +140,10 @@ Before the first production upload of a new version, check *Release dashboard �
 in the internal test: a permission without `<uses-feature android:required="false">` (camera, microphone)
 or a missing processor type silently drops devices.
 
+The App Bundle contains the R8 mapping file, so *Android vitals → Crashes and ANRs* shows readable
+stack traces without uploading anything else. The same mapping is in the GitHub release as
+`IndustrialKioskBrowser-<version>-mapping.txt` for crash logs collected elsewhere (`retrace`).
+
 The `versionCode` is the CI run number plus 100 (the run number started again at 1 once; the
 offset keeps it above every earlier build), so every build is higher than the one before. Play
 refuses an App Bundle whose `versionCode` was uploaded already – use a new tag, not a re-run.

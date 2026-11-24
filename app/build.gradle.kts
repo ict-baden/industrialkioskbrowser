@@ -42,7 +42,13 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            isMinifyEnabled = false
+            // R8 shrinks, optimises and obfuscates the release build; the Play Console measures this
+            // under Android vitals → code optimisation and warns below 25 %. Keep rules: proguard-rules.pro.
+            // The mapping file (app/build/outputs/mapping/release/mapping.txt) is published with every
+            // release and is also inside the App Bundle, so the Play Console deobfuscates stack traces itself.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (keystore != null) signingConfig = signingConfigs.getByName("release")
             // Rugged Android devices are ARM; x86_64 is for Chromebooks (without it Play drops nearly
             // all of them). 32-bit x86 is left out: the OCR library of ML Kit is about 11 MB per ABI in

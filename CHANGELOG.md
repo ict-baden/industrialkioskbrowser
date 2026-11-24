@@ -5,6 +5,11 @@
 ### Changed
 
 - **Build: `versionCode` with an offset.** The CI run number started again at 1; the `versionCode` is now the run number plus 100 and so stays above every earlier build (latest 75, Google Play has 50). The app itself behaves the same.
+- **Release builds are shrunk and obfuscated with R8.** Google Play measures this under *Android vitals →
+  Code optimisation* and warns below 25 %. Error codes, the JavaScript API, broadcast actions and the
+  configuration format are unchanged. Every release now also contains `IndustrialKioskBrowser-<version>-mapping.txt`
+  to translate stack traces back to source names; the App Bundle carries the same mapping, so the Play
+  Console deobfuscates crash reports itself.
 
 - The release APK contains ARM code (`arm64-v8a`, `armeabi-v7a`) and `x86_64` for Chromebooks, but no 32-bit x86: with ML Kit for OCR every processor type adds about 11 MB. Google Play delivers only the device's code from the app bundle. Camera and autofocus are declared optional, so Play keeps offering the app on devices without them. Debug builds keep all four for the emulator.
 
@@ -55,8 +60,6 @@
 ### Docs
 
 - README links the product page on ict-baden.de (link row at the top, German note, footer).
-### Docs
-
 - Google Play listing linked from the README, [Deployment](docs/deployment.md) (Intune: use the
   listing of ICT-Baden, never a private upload of the APK) and [Google Play](docs/play-store.md).
 
