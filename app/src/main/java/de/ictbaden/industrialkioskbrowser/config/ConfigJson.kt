@@ -21,9 +21,12 @@ object ConfigJson {
     /** Upper bound for a configuration text; a broadcast carries at most about 1 MB, a QR code 3 KB. */
     const val MAX_LENGTH = 16 * 1024 * 1024
 
+    /** For sources that know the size before they read: a file of gigabytes must not be loaded just to be refused. */
+    fun tooLarge() = ConfigException("Configuration is larger than ${MAX_LENGTH / (1024 * 1024)} MB")
+
     /** Plain JSON or a barcode payload packed by [ConfigCodec] (`ICTZ1:`). */
     fun parse(text: String): AppConfig {
-        if (text.length > MAX_LENGTH) throw ConfigException("Configuration is larger than ${MAX_LENGTH / (1024 * 1024)} MB")
+        if (text.length > MAX_LENGTH) throw tooLarge()
         val root = try {
             JSONObject(ConfigCodec.unpack(text).trim())
         } catch (e: JSONException) {

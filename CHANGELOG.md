@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Security
+
+- **Huge configuration files are refused before they are read** ([#29](https://github.com/ict-baden/industrialkioskbrowser/issues/29)):
+  0.8.0 refuses configuration texts over 16 MB, but a configuration file (app folder, `/enterprise/usr/`) was read
+  into memory first. A file of several hundred megabytes ended in `OutOfMemoryError` and, because the file is
+  looked at again on every start, in a crash loop. The file size is now checked before reading; the file is
+  refused once with *Configuration is larger than 16 MB* (`IKB-0100`).
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

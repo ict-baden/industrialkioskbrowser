@@ -121,6 +121,25 @@ class ProvisioningTest {
         assertTrue(Provisioning.lastError(context)!!.contains("larger than"))
     }
 
+    @Test
+    fun `a file too large to read is refused before it is read`() {
+        // 3 GB, sparse: reading it throws OutOfMemoryError (an Error, not caught as a rejected configuration),
+        // and because the fingerprint is stored after the import the app would crash again on every start.
+        file.parentFile!!.mkdirs()
+        java.io.RandomAccessFile(file, "rw").use { it.setLength(3L * 1024 * 1024 * 1024) }
+        try {
+            Provisioning.applyAll(context)
+            assertTrue(Provisioning.lastError(context)!!.contains("larger than"))
+            assertEquals(AppConfig.DEMO_PROFILE_ID, store.config.profiles.single().id)
+            // Refused once, not on every check: the fingerprint is stored.
+            context.getSharedPreferences("provisioning", Context.MODE_PRIVATE).edit().remove("last_error").commit()
+            Provisioning.applyAll(context)
+            assertNull(Provisioning.lastError(context))
+        } finally {
+            file.delete()
+        }
+    }
+
     private fun write(json: String) {
         file.parentFile!!.mkdirs()
         file.writeText(json)
