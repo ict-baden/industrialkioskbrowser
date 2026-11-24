@@ -5,24 +5,34 @@ import androidx.core.content.edit
 import de.ictbaden.industrialkioskbrowser.config.PasswordHasher
 
 /**
- * Admin password check for configurations from other apps (broadcast, file in the app folder).
- * After [MAX_FAILURES] wrong passwords in a row every attempt of that [Source] is refused for
- * [LOCKOUT_MS], so a foreign app cannot try passwords at full speed. Each source has its own
- * counter: an app that spams wrong broadcasts cannot block the configuration file.
+ * Password check for configurations from other apps (broadcast, file in the app folder) and for
+ * the password dialogs of the app itself. After [MAX_FAILURES] wrong passwords in a row every
+ * attempt of that [Source] is refused for [LOCKOUT_MS], so neither a foreign app nor a person at
+ * the device can try passwords at full speed. Each source has its own counter: an app that spams
+ * wrong broadcasts cannot block the configuration file or the dialog.
  */
 object AdminGate {
     const val MAX_FAILURES = 5
     const val LOCKOUT_MS = 15 * 60 * 1000L
     private const val PREFS = "admin_gate"
 
-    enum class Source(val key: String) { BROADCAST("broadcast"), FILE("file") }
+    enum class Source(val key: String) {
+        BROADCAST("broadcast"),
+        FILE("file"),
+
+        /** Admin and exit password dialogs; they share one counter. */
+        DIALOG("dialog"),
+    }
 
     enum class Result { OK, WRONG, LOCKED }
 
-    fun isLocked(context: Context, source: Source, now: Long = System.currentTimeMillis()): Boolean {
+    fun isLocked(context: Context, source: Source, now: Long = System.currentTimeMillis()) = remainingMs(context, source, now) > 0
+
+    /** How long [source] stays locked, `0` when it is not. */
+    fun remainingMs(context: Context, source: Source, now: Long = System.currentTimeMillis()): Long {
         val lockedUntil = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong("${source.key}_locked_until", 0)
         // A lock further in the future than LOCKOUT_MS comes from a clock that was ahead: ignore it.
-        return now < lockedUntil && lockedUntil - now <= LOCKOUT_MS
+        return if (now < lockedUntil && lockedUntil - now <= LOCKOUT_MS) lockedUntil - now else 0
     }
 
     fun check(context: Context, source: Source, password: String?, hash: String, now: Long = System.currentTimeMillis()): Result {

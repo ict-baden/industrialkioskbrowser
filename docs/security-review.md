@@ -84,7 +84,7 @@ reported again.
 | 6 | medium | The WebView text-selection menu offers *Share* and *Web search*, which open other apps when the device is not in lock task mode; the app does not trim the action mode. | open, device test ([#30](https://github.com/ict-baden/industrialkioskbrowser/issues/30)) |
 | 7 | low–medium | The HTTP authentication dialog is shown for sub-resources of hosts outside the allow list, which allows credential phishing from an embedded image. | open ([#31](https://github.com/ict-baden/industrialkioskbrowser/issues/31)) |
 | 8 | low–medium | Downloads do not check the allow list (`<a download>` and script-started downloads skip `shouldOverrideUrlLoading`); `allowDownloads` is on by default and the notification opens files in other apps. | open, device test ([#32](https://github.com/ict-baden/industrialkioskbrowser/issues/32)) |
-| 9 | low | The in-app admin and exit password dialogs have no attempt limit; only broadcasts and files have the 5-attempt lock. | open ([#33](https://github.com/ict-baden/industrialkioskbrowser/issues/33)) |
+| 9 | low | The in-app admin and exit password dialogs have no attempt limit; only broadcasts and files have the 5-attempt lock. | fixed after 0.8.0 ([#33](https://github.com/ict-baden/industrialkioskbrowser/issues/33)): the dialogs use the same lock (5 wrong entries, 15 minutes, stored across restarts, `IKB-0106`) with a counter of their own. |
 | 10 | low | An IPv6 start URL produced the invalid origin rule `http://fd00::1`, which silently disabled the JavaScript bridge. | fixed in PR #23 ([#34](https://github.com/ict-baden/industrialkioskbrowser/issues/34)) |
 | 11 | low | The allow list ignores scheme and port (`https://wms.example.com` also allows `http://wms.example.com:8080`); not documented. | open ([#35](https://github.com/ict-baden/industrialkioskbrowser/issues/35)) |
 | 12 | low | Workflow permissions (`contents: write`, `id-token: write`) apply to every job including pull-request builds; actions are pinned by major tag, not by commit. | open ([#36](https://github.com/ict-baden/industrialkioskbrowser/issues/36)) |
@@ -135,4 +135,8 @@ done for the name (Industrial Kiosk Browser) and in progress for the history (PR
   15 minutes at a time. Configuration files and the managed configuration still work.
 - **Short passwords:** 5 attempts per 15 minutes still allow about 480 guesses per day. Use
   at least 10 characters.
+- **Dialog lockout:** a person at the device can lock the admin and exit password dialogs for
+  15 minutes at a time by entering wrong passwords. Configuration through the EMM, a file or
+  `INSTALL_CONFIG` still works. The lock follows the device clock; whoever can change the clock
+  can end it early.
 - **Exported DataWedge receiver, plain HTTP, user CAs:** see [Limitations](limitations.md).

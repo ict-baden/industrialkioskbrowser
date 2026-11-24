@@ -43,6 +43,9 @@
     <string name="admin_password">管理员密码</string>
     <string name="exit_password">退出密码</string>
     <string name="wrong_password">密码错误</string>
+    <plurals name="password_locked">
+        <item quantity="other">密码错误次数过多，请在 %d 分钟后重试。</item>
+    </plurals>
     <string name="sign_in">登录</string>
     <string name="user_name">用户名</string>
 

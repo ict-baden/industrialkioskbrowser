@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Security
+
+- **Password dialogs lock after five wrong entries** ([#33](https://github.com/ict-baden/industrialkioskbrowser/issues/33)):
+  the admin and exit password dialogs accepted any number of attempts, so a four-digit PIN could be tried out in a
+  few hours. After five wrong entries in a row both dialogs now stay closed for 15 minutes – the same lock
+  `INSTALL_CONFIG` and configuration files already have, with a counter of its own, kept across restarts. New
+  error code `IKB-0106`. **Behaviour change:** someone at the device can lock the dialogs for 15 minutes at a time.
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

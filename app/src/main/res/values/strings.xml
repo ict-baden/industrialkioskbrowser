@@ -52,6 +52,10 @@
     <string name="admin_password">Admin password</string>
     <string name="exit_password">Exit password</string>
     <string name="wrong_password">Wrong password</string>
+    <plurals name="password_locked">
+        <item quantity="one">Too many wrong passwords. Try again in %d minute.</item>
+        <item quantity="other">Too many wrong passwords. Try again in %d minutes.</item>
+    </plurals>
     <string name="sign_in">Sign in</string>
     <string name="user_name">User name</string>
 

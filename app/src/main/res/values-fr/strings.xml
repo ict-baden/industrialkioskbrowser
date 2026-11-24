@@ -43,6 +43,11 @@
     <string name="admin_password">Mot de passe administrateur</string>
     <string name="exit_password">Mot de passe pour quitter</string>
     <string name="wrong_password">Mot de passe incorrect</string>
+    <plurals name="password_locked">
+        <item quantity="one">Trop de mots de passe incorrects. Réessayez dans %d minute.</item>
+        <item quantity="many">Trop de mots de passe incorrects. Réessayez dans %d minutes.</item>
+        <item quantity="other">Trop de mots de passe incorrects. Réessayez dans %d minutes.</item>
+    </plurals>
     <string name="sign_in">Connexion</string>
     <string name="user_name">Nom d\'utilisateur</string>
 

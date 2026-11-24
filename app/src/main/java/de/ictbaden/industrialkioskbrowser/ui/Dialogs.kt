@@ -17,7 +17,8 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import de.ictbaden.industrialkioskbrowser.R
 import de.ictbaden.industrialkioskbrowser.config.ConfigStore
-import de.ictbaden.industrialkioskbrowser.config.PasswordHasher
+import de.ictbaden.industrialkioskbrowser.provisioning.AdminGate
+import de.ictbaden.industrialkioskbrowser.web.ErrorCodes
 
 object Dialogs {
 
@@ -28,27 +29,43 @@ object Dialogs {
         onSuccess,
     )
 
-    /** Runs [onSuccess] directly when no password is set, otherwise after a correct entry. */
+    /**
+     * Runs [onSuccess] directly when no password is set, otherwise after a correct entry. After
+     * [AdminGate.MAX_FAILURES] wrong entries in a row the dialogs stay closed for
+     * [AdminGate.LOCKOUT_MS]; the count is stored, so restarting the app does not reset it.
+     */
     fun requirePassword(activity: Activity, hash: String?, title: String, onSuccess: () -> Unit) {
         if (hash == null) {
             onSuccess()
             return
         }
+        if (showLock(activity)) return
         val field = textField(activity, activity.getString(R.string.password), password = true)
         MaterialAlertDialogBuilder(activity)
             .setIcon(icon(activity, R.drawable.ic_lock))
             .setTitle(title)
             .setView(form(activity, field))
             .setPositiveButton(R.string.button_unlock) { _, _ ->
-                if (PasswordHasher.verify(field.value, hash)) {
-                    onSuccess()
-                } else {
-                    Toast.makeText(activity, R.string.wrong_password, Toast.LENGTH_SHORT).show()
+                when (AdminGate.check(activity, AdminGate.Source.DIALOG, field.value, hash)) {
+                    AdminGate.Result.OK -> onSuccess()
+                    // The fifth wrong entry locks: say so instead of "wrong password".
+                    AdminGate.Result.WRONG -> if (!showLock(activity)) Toast.makeText(activity, R.string.wrong_password, Toast.LENGTH_SHORT).show()
+                    AdminGate.Result.LOCKED -> showLock(activity)
                 }
             }
             .setNegativeButton(R.string.button_cancel, null)
             .show()
         field.editText?.requestFocus()
+    }
+
+    /** Tells how long the password dialogs stay locked; false when they are not. */
+    private fun showLock(activity: Activity): Boolean {
+        val remaining = AdminGate.remainingMs(activity, AdminGate.Source.DIALOG)
+        if (remaining <= 0) return false
+        val minutes = ((remaining + 59_999) / 60_000).toInt()
+        val message = activity.resources.getQuantityString(R.plurals.password_locked, minutes, minutes)
+        Toast.makeText(activity, activity.getString(R.string.message_with_code, message, ErrorCodes.PASSWORD_LOCKED), Toast.LENGTH_LONG).show()
+        return true
     }
 
     /** Asks for HTTP credentials; [onResult] receives `null` when cancelled. */
