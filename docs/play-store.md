@@ -108,6 +108,11 @@ the administrator usually limits it to an allow list.
 No sensitive permissions that need a declaration form (no SMS, call log, location,
 accessibility, all-files access, package queries beyond the two scanner services).
 
+## Store listing
+
+Published 2026-11-06 (first review pending): [https://play.google.com/store/apps/details?id=de.ictbaden.industrialkioskbrowser](https://play.google.com/store/apps/details?id=de.ictbaden.industrialkioskbrowser). Play and the MDM/GitHub APKs
+carry the same signature, so devices can switch between the sources.
+
 ## Publishing a version
 
 The CI uploads to Google Play by itself once the secret `PLAY_SERVICE_ACCOUNT_JSON` exists
