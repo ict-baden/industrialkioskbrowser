@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Security
+
+- **Text-selection menu without Share and Web search** ([#30](https://github.com/ict-baden/industrialkioskbrowser/issues/30)):
+  a long press on text offered *Share*, *Web search* and the text actions of other apps. Each opens another app –
+  without lock task mode a way out of the kiosk, and *Web search* a way around the allow list. **Behaviour
+  change:** the menu now only offers cut, copy, paste and select all, in every profile.
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

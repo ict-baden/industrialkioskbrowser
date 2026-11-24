@@ -282,7 +282,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         scannerWanted = profile.scanner.enabled
         applyKioskSettings()
 
-        webView = WebView(this)
+        webView = KioskWebView(this)
         findViewById<ViewGroup>(R.id.webContainer).addView(
             webView,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),

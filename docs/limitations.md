@@ -49,6 +49,9 @@ These are deliberate, because many warehouse and production web apps run in an i
 - Lock task (real kiosk) needs a device owner, i.e. an EMM in *dedicated device* mode. Without it
   `hideExit` only hides the exit; the Android home and recents buttons still work.
 - Pages that open new windows (`target="_blank"`, `window.open`) stay in the same view.
+- The menu that appears when text is selected only offers cut, copy, paste and select all. *Share*,
+  *Web search* and the text actions of other apps (translate, assistant) are removed, because each
+  of them opens another app.
 - Downloads go to the app folder and need `allowDownloads`; `blob:` downloads are not supported.
 - Some features (document-start injections, JavaScript API) need a recent Android System WebView;
   on old WebViews injections run after the page has loaded, and the API is missing.
