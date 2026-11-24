@@ -1,0 +1,16 @@
+{
+  "profiles": [
+    {
+      "id": "scan-queue-test",
+      "name": "Scan queue test",
+      "startUrl": "http://10.0.2.2:8767/?mode=form&delay=1500",
+      "allowList": ["10.0.2.2"],
+      "launchOnStartup": true,
+      "scanner": {
+        "genericIntent": "on",
+        "terminator": "enter",
+        "queue": { "enabled": true, "maxPending": 20, "timeoutMs": 15000, "navigationGraceMs": 400, "settleMs": 200 }
+      }
+    }
+  ]
+}

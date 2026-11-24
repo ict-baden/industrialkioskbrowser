@@ -1,6 +1,6 @@
 # Web integration
 
-For developers of the web apps that run in Industrial Kiosk Browser. An existing web app works
+For developers of the web apps that run in IndustrialKioskBrowser. An existing web app works
 **without any changes**: scans are typed into the focused field like keyboard input.
 Everything on this page is optional.
 
@@ -22,6 +22,9 @@ sequenceDiagram
     A->>P: terminator key(s): Enter / Tab
   end
 ```
+
+While the page is loading, is sending a form or reports itself busy, the scan first waits in the
+[scan queue](#scan-queue); the steps below run once the page is ready.
 
 1. If the page has a `ScannerNavigate` meta tag, its target is opened instead (see
    below) – otherwise:
@@ -75,19 +78,22 @@ or the host of the start URL when there is no allow list. All methods return pro
 ```js
 IndustrialKioskBrowser.onScan((scan, event) => { /* same as the scan event */ });
 
-await Industrial Kiosk Browser.scanner.trigger();       // start scanning (soft trigger)
-await Industrial Kiosk Browser.scanner.trigger(false);  // stop scanning
-await Industrial Kiosk Browser.scanner.trigger({ mode: "text" }); // text recognition (OCR) with the camera
-await Industrial Kiosk Browser.scanner.disable();       // scanner off until the next page load
-await Industrial Kiosk Browser.scanner.enable();
-const { name, enabled } = await Industrial Kiosk Browser.scanner.status();
+await IndustrialKioskBrowser.scanner.trigger();       // start scanning (soft trigger)
+await IndustrialKioskBrowser.scanner.trigger(false);  // stop scanning
+await IndustrialKioskBrowser.scanner.trigger({ mode: "text" }); // text recognition (OCR) with the camera
+await IndustrialKioskBrowser.scanner.disable();       // scanner off until the next page load
+await IndustrialKioskBrowser.scanner.enable();
+const { name, enabled, pending, ready } = await IndustrialKioskBrowser.scanner.status();
+// pending: scans waiting in the queue, ready: a new scan would be delivered right away
+await IndustrialKioskBrowser.scanner.busy();          // hold scans back while the page works …
+await IndustrialKioskBrowser.scanner.ready();         // … and let them through again
 
-await Industrial Kiosk Browser.beep();                  // confirmation
-await Industrial Kiosk Browser.beep('error');           // error tone
-await Industrial Kiosk Browser.vibrate(300);
-await Industrial Kiosk Browser.toast('Booked');
+await IndustrialKioskBrowser.beep();                  // confirmation
+await IndustrialKioskBrowser.beep('error');           // error tone
+await IndustrialKioskBrowser.vibrate(300);
+await IndustrialKioskBrowser.toast('Booked');
 
-const info = await Industrial Kiosk Browser.deviceInfo();
+const info = await IndustrialKioskBrowser.deviceInfo();
 // { manufacturer, model, androidVersion, sdk, appVersion, profileId, scanner }
 ```
 
@@ -95,13 +101,49 @@ Feature detection for pages that also run in a normal browser:
 
 ```js
 if (window.IndustrialKioskBrowser) {
-  Industrial Kiosk Browser.beep();
+  IndustrialKioskBrowser.beep();
 }
 ```
 
 > **Note:** on servers with a non-default port (e.g. `:8443`)
 > `window.IndustrialKioskBrowser` is currently not available. Scans, the scan event and the
 > meta tags still work there.
+
+## Scan queue
+
+Scans that arrive while the page cannot take them wait in the app and are delivered one by one
+afterwards, each with its terminator key ([`scanner.queue`](configuration.md#scannerqueue)). The
+app sees by itself when a page loads and when a form sent with Enter navigates. What it cannot see
+is work the page does in JavaScript – saving with `fetch()`, then showing the next step without a
+new page. For that the page says so:
+
+```js
+const form = document.querySelector('#receipt');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const api = window.IndustrialKioskBrowser;
+  api?.scanner.busy();                       // scans now wait in the app
+  try {
+    await fetch('/api/receipt', { method: 'POST', body: new FormData(form) });
+    form.reset();
+    form.querySelector('input[name=item]').focus();
+  } finally {
+    api?.scanner.ready();                    // the next scan goes into the empty field
+  }
+});
+```
+
+- `busy(timeoutMs)` holds scans back until `ready()`, at most `timeoutMs` (default
+  `scanner.queue.timeoutMs`, 15 s) in case `ready()` never comes. Loading a new page ends it too.
+- Calling `busy()` inside the scan event handler or an `input`/`change` handler holds back the
+  very next scan already – the app checks this when the handler returns.
+- A scan handled with `preventDefault()` starts no wait of its own; call `busy()` when the handling
+  takes time.
+- Without the JavaScript API (other hosts, non-default port) the queue still waits for page loads
+  and sent forms; only `busy()` is missing.
+- A scan that finds no focused field waits until one has the focus. Pages that handle the scan
+  event without a field should call `preventDefault()`, otherwise the scan waits for a field and is
+  discarded after `timeoutMs` with `IKB-0041`.
 
 ## Built-in pages and resources
 
