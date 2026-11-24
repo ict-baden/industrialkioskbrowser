@@ -81,12 +81,17 @@ data class ScanQueueSettings(
     val enabled: Boolean = true,
     /** Scans waiting at most; one more is discarded. */
     val maxPending: Int = 20,
-    /** A scan not delivered within this time after it was read is discarded. */
+    /** The first waiting scan is discarded when the queue made no progress for this long. */
     val timeoutMs: Int = 15_000,
     /** After a terminator key: time for the form to start a navigation, otherwise the page counts as ready again. */
     val navigationGraceMs: Int = 400,
     /** After a page has loaded: time for its own scripts (focus, rendering) before the next scan. */
     val settleMs: Int = 200,
+    /**
+     * After a scan with terminator: while the focused field still ends with that scan (the page has
+     * not emptied it yet), the next scan waits instead of being appended.
+     */
+    val waitForFieldClear: Boolean = true,
 )
 
 /** How text recognition picks the text (`scanner.ocr.mode`). */

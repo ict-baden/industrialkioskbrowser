@@ -13,6 +13,7 @@ import de.ictbaden.industrialkioskbrowser.config.ConfigStore
 import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -75,6 +76,29 @@ class ScanQueueBrowserTest {
         assertFalse(lastScript().contains("\"data\":\"B\""))
         idle(1)
         assertTrue(lastScript().contains("\"data\":\"B\""))
+    }
+
+    @Test
+    fun `a field still holding the previous scan is checked again`() {
+        val browser = openDemo()
+        val activity = browser.get()
+        pageLoaded()
+        idle(200)
+        activity.onScan(scan("A"))
+        // Terminator Enter: the script remembers the field (waitForFieldClear).
+        assertTrue(lastScript().trimEnd().endsWith(", true, true, true)"))
+        answer("\"inserted\"")
+        activity.onScan(scan("B"))
+        idle(450)
+        assertTrue(lastScript().contains("\"data\":\"B\""))
+        answer("\"pending\"") // the page has not emptied the field yet
+        assertEquals(1, activity.scansPending)
+        val before = shadowOf(webView).lastEvaluatedJavascriptCallback
+        idle(250)
+        assertNotSame(before, shadowOf(webView).lastEvaluatedJavascriptCallback) // tried again
+        assertTrue(lastScript().contains("\"data\":\"B\""))
+        assertTrue(lastScript().trimEnd().endsWith(", true, true, true)")) // event not dispatched yet: still dispatch=true
+        assertEquals(0, activity.scansPending)
     }
 
     @Test

@@ -144,6 +144,10 @@ form.addEventListener('submit', async (event) => {
 - A scan that finds no focused field waits until one has the focus. Pages that handle the scan
   event without a field should call `preventDefault()`, otherwise the scan waits for a field and is
   discarded after `timeoutMs` with `IKB-0041`.
+- After a scan with terminator key the next scan also waits while the field still holds that scan
+  (`scanner.queue.waitForFieldClear`) – empty the field when the save is done, as above. A page
+  that keeps the value on purpose and wants scans appended turns `waitForFieldClear` off; one that
+  selects the whole text after sending gets it replaced by the next scan.
 
 ## Built-in pages and resources
 

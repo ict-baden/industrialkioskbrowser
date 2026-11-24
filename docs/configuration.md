@@ -57,7 +57,7 @@ checked against the app by the automated tests.
       "kiosk":      { "hideToolbar": false, "immersive": false, "keepScreenOn": true, "orientation": "auto" },
       "scanner":    { "enabled": true, "terminator": "enter", "injectIntoFocusedField": true, "genericIntent": "auto", "engine": "auto",
                       "camera": { "aim": "frame", "continuous": false }, "data": { "prefix": "", "suffix": null },
-                      "queue": { "enabled": true, "timeoutMs": 15000 } }
+                      "queue": { "enabled": true, "timeoutMs": 15000, "waitForFieldClear": true } }
     }
   ]
 }
@@ -248,7 +248,7 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 
 Every field of a profile except the lists (injections, key remapping, hotkeys, replacements and
-rules of the scan data) and the `scanner.queue` values `maxPending`, `navigationGraceMs`, `settleMs`
+rules of the scan data) and the `scanner.queue` values `maxPending`, `navigationGraceMs`, `settleMs`, `waitForFieldClear`
 can also be changed on the device: **Settings → tap a profile**.
 
 ## `scanner.camera`
@@ -345,9 +345,10 @@ camera, NFC, OCR) and also pages with a `ScannerNavigate` meta tag or their own 
 |---|---|---|
 | `enabled` | `true` | Use the queue. `false`: every scan goes to the page at once, as in earlier versions |
 | `maxPending` | `20` | Scans waiting at most (1–200); one more is discarded (`IKB-0040`) |
-| `timeoutMs` | `15000` | A scan not delivered within this time after it was read is discarded (`IKB-0041`), 1000–120000 |
+| `timeoutMs` | `15000` | When the queue makes no progress for this long, the first waiting scan is discarded (`IKB-0041`) and the time starts again for the next one; 1000–120000. Counted from the last delivery (or from when the first scan of an idle queue arrived), not from when each scan was read |
 | `navigationGraceMs` | `400` | After a terminator key: time for the form to start loading a page (0–5000). If none starts (single-page app), the page counts as ready again |
 | `settleMs` | `200` | After a page has loaded: time for its own scripts, e.g. setting the focus, before the next scan (0–5000) |
+| `waitForFieldClear` | `true` | After a scan with terminator key: as long as the focused field still ends with that scan (the page has not emptied it yet), the next scan waits instead of being appended. Turn it off for pages that never empty the field after sending and want scans appended |
 
 **When the page is not ready.** A scan is delivered at once when the page is ready and nothing
 waits – no extra delay. The page is *not* ready:
@@ -359,17 +360,23 @@ waits – no extra delay. The page is *not* ready:
    started has loaded (rule 1), or `navigationGraceMs` if none starts;
 3. while the page reports itself busy through the JavaScript API (`scanner.busy()` until
    `scanner.ready()`, at most a safety limit – [Web integration](web-integration.md#scan-queue));
-4. while a scan is being delivered.
+4. while a scan is being delivered;
+5. with `waitForFieldClear`, after a scan with terminator key: while that field still has the focus
+   and its value still ends with the scan. This catches pages that save with JavaScript and empty
+   the field only afterwards, without calling `scanner.busy()`. The check runs in the page right
+   before inserting, together with the insertion. A field whose whole text is selected counts as
+   free (the scan replaces it), and the first scan on a new page is never held back by it.
 
 A scan that finds no focused text field is not discarded: it stays first in the queue and is tried
-again every 250 ms until a field has the focus or `timeoutMs` is over (`IKB-0041`). The scan event
-is dispatched only once per page. A scan handled by the page's own listener (`preventDefault()`)
+again every 250 ms until a field has the focus or the queue made no progress for `timeoutMs`
+(`IKB-0041`); rule 5 is checked the same way. The scan event is dispatched only once per page, and
+not before rule 5 lets the scan through. A scan handled by the page's own listener (`preventDefault()`)
 starts no wait unless the page calls `scanner.busy()`; a `ScannerNavigate` script counts like a sent
 form (rule 2).
 
 **Never discarded silently.** Scans that cannot be delivered are discarded with the error tone
-(`sounds.error`) and a message naming the value: queue full (`IKB-0040`), not delivered in time
-(`IKB-0041`), the page was left – an error page appeared or a navigation outside the allow list was
+(`sounds.error`) and a message naming the value: queue full (`IKB-0040`), no progress for
+`timeoutMs` (`IKB-0041`), the page was left – an error page appeared or a navigation outside the allow list was
 blocked (`IKB-0042`) – or the session was closed, e.g. by a new configuration (`IKB-0043`). The scan
 tone (`sounds.scanOk`) still plays as soon as a scan is read. While scans wait, a small number on
 the scan button of the toolbar shows how many; pages ask `scanner.status()`.
@@ -381,7 +388,7 @@ submit with the terminator key.
 
 Edge cases: a form answered with a file download ends the wait at once. A form answered with
 `204 No Content` (no new page) holds the queue for up to `timeoutMs`, because the WebView reports
-no end for such a request; scans that are older by then are discarded with `IKB-0041`. Navigations
+no end for such a request; then the first waiting scan is discarded with `IKB-0041`. Navigations
 that a service worker answers without a network request start the wait only when the new page
 appears.
 

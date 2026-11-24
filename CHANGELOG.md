@@ -11,10 +11,14 @@
   `navigationGraceMs` passed without one, while the page reports itself busy, and while a scan is
   being delivered. A scan that finds no focused text field waits for one instead of being dropped.
   Covers every scan source and pages with `ScannerNavigate` or their own scan handler. On by default
-  with `maxPending` 20, `timeoutMs` 15000, `navigationGraceMs` 400, `settleMs` 200; older
-  configurations get these defaults. *Settings → profile → Scanner* has the switch and the timeout.
+  with `maxPending` 20, `timeoutMs` 15000, `navigationGraceMs` 400, `settleMs` 200,
+  `waitForFieldClear` true; older configurations get these defaults. `timeoutMs` counts from the
+  last progress of the queue, not from when a scan was read: a long queue that moves on is not cut
+  short, a first scan that cannot be delivered for that long is discarded. `waitForFieldClear`:
+  after a scan with terminator key the next one waits while the focused field still holds that
+  scan (pages that save with JavaScript and empty the field afterwards). *Settings → profile → Scanner* has the switch and the timeout.
   Scans that cannot be delivered are never dropped silently: error tone and a message with the
-  value, new error codes `IKB-0040` (queue full), `IKB-0041` (not ready in time), `IKB-0042` (page
+  value, new error codes `IKB-0040` (queue full), `IKB-0041` (no progress in time), `IKB-0042` (page
   left: error page or blocked navigation), `IKB-0043` (session closed). The scan button shows how
   many scans wait. Test server and guide: `tools/scan-queue/`, docs/testing-scan-queue.md.
 - JavaScript API: `scanner.busy(timeoutMs)` and `scanner.ready()` hold scans back while the page

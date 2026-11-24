@@ -70,12 +70,14 @@ record what you measured.
 | # | Page | Run | What it shows | Expected with the queue | Without (`queue.enabled: false`) |
 |---|---|---|---|---|---|
 | 1 | `/?mode=form&delay=1500` | `-n 10 -d 0.5` | Scans while the form posts and the next page loads (rules 1 and 2) | 10 saved, in order; the scan button shows the waiting count | scans go into the old page and are lost with the navigation |
+| 1b | `/?mode=form&delay=1500` | `-n 15 -d 0.2` | A long queue that is worked off steadily | 15 saved, in order, nothing discarded (`timeoutMs` counts from the last progress) | – |
 | 2 | `/?mode=form&delay=0` | `-n 20 -d 0` | Fast bursts with fast pages | 20 saved, in order | at high rates values can merge in the field ([scan stress test](testing-scan-stress.md), run 2) |
 | 3 | `/?mode=spa&delay=1500&busy=1` (port 80) | `-n 10 -d 0.3` | Page reports busy while `fetch()` saves | 10 saved, in order | values typed into the field during the save |
-| 4 | `/?mode=spa&delay=1500` (no busy) | `-n 10 -d 0.3` | What the queue cannot know: a JavaScript save without `busy()` | after `navigationGraceMs` the next scan goes into the field during the save – shows why pages should call `busy()` | same |
+| 4 | `/?mode=spa&delay=1500` (no busy) | `-n 10 -d 0.5` | JavaScript save without `busy()`, field emptied only after the save | 10 saved, in order: the next scan waits while the field still holds the previous one (`waitForFieldClear`) | values appended in the field (`other` shows `SCAN0001SCAN0002`) |
+| 4b | as 4, profile with `"waitForFieldClear": false` | `-n 10 -d 0.5` | What the field check prevents | values appended after `navigationGraceMs` | same |
 | 5 | `/?mode=js&delay=1500&busy=1` (port 80) | `-n 5 -d 0.3` | JavaScript save, then navigation, with `busy()` | 5 saved, in order | lost with the navigation |
 | 6 | `/?mode=form&delay=500&focus=1500` | `-n 5 -d 0.2` | Next page focuses its field late (no field yet) | scans wait for the field (tried every 250 ms), 5 saved | event only, nothing typed |
-| 7 | `/?mode=form&delay=20000` | `-n 3 -d 0.2` | Server slower than `timeoutMs` (15 s) | error tone and `IKB-0041` for the scans that waited | – |
+| 7 | `/?mode=form&delay=20000` | `-n 3 -d 0.2` | Server slower than `timeoutMs` (15 s) | 15 s after the first save: error tone and `IKB-0041` for the second scan; the third gets 15 s again and goes into the next page | – |
 | 8 | `/?mode=form&delay=3000` | `-n 30 -d 0` | More than `maxPending` (20) waiting | the 21st and later: error tone, `IKB-0040` | – |
 
 For "without the queue" set `"queue": { "enabled": false }` in the profile, push it again and

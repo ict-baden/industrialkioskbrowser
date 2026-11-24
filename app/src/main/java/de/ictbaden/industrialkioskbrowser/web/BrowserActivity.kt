@@ -621,8 +621,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             return
         }
         val terminator = pagePolicy.terminator ?: profile.scanner.terminator
+        val queue = profile.scanner.queue
+        // waitForFieldClear: the next scan must not be appended while the page still has this one in the field.
+        val mark = queue.enabled && queue.waitForFieldClear && terminator != ScanTerminator.NONE
         webView.requestFocus()
-        webView.evaluateJavascript(ScanScripts.deliver(scan, profile.scanner.injectIntoFocusedField, dispatch = !retry)) { value ->
+        webView.evaluateJavascript(ScanScripts.deliver(scan, profile.scanner.injectIntoFocusedField, dispatch = !retry, markInsert = mark)) { value ->
             val delivery = ScanScripts.parseDelivery(value)
             when (delivery.result) {
                 "inserted" -> {
@@ -634,6 +637,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                     }
                 }
                 "nofield" -> scanQueue.delivered(ScanQueue.Outcome.NO_FIELD, delivery.busy)
+                "pending" -> scanQueue.delivered(ScanQueue.Outcome.FIELD_NOT_CLEARED, delivery.busy)
                 else -> scanQueue.delivered(ScanQueue.Outcome.DONE, delivery.busy)
             }
         }

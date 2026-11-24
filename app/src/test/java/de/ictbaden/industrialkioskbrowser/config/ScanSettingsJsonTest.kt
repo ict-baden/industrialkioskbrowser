@@ -178,9 +178,10 @@ class ScanSettingsJsonTest {
         // Older configurations have no scanner.queue: the queue is on with the defaults.
         assertEquals(ScanQueueSettings(), parse("{}").queue)
         assertEquals(true, parse("{}").queue.enabled)
+        assertEquals(true, parse("{}").queue.waitForFieldClear)
         assertEquals(ScanQueueSettings(enabled = false, maxPending = 20, timeoutMs = 15_000), parse("""{"queue":{"enabled":false}}""").queue)
 
-        val queue = ScanQueueSettings(enabled = false, maxPending = 5, timeoutMs = 30_000, navigationGraceMs = 800, settleMs = 0)
+        val queue = ScanQueueSettings(enabled = false, maxPending = 5, timeoutMs = 30_000, navigationGraceMs = 800, settleMs = 0, waitForFieldClear = false)
         val config = AppConfig(profiles = listOf(Profile(id = "p", name = "P", startUrl = "https://example.com", scanner = ScannerSettings(queue = queue))))
         assertEquals(queue, ConfigJson.parse(ConfigJson.write(config)).profiles.single().scanner.queue)
         assertEquals(queue, ConfigJson.parse(ConfigJson.writeCompact(config)).profiles.single().scanner.queue)

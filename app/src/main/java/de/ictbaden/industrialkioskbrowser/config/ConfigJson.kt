@@ -402,6 +402,7 @@ object ConfigJson {
             timeoutMs = intIn(json, "timeoutMs", where, d.timeoutMs, 1_000, 120_000),
             navigationGraceMs = intIn(json, "navigationGraceMs", where, d.navigationGraceMs, 0, 5_000),
             settleMs = intIn(json, "settleMs", where, d.settleMs, 0, 5_000),
+            waitForFieldClear = json.optBoolean("waitForFieldClear", d.waitForFieldClear),
         )
     }
 
@@ -591,6 +592,7 @@ object ConfigJson {
         put("timeoutMs", q.timeoutMs)
         put("navigationGraceMs", q.navigationGraceMs)
         put("settleMs", q.settleMs)
+        put("waitForFieldClear", q.waitForFieldClear)
     }
 
     private fun writeNfc(n: NfcSettings) = JSONObject().apply {

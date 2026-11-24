@@ -29,7 +29,7 @@ class ScanScriptsTest {
     fun `scan data is embedded as json`() {
         val script = ScanScripts.deliver(ScanResult("</script>'\n", "CODE128", "test", 1), injectIntoFocusedField = true)
         assertTrue(script.contains("\"data\":\"<\\/script>'\\n\""))
-        assertTrue(script.trimEnd().endsWith(", true)"))
+        assertTrue(script.trimEnd().endsWith(", true, true, false)"))
     }
 
     @Test
@@ -77,8 +77,11 @@ class ScanScriptsTest {
     fun `a retry only inserts, without dispatching the scan event again`() {
         val first = ScanScripts.deliver(ScanResult("A", null, "test", 1), injectIntoFocusedField = true)
         val retry = ScanScripts.deliver(ScanResult("A", null, "test", 1), injectIntoFocusedField = true, dispatch = false)
-        assertTrue(first.trimEnd().endsWith(", true, true)"))
-        assertTrue(retry.trimEnd().endsWith(", true, false)"))
+        assertTrue(first.trimEnd().endsWith(", true, true, false)"))
+        assertTrue(retry.trimEnd().endsWith(", true, false, false)"))
+        val marked = ScanScripts.deliver(ScanResult("A", null, "test", 1), injectIntoFocusedField = true, markInsert = true)
+        assertTrue(marked.trimEnd().endsWith(", true, true, true)"))
+        assertTrue(marked.contains("return 'pending'"))
         assertTrue(retry.contains("if (dispatch)"))
     }
 
