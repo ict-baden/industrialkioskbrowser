@@ -70,6 +70,23 @@ data class ScannerSettings(
     val data: ScanDataSettings = ScanDataSettings(),
     val ocr: OcrSettings = OcrSettings(),
     val nfc: NfcSettings = NfcSettings(),
+    val queue: ScanQueueSettings = ScanQueueSettings(),
+)
+
+/**
+ * Scans that arrive while the page is not ready (loading, form being sent, page busy, no field
+ * focused) wait in a queue and are delivered one by one afterwards (`scanner.queue`).
+ */
+data class ScanQueueSettings(
+    val enabled: Boolean = true,
+    /** Scans waiting at most; one more is discarded. */
+    val maxPending: Int = 20,
+    /** A scan not delivered within this time after it was read is discarded. */
+    val timeoutMs: Int = 15_000,
+    /** After a terminator key: time for the form to start a navigation, otherwise the page counts as ready again. */
+    val navigationGraceMs: Int = 400,
+    /** After a page has loaded: time for its own scripts (focus, rendering) before the next scan. */
+    val settleMs: Int = 200,
 )
 
 /** How text recognition picks the text (`scanner.ocr.mode`). */
