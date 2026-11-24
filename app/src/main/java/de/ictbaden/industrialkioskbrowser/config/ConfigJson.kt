@@ -49,11 +49,19 @@ object ConfigJson {
     }
 
     /**
-     * Android's `org.json` appends the whole input to its messages ("… at character 12 of {…}"). The
-     * input may contain a plain admin password and would end up in the log and the settings screen.
+     * Android's `org.json` puts the input into its messages: the whole text after a syntax error
+     * ("… at character 12 of {…}"), the whole value when the text is valid JSON but not an object
+     * ("Value [{…}] of type org.json.JSONArray cannot be converted to JSONObject" – a configuration
+     * wrapped in an array or quoted once too often). The input may contain a plain admin password
+     * and would end up in the log and the settings screen.
      */
-    private fun withoutInput(e: JSONException): String =
-        e.message.orEmpty().replace(Regex("(?s)( at character \\d+) of .*"), "$1")
+    private fun withoutInput(e: JSONException): String {
+        val message = e.message.orEmpty()
+        NOT_AN_OBJECT.find(message)?.let { return "expected an object {…}, found ${it.groupValues[1].substringAfterLast('.')}" }
+        return message.replace(Regex("(?s)( at character \\d+) of .*"), "$1")
+    }
+
+    private val NOT_AN_OBJECT = Regex("(?s)^Value .* of type (\\S+) cannot be converted to \\S+$")
 
     /** Plain-text `global.adminPassword` of a configuration, to check that it comes from the administrator. */
     fun plainAdminPassword(text: String): String? = try {

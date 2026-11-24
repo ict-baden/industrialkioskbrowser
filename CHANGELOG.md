@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Security
+
+- **No configuration text in the error message, second case** ([#26](https://github.com/ict-baden/industrialkioskbrowser/issues/26)):
+  0.8.0 cut the input out of JSON syntax errors. A configuration that is valid JSON but not an object – wrapped in
+  `[…]`, quoted once too often by a staging tool, or not JSON at all (`adminPassword=…`) – still put its whole text,
+  including a plain `adminPassword`, into Logcat and *Settings → Last provisioning error*. The message now reads
+  `Invalid JSON: expected an object {…}, found JSONArray` (or `String`).
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed
