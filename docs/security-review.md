@@ -87,7 +87,7 @@ reported again.
 | 9 | low | The in-app admin and exit password dialogs have no attempt limit; only broadcasts and files have the 5-attempt lock. | open ([#33](https://github.com/ict-baden/industrialkioskbrowser/issues/33)) |
 | 10 | low | An IPv6 start URL produced the invalid origin rule `http://fd00::1`, which silently disabled the JavaScript bridge. | fixed in PR #23 ([#34](https://github.com/ict-baden/industrialkioskbrowser/issues/34)) |
 | 11 | low | The allow list ignores scheme and port (`https://wms.example.com` also allows `http://wms.example.com:8080`); not documented. | open ([#35](https://github.com/ict-baden/industrialkioskbrowser/issues/35)) |
-| 12 | low | Workflow permissions (`contents: write`, `id-token: write`) apply to every job including pull-request builds; actions are pinned by major tag, not by commit. | open ([#36](https://github.com/ict-baden/industrialkioskbrowser/issues/36)) |
+| 12 | low | Workflow permissions (`contents: write`, `id-token: write`) apply to every job including pull-request builds; actions are pinned by major tag, not by commit. | fixed after 0.8.0 ([#36](https://github.com/ict-baden/industrialkioskbrowser/issues/36)): the workflow token is read-only; only the separate `release` job, which never runs for pull requests, may write. All actions are pinned to commits. |
 
 Checked and found in order: `allowFileAccess`/`allowContentAccess` off, non-web schemes
 (`file:`, `content:`, `intent:`, `tel:`, `mailto:`, `market:`, `data:`, `blob:`) blocked for the
