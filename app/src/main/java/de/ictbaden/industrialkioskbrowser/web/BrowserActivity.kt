@@ -649,13 +649,22 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private fun download(url: String, userAgent: String?, contentDisposition: String?, mimeType: String?) {
-        if (!profile.allowDownloads) {
-            toast(withCode(getString(R.string.downloads_disabled), ErrorCodes.DOWNLOADS_DISABLED))
-            return
-        }
-        if (!URLUtil.isNetworkUrl(url)) {
-            toast(withCode(getString(R.string.download_unsupported), ErrorCodes.DOWNLOAD_UNSUPPORTED))
-            return
+        when (DownloadPolicy.check(url, profile)) {
+            DownloadPolicy.Decision.START -> Unit
+            DownloadPolicy.Decision.DISABLED -> {
+                toast(withCode(getString(R.string.downloads_disabled), ErrorCodes.DOWNLOADS_DISABLED))
+                return
+            }
+            DownloadPolicy.Decision.UNSUPPORTED -> {
+                toast(withCode(getString(R.string.download_unsupported), ErrorCodes.DOWNLOAD_UNSUPPORTED))
+                return
+            }
+            DownloadPolicy.Decision.NOT_ALLOWED -> {
+                // Before the request is built: no cookies and no request go to a host outside the allow list.
+                toast(withCode(getString(R.string.download_not_allowed, UrlPolicy.hostOf(url) ?: url), ErrorCodes.DOWNLOAD_NOT_ALLOWED))
+                sounds.play(profile.sounds.error)
+                return
+            }
         }
         val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
         val request = DownloadManager.Request(url.toUri())

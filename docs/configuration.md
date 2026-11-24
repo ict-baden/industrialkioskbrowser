@@ -115,12 +115,12 @@ intermediate CA when there is one, not only the root.
 | `name` | `startUrl` | Display name |
 | `startUrl` | – | **Required**, `http://` or `https://` |
 | `color` | brand color | Color of the profile card and toolbar, `#RRGGBB` |
-| `allowList` | `[]` | Allowed hosts including subdomains (`example.com` also allows `a.example.com`). **Empty = every host allowed** – set an allow list on kiosk devices. The host of the start URL is always allowed. Applies to main-frame navigations. |
+| `allowList` | `[]` | Allowed hosts including subdomains (`example.com` also allows `a.example.com`). **Empty = every host allowed** – set an allow list on kiosk devices. The host of the start URL is always allowed. Applies to main-frame navigations and to downloads. |
 | `launchOnStartup` | `false` | Open this profile directly when the app starts |
 | `userAgent` | default | Custom user agent; `{default}` is replaced by the default user agent |
 | `clearCacheOnStart`, `clearCookiesOnStart` | `false` | Clear when the profile opens (e.g. a fresh SAP session) |
 | `allowFileUpload` | `false` | Allow `<input type="file">` |
-| `allowDownloads` | `true` | Downloads through the Android DownloadManager |
+| `allowDownloads` | `true` | Downloads through the Android DownloadManager. With an `allowList` only files from allowed hosts are downloaded (`IKB-0014` otherwise). Switch it off on kiosk devices that do not need downloads. |
 
 ## `viewport`
 

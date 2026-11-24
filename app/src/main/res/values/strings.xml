@@ -62,6 +62,7 @@
     <string name="scan_target_not_allowed">Scan target not allowed: %1$s</string>
     <string name="downloads_disabled">Downloads are disabled</string>
     <string name="download_unsupported">This download type is not supported</string>
+    <string name="download_not_allowed">Download not allowed: %1$s</string>
     <string name="download_started">Download started: %1$s</string>
 
     <!-- Error pages -->

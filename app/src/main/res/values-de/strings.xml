@@ -52,6 +52,7 @@
     <string name="scan_target_not_allowed">Scan-Ziel nicht erlaubt: %1$s</string>
     <string name="downloads_disabled">Downloads sind deaktiviert</string>
     <string name="download_unsupported">Diese Art von Download wird nicht unterstützt</string>
+    <string name="download_not_allowed">Download nicht erlaubt: %1$s</string>
     <string name="download_started">Download gestartet: %1$s</string>
 
     <string name="error_host_title">Server nicht gefunden</string>

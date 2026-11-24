@@ -52,6 +52,7 @@
     <string name="scan_target_not_allowed">Destino del escaneo no permitido: %1$s</string>
     <string name="downloads_disabled">Las descargas están desactivadas</string>
     <string name="download_unsupported">Este tipo de descarga no es compatible</string>
+    <string name="download_not_allowed">Descarga no permitida: %1$s</string>
     <string name="download_started">Descarga iniciada: %1$s</string>
 
     <string name="error_host_title">Servidor no encontrado</string>

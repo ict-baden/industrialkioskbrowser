@@ -18,6 +18,7 @@ any of the five languages. Source: [`ErrorCodes.kt`](../app/src/main/java/de/ict
 | `IKB-0011` | Scan target not allowed | `ScannerNavigate` points to a host outside `allowList` |
 | `IKB-0012` | Downloads are disabled | `allowDownloads` is off |
 | `IKB-0013` | This download type is not supported | Download that is not `http`/`https` (e.g. `blob:`) |
+| `IKB-0014` | Download not allowed | The file comes from a host outside `allowList`; add the host or serve the file from an allowed one |
 | `IKB-0020` | Profile not found | The profile was removed while it was being opened |
 | `IKB-0030` | No access to the camera | Camera scanning: the camera permission was denied (Android settings → Apps → Industrial Kiosk Browser → Permissions, or grant it through the MDM) |
 | `IKB-0031` | Camera could not be started | Camera scanning: no usable camera, or another app holds it |

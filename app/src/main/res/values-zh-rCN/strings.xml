@@ -52,6 +52,7 @@
     <string name="scan_target_not_allowed">不允许的扫描目标：%1$s</string>
     <string name="downloads_disabled">下载已停用</string>
     <string name="download_unsupported">不支持此类下载</string>
+    <string name="download_not_allowed">不允许下载：%1$s</string>
     <string name="download_started">已开始下载：%1$s</string>
 
     <string name="error_host_title">找不到服务器</string>

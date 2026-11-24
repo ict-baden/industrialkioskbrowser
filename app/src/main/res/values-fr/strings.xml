@@ -52,6 +52,7 @@
     <string name="scan_target_not_allowed">Destination du scan non autorisée : %1$s</string>
     <string name="downloads_disabled">Les téléchargements sont désactivés</string>
     <string name="download_unsupported">Ce type de téléchargement n\'est pas pris en charge</string>
+    <string name="download_not_allowed">Téléchargement non autorisé : %1$s</string>
     <string name="download_started">Téléchargement lancé : %1$s</string>
 
     <string name="error_host_title">Serveur introuvable</string>
