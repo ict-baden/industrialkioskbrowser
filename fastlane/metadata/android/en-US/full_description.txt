@@ -28,7 +28,7 @@ YOUR DESIGN
 • Your title, logo and brand color, set by configuration or right in the app
 
 PRIVACY
-• No account, no ads, no tracking. Industrial Kiosk Browser sends no data to ICT-Baden.
+• No account, no ads, no tracking. Industrial Kiosk Browser sends no data to ICT Baden.
 • The app itself only connects to the web apps you configure and the pages they lead to.
 
-User interface in English, German, Spanish, French and Chinese. Free and open source (MIT licence), made by ICT-Baden. Paid support contracts are available.
+User interface in English, German, Spanish, French and Chinese. Free and open source (MIT licence), made by ICT Baden. Paid support contracts are available.

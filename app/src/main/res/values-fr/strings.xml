@@ -158,7 +158,7 @@
     <string name="delete_profile_message">« %1$s » sera supprimé de cet appareil.</string>
 
     <string name="about_privacy">Données et confidentialité</string>
-    <string name="about_privacy_summary">Ce logiciel n\'envoie aucune donnée à ICT-Baden.</string>
+    <string name="about_privacy_summary">Ce logiciel n\'envoie aucune donnée à ICT Baden.</string>
     <string name="about_licence">Licence</string>
     <string name="about_third_party">Licences tierces</string>
     <string name="about_source">Code source</string>
