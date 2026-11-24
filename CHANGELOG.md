@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Security
+
+- **No sign-in dialog for hosts outside the allow list** ([#31](https://github.com/ict-baden/industrialkioskbrowser/issues/31)):
+  the dialog for HTTP authentication appeared for every resource, also for an image or a frame from a host the
+  profile could never open – a way to ask the person at the device for the credentials of another system. With an
+  `allowList` the dialog now only appears for allowed hosts and the host of the start URL; other requests are
+  cancelled. **Behaviour change:** a resource on another host that needs HTTP authentication (for example an SSO
+  or file server) needs that host in the `allowList`. Profiles without an `allowList` behave as before.
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

@@ -819,6 +819,12 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         }
 
         override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String?) {
+            if (!HttpAuthPolicy.mayAsk(host, profile)) {
+                // An embedded resource of a host outside the allow list: no dialog, the resource gets its 401.
+                Log.w(TAG, "Sign-in request of a host outside the allow list refused")
+                handler.cancel()
+                return
+            }
             Dialogs.credentials(this@BrowserActivity, host) { credentials ->
                 if (credentials == null) handler.cancel() else handler.proceed(credentials.first, credentials.second)
             }
