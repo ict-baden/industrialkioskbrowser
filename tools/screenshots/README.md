@@ -22,5 +22,8 @@ emulator:
 Requirements: JDK 17–21, Python 3 with Pillow, Node.js (for Playwright), Roboto
 (available on Windows, otherwise set `FONTS_DIR`).
 
+The QR login images (`screen-qr-login-*.png`) use a staged sign-in page with `examples/qr-login/qr-login.js`: the
+render scans a test code and types its PIN (482913).
+
 Robolectric cannot render the WebView itself, so for the browser screens the Chromium
 render of the page is placed into the content area of the rendered activity.

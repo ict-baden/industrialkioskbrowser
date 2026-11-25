@@ -143,6 +143,8 @@ screens = {
     "browser": with_web(demo_frame, load(web / "demo.png"), top),
     "menu": with_web_under_scrim(load(raw / "browser-menu-frame.png"), load(web / "demo.png"), top),
     "error": with_web(load(raw / "browser-wms-frame.png"), load(web / "status.png"), top),
+    "qr-login-pin": with_web(load(raw / "browser-wms-frame.png"), load(web / "qr-login-pin.png"), top),
+    "qr-login-filled": with_web(load(raw / "browser-wms-frame.png"), load(web / "qr-login-filled.png"), top),
     "settings": load(raw / "settings.png"),
     "profile-editor": load(raw / "profile-editor.png"),
     "color-picker": load(raw / "color-picker.png"),

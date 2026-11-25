@@ -125,6 +125,7 @@
         h2 { margin: 0 0 14px; font-size: 20px; }
         input { box-sizing: border-box; width: 100%; font-size: 26px; letter-spacing: .25em; padding: 12px; border: 2px solid #888; border-radius: 10px; }
         input:focus { outline: none; border-color: #111; }
+        input::-ms-reveal { display: none; }
         .msg { min-height: 1.4em; margin: 10px 0 0; color: #b00020; font-size: 16px; }
         .row { display: flex; gap: 10px; margin-top: 16px; }
         button { flex: 1; font-size: 18px; padding: 14px; border-radius: 10px; border: 0; }

@@ -10,6 +10,11 @@ Everything here is an example you can use and adapt: the script `examples/qr-log
 
 ## How it works
 
+<p align="center">
+  <img src="images/screen-qr-login-pin.png" width="260" alt="After the scan the script asks for the PIN, above the sign-in page">
+  <img src="images/screen-qr-login-filled.png" width="260" alt="With the right PIN, user name and password are filled in">
+</p>
+
 1. An administrator (or the user) opens the generator, enters user name, password and a PIN, optionally an expiry date,
    and prints the QR code – for example on the back of the badge. The generator runs in the browser only; nothing is
    sent anywhere.
