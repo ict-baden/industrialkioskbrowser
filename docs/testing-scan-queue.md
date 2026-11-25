@@ -97,3 +97,20 @@ saved=10 highest=10 missing=none duplicates=0 outOfOrder=0 other=[]
 same summary is in the window title (`IKB-Q saved=… miss=… dup=… ooo=… other=…`), readable with
 `adb shell uiautomator dump`. Scans the app discarded are logged as
 `W BrowserActivity: n scan(s) discarded: TIMEOUT|FULL|PAGE_LEFT|CLOSED`.
+
+## Measured
+
+On a Zebra device with Android 15 (DataWedge device, scans sent as generic broadcasts from a shell on
+the device, terminator Enter), debug builds of `main`:
+
+| Date | Page | Scans | Queue settings | Result |
+|---|---|---|---|---|
+| 2026-11-24 | `mode=form`, `delay=1500` | 10, 0.5 s apart | defaults | 10 saved, in order |
+| 2026-11-24 | `mode=form`, `delay=1500` | 15, 0.2 s apart | defaults | 15 saved, in order |
+| 2026-11-24 | `mode=spa` | 10, 0.5 s apart | defaults | 10 saved, in order |
+| 2026-11-24 | `mode=form`, queue off | 10, 0.5 s apart | `enabled: false` | values run together (the behaviour before 0.9.0) |
+| 2026-11-25 | `mode=form`, `delay=0` | 200 without a pause (about 20 per second) | `maxPending: 200` | 200 saved, in order, no duplicates, none discarded |
+
+With the default `maxPending` of 20, a burst like the last one fills the queue; scans above the limit
+are discarded with the error tone and a message instead of running together. Not measured: Honeywell
+devices, Android 8 to 14, scans from the scan engine at this rate (a person does not scan that fast).

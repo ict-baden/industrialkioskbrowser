@@ -7,6 +7,7 @@
 - [Web integration](docs/web-integration.md): the note on non-default ports described the state before 1.0.0. The
   JavaScript API is available there for the start URL and for allow list entries that name the port.
 - [Limitations](docs/limitations.md) and README no longer call the app a 0.x version.
+- [Testing the scan queue](docs/testing-scan-queue.md): what was measured on a device ([#19](https://github.com/ict-baden/industrialkioskbrowser/issues/19)).
 
 ## [1.0.0] – 2026-11-25
 
