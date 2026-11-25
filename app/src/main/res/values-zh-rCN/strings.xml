@@ -7,6 +7,7 @@
     <string name="action_settings">设置</string>
     <string name="action_home">主页</string>
     <string name="action_reload">重新加载</string>
+    <string name="action_clear_cache">清除缓存</string>
     <string name="action_forward">前进</string>
     <string name="action_scanner">扫描器</string>
     <string name="action_profiles">配置文件</string>

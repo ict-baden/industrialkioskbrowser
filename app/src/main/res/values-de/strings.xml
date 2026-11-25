@@ -7,6 +7,7 @@
     <string name="action_settings">Einstellungen</string>
     <string name="action_home">Startseite</string>
     <string name="action_reload">Neu laden</string>
+    <string name="action_clear_cache">Cache leeren</string>
     <string name="action_forward">Vorwärts</string>
     <string name="action_scanner">Scanner</string>
     <string name="action_profiles">Profile</string>

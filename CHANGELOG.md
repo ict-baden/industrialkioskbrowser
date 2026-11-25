@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- **Menu item *Clear cache*** ([#64](https://github.com/ict-baden/industrialkioskbrowser/issues/64)): next to
+  *Reload*, it empties the WebView cache and reloads the page. Cookies and logins stay. Helps when devices still show
+  old scripts after a web app update, without restarting the app. No new configuration key.
+
 ### Docs
 
 - [Web integration](docs/web-integration.md): the note on non-default ports described the state before 1.0.0. The
