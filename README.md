@@ -52,7 +52,7 @@
 | | |
 |---|---|
 | 📦 **Profiles** | Start URL, host allow list, user agent, viewport, colors – several web apps on one device |
-| 🔫 **Barcode scanning** | Zebra DataWedge, Honeywell, any scanner app via intent. Scans are typed into the focused field like a keyboard (including Tab/Enter) **and** reported as a JavaScript event |
+| 🔫 **Barcode scanning** | Zebra DataWedge, Honeywell, any scanner app via intent. Scans are typed into the focused field like a keyboard (including Tab/Enter) **and** reported as a JavaScript event. Scans that arrive while a page loads or a form is being saved wait in a queue and follow in order |
 | 🧭 **Page control** | `scanner` and `ScannerNavigate` meta tags control scanning per page |
 | ⌨️ **Keyboard** | On-screen keyboard only on demand, hardware key remapping, hotkeys, macros like `{F1}` `{TAB}` |
 | 🧩 **Injections** | Add your own CSS/JS/HTML to third-party web apps – matched by URL, without flicker |
@@ -212,6 +212,7 @@ docs/            documentation and images
 - [Error codes](docs/error-codes.md) – `IKB-0001` … with causes
 - [Limitations](docs/limitations.md) – what is tested, what is not, known gaps
 - [Scan stress test](docs/testing-scan-stress.md) – 1 600 scans at 2.6–19 scans/s on an emulator, numbers and how to repeat it
+- [Testing the scan queue](docs/testing-scan-queue.md) – test server for "scan while the form is saving", adb steps
 - [Emulator tests](docs/testing-emulator.md) – manual test run on Android 11 and 15, what passed and what was found
 - [Security review](docs/security-review.md) – independent reviews of 0.6.x and what was fixed
 - [Google Play](docs/play-store.md) – store texts, graphics, Play Console answers

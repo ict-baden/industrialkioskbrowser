@@ -5,10 +5,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** Every configuration in `examples/` must be accepted by the app as-is. */
+/** Every configuration in `examples/` (and the test profiles in `tools/`) must be accepted by the app as-is. */
 class ExamplesTest {
 
-    private val examples = File("../examples").listFiles { file -> file.extension == "json" }.orEmpty().sortedBy { it.name }
+    private val examples = listOf("../examples", "../tools/scan-queue")
+        .flatMap { dir -> File(dir).listFiles { file -> file.extension == "json" }.orEmpty().sortedBy { it.name } }
 
     @Test
     fun `all example configurations are valid`() {
