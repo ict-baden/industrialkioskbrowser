@@ -357,7 +357,12 @@
     <!-- Scan queue (scanner.queue) -->
     <string name="scan_queue">Scan-Warteschlange</string>
     <string name="scan_queue_summary">Scans warten, bis die Seite geladen oder das Formular abgeschickt ist</string>
-    <string name="scan_queue_timeout">Höchste Wartezeit je Scan (ms)</string>
+    <string name="scan_queue_timeout">Höchste Wartezeit ohne Fortschritt (ms)</string>
+    <string name="scan_queue_max_pending">Höchstens wartende Scans</string>
+    <string name="scan_queue_navigation_grace">Wartezeit aufs Formular nach Enter (ms)</string>
+    <string name="scan_queue_settle">Pause nach dem Laden einer Seite (ms)</string>
+    <string name="scan_queue_wait_field">Warten, bis das Feld leer ist</string>
+    <string name="scan_queue_wait_field_summary">Der nächste Scan wartet, solange der vorige noch im Feld steht</string>
     <string name="scan_discarded_single">Scan „%1$s“ verworfen: %2$s</string>
     <plurals name="scan_discarded_multiple">
         <item quantity="one">%1$d Scan verworfen: %2$s</item>

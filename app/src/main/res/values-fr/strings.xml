@@ -359,7 +359,12 @@
     <!-- Scan queue (scanner.queue) -->
     <string name="scan_queue">File d’attente des scans</string>
     <string name="scan_queue_summary">Les scans attendent que la page soit chargée ou le formulaire envoyé</string>
-    <string name="scan_queue_timeout">Attente maximale par scan (ms)</string>
+    <string name="scan_queue_timeout">Attente maximale sans progression (ms)</string>
+    <string name="scan_queue_max_pending">Scans en attente au maximum</string>
+    <string name="scan_queue_navigation_grace">Attente du formulaire après Entrée (ms)</string>
+    <string name="scan_queue_settle">Pause après le chargement d’une page (ms)</string>
+    <string name="scan_queue_wait_field">Attendre que le champ soit vide</string>
+    <string name="scan_queue_wait_field_summary">Le scan suivant attend tant que le précédent est encore dans le champ</string>
     <string name="scan_discarded_single">Scan « %1$s » rejeté : %2$s</string>
     <plurals name="scan_discarded_multiple">
         <item quantity="one">%1$d scan rejeté : %2$s</item>

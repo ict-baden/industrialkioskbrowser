@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [0.9.0] – 2026-11-25
+
 ### Added
 
 - **Scan queue** (`scanner.queue`): scans that arrive while the page cannot take them wait and are
@@ -23,6 +25,8 @@
   many scans wait. Test server and guide: `tools/scan-queue/`, docs/testing-scan-queue.md.
 - JavaScript API: `scanner.busy(timeoutMs)` and `scanner.ready()` hold scans back while the page
   saves or loads data; `scanner.status()` also reports `pending` and `ready`.
+
+- All `scanner.queue` values can also be set on the device: *Settings → tap a profile*, section Scanner.
 
 ### Changed
 

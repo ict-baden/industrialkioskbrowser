@@ -248,8 +248,7 @@ Template: [`kiosk-single-app.json`](../examples/kiosk-single-app.json).
 Pages can control the scanner with meta tags – see [Web integration](web-integration.md).
 
 Every field of a profile except the lists (injections, key remapping, hotkeys, replacements and
-rules of the scan data) and the `scanner.queue` values `maxPending`, `navigationGraceMs`, `settleMs`, `waitForFieldClear`
-can also be changed on the device: **Settings → tap a profile**.
+rules of the scan data) can also be changed on the device: **Settings → tap a profile**.
 
 ## `scanner.camera`
 

@@ -296,12 +296,24 @@ class ProfileSettingsActivity : AppCompatActivity() {
                     listOf(R.string.scan_engine_auto, R.string.generic_intent_on, R.string.generic_intent_off),
                     s.genericIntent,
                 ) { mode -> update { it.copy(scanner = it.scanner.copy(genericIntent = mode)) } },
-                // scanner.queue: maxPending, navigationGraceMs and settleMs only in the JSON configuration.
+                // scanner.queue (docs/configuration.md)
                 switchRow(R.drawable.ic_scan, R.string.scan_queue, s.queue.enabled, R.string.scan_queue_summary) { on ->
                     update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(enabled = on))) }
                 },
                 numberRow(R.drawable.ic_close, R.string.scan_queue_timeout, s.queue.timeoutMs, 1_000, 120_000) { n ->
                     update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(timeoutMs = n))) }
+                },
+                numberRow(R.drawable.ic_scan, R.string.scan_queue_max_pending, s.queue.maxPending, 1, 200) { n ->
+                    update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(maxPending = n))) }
+                },
+                numberRow(R.drawable.ic_close, R.string.scan_queue_navigation_grace, s.queue.navigationGraceMs, 0, 5_000) { n ->
+                    update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(navigationGraceMs = n))) }
+                },
+                numberRow(R.drawable.ic_close, R.string.scan_queue_settle, s.queue.settleMs, 0, 5_000) { n ->
+                    update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(settleMs = n))) }
+                },
+                switchRow(R.drawable.ic_scan, R.string.scan_queue_wait_field, s.queue.waitForFieldClear, R.string.scan_queue_wait_field_summary) { on ->
+                    update { it.copy(scanner = it.scanner.copy(queue = it.scanner.queue.copy(waitForFieldClear = on))) }
                 },
             ),
         )
