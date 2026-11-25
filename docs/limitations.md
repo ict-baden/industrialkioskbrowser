@@ -58,6 +58,9 @@ These are deliberate, because many warehouse and production web apps run in an i
 - An embedded resource (image, script, frame) from another host with an invalid certificate is not
   loaded; the page itself stays. Only a certificate error of the page, or of a resource on the same
   host, shows the error page `IKB-0007`.
+- The menu that appears when text is selected only offers cut, copy, paste and select all. *Share*,
+  *Web search* and the text actions of other apps (translate, assistant) are removed, because each
+  of them opens another app.
 - Downloads go to the app folder and need `allowDownloads`; `blob:` downloads are not supported.
   With an `allowList` only files from allowed hosts are downloaded (`IKB-0014`). The check looks at
   the address the page offers: a redirect answered by an allowed host is followed by Android's

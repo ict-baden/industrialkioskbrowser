@@ -49,6 +49,10 @@
   `allowList` the dialog now only appears for allowed hosts and the host of the start URL; other requests are
   cancelled. **Behaviour change:** a resource on another host that needs HTTP authentication (for example an SSO
   or file server) needs that host in the `allowList`. Profiles without an `allowList` behave as before.
+- **Text-selection menu without Share and Web search** ([#30](https://github.com/ict-baden/industrialkioskbrowser/issues/30)):
+  a long press on text offered *Share*, *Web search* and the text actions of other apps. Each opens another app –
+  without lock task mode a way out of the kiosk, and *Web search* a way around the allow list. **Behaviour
+  change:** the menu now only offers cut, copy, paste and select all, in every profile.
 
 ## [0.9.0] – 2026-11-25
 
