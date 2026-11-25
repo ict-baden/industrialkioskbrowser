@@ -893,7 +893,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         }
 
         private fun blocked(url: Uri) {
-            toast(withCode(getString(R.string.page_not_allowed, url.host ?: url.toString()), ErrorCodes.PAGE_NOT_ALLOWED))
+            toast(withCode(getString(R.string.page_not_allowed, UrlPolicy.describeBlocked(url.toString(), profile)), ErrorCodes.PAGE_NOT_ALLOWED))
             sounds.play(profile.sounds.error)
             scanQueue.navigationBlocked()
         }

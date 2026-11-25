@@ -10,6 +10,22 @@
   the host of the start URL; anything else is refused with the new error code `IKB-0014` before a request or a
   cookie is sent. **Behaviour change:** profiles with an `allowList` whose pages offer files from another host
   (a file server, a CDN) need that host in the list. Profiles without an `allowList` behave as before.
+- **Allow list entries can require HTTPS and a port** ([#35](https://github.com/ict-baden/industrialkioskbrowser/issues/35)):
+  every entry was reduced to its host, so `https://wms.example.com` also allowed `http://wms.example.com:8080` and a
+  network attacker could move a kiosk to plain HTTP on an allowed host. An entry with a scheme now allows only that
+  scheme, an entry with a port only that port (`https://example.com`, `example.com:8443`, `https://example.com:8443`).
+  The JavaScript API follows the same limits. **Behaviour change:** only for entries that are written with
+  `http://`/`https://` or with a port – plain host entries (`example.com`, `*.example.com`) allow every scheme and
+  port as before. The start URL always loads; its host stays allowed as a whole unless the list has its own entry
+  for it. See [Configuration](docs/configuration.md#allowlist-entries).
+- The "page not allowed" message (`IKB-0010`) names scheme and port when the host is allowed and only they are not.
+- Allow list: IP addresses match exactly (an entry `1.20` no longer matches `192.168.1.20`); IPv6 entries work
+  without brackets and with a port (`[fd00::1]:8080`); a list whose entries cannot be read no longer falls back
+  to "every host" when the start URL cannot be read either; a backslash before `@` is read the way the WebView
+  reads it.
+- JavaScript API: a start URL on a non-standard port (`http://192.168.1.20:8080/app`) gets an origin rule with its
+  port. According to the WebView documentation a rule without a port only covers ports 80 and 443, so the API
+  was missing for such profiles (not yet confirmed on a device).
 
 ## [0.9.0] – 2026-11-25
 

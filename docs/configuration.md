@@ -124,6 +124,26 @@ intermediate CA when there is one, not only the root.
 | `allowFileUpload` | `false` | Allow `<input type="file">` |
 | `allowDownloads` | `true` | Downloads through the Android DownloadManager. With an `allowList` only files from allowed hosts are downloaded (`IKB-0014` otherwise). Switch it off on kiosk devices that do not need downloads. |
 
+### `allowList` entries
+
+An entry is a host name, optionally with a scheme and a port. Subdomains are always included, a path is ignored.
+
+| Entry | Allows |
+|---|---|
+| `example.com`, `*.example.com` | `example.com` and its subdomains, `http` and `https`, every port |
+| `https://example.com` | only `https`, every port – `http://example.com` is refused |
+| `example.com:8443` | only port 8443, `http` and `https` |
+| `https://example.com:8443` | only `https` on port 8443 |
+| `https://example.com:443` | only `https` on the standard port (a URL without a port uses 443 for `https`, 80 for `http`) |
+| `10.0.0.5`, `[fd00::1]:8080` | IP addresses match exactly; IPv6 addresses with a port need the brackets |
+
+The start URL itself always loads. Its host is allowed as a whole – any scheme and port – unless the list has
+an entry of its own for that host (or a parent domain): then that entry decides. So to keep a profile on HTTPS,
+put the host of the start URL into the list with `https://`. Entries that cannot be read (a port that is not a
+number, a scheme other than `http`/`https`) allow nothing. A refused address shows `IKB-0010`; when only the
+scheme or the port is not allowed, the message names them (`http://example.com:8080`). The same limits apply to
+the [JavaScript API](web-integration.md#javascript-api).
+
 ## `viewport`
 
 | Field | Default | Meaning |

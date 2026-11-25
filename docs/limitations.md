@@ -29,7 +29,9 @@ These are deliberate, because many warehouse and production web apps run in an i
 - **Plain HTTP is allowed** and **user-installed CA certificates are trusted** (the EMM installs
   company CAs into the user store), as are the CAs and pinned certificates in
   `global.trustedCertificates`. On an untrusted network an attacker could change HTTP pages.
-  Use HTTPS wherever possible.
+  Use HTTPS wherever possible. An `allowList` entry written as a plain host (`wms.example.com`)
+  allows `http` and `https` on every port; write `https://wms.example.com` to refuse plain HTTP
+  for that host ([`allowList` entries](configuration.md#allowlist-entries)).
 - **The JavaScript API (`window.IndustrialKioskBrowser`) is also offered to `http://` pages** of the allowed hosts.
   It can only beep, vibrate, show a toast, report device and scanner information and switch the
   scanner – no files, no configuration, no navigation outside the allow list.

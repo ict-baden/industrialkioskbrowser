@@ -72,8 +72,12 @@ They apply to the current page:
 
 ## JavaScript API
 
-`window.IndustrialKioskBrowser` is available on allowed hosts – the hosts of the `allowList`,
-or the host of the start URL when there is no allow list. All methods return promises.
+`window.IndustrialKioskBrowser` is available on allowed hosts – the hosts of the `allowList`
+(with the scheme and port of an entry that names them, see
+[`allowList` entries](configuration.md#allowlist-entries)), or the host of the start URL when
+there is no allow list. On a port other than 80 (`http`) or 443 (`https`) the API needs the port to be
+named: the start URL's own port is covered, other ports need an `allowList` entry with the port
+(`wms.example.com:8080`). All methods return promises.
 
 ```js
 IndustrialKioskBrowser.onScan((scan, event) => { /* same as the scan event */ });
