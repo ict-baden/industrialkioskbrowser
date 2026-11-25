@@ -371,4 +371,26 @@
         <item quantity="one">%d certificate imported</item>
         <item quantity="other">%d certificates imported</item>
     </plurals>
+    <!-- Scan queue (scanner.queue) -->
+    <string name="scan_queue">Scan queue</string>
+    <string name="scan_queue_summary">Scans wait until the page has loaded or the form has been sent</string>
+    <string name="scan_queue_timeout">Maximum wait without progress (ms)</string>
+    <string name="scan_queue_max_pending">Queued scans at most</string>
+    <string name="scan_queue_navigation_grace">Wait for the form after Enter (ms)</string>
+    <string name="scan_queue_settle">Pause after a page has loaded (ms)</string>
+    <string name="scan_queue_wait_field">Wait until the field is empty</string>
+    <string name="scan_queue_wait_field_summary">The next scan waits while the previous one is still in the field</string>
+    <string name="scan_discarded_single">Scan \"%1$s\" discarded: %2$s</string>
+    <plurals name="scan_discarded_multiple">
+        <item quantity="one">%1$d scan discarded: %2$s</item>
+        <item quantity="other">%1$d scans discarded: %2$s</item>
+    </plurals>
+    <string name="scan_drop_full">too many scans are waiting</string>
+    <string name="scan_drop_timeout">the page was not ready in time</string>
+    <string name="scan_drop_page_left">the page was left</string>
+    <string name="scan_drop_closed">the session was closed</string>
+    <plurals name="scan_pending">
+        <item quantity="one">%d scan waiting</item>
+        <item quantity="other">%d scans waiting</item>
+    </plurals>
 </resources>
