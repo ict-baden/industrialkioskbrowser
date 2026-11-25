@@ -355,4 +355,26 @@
         <item quantity="one">%d Zertifikat importiert</item>
         <item quantity="other">%d Zertifikate importiert</item>
     </plurals>
+    <!-- Scan queue (scanner.queue) -->
+    <string name="scan_queue">Scan-Warteschlange</string>
+    <string name="scan_queue_summary">Scans warten, bis die Seite geladen oder das Formular abgeschickt ist</string>
+    <string name="scan_queue_timeout">Höchste Wartezeit ohne Fortschritt (ms)</string>
+    <string name="scan_queue_max_pending">Höchstens wartende Scans</string>
+    <string name="scan_queue_navigation_grace">Wartezeit aufs Formular nach Enter (ms)</string>
+    <string name="scan_queue_settle">Pause nach dem Laden einer Seite (ms)</string>
+    <string name="scan_queue_wait_field">Warten, bis das Feld leer ist</string>
+    <string name="scan_queue_wait_field_summary">Der nächste Scan wartet, solange der vorige noch im Feld steht</string>
+    <string name="scan_discarded_single">Scan „%1$s“ verworfen: %2$s</string>
+    <plurals name="scan_discarded_multiple">
+        <item quantity="one">%1$d Scan verworfen: %2$s</item>
+        <item quantity="other">%1$d Scans verworfen: %2$s</item>
+    </plurals>
+    <string name="scan_drop_full">zu viele Scans warten</string>
+    <string name="scan_drop_timeout">die Seite war nicht rechtzeitig bereit</string>
+    <string name="scan_drop_page_left">die Seite wurde verlassen</string>
+    <string name="scan_drop_closed">die Sitzung wurde beendet</string>
+    <plurals name="scan_pending">
+        <item quantity="one">%d Scan wartet</item>
+        <item quantity="other">%d Scans warten</item>
+    </plurals>
 </resources>
