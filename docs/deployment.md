@@ -131,7 +131,7 @@ A refused file is shown under **Settings → Configuration** and is only read ag
 changes (a file that arrives while wrong passwords have locked the check is read once the
 lock has expired).
 
-> **Changed after 0.9.0:** files in `/enterprise/usr/` used to be trusted, were applied without
+> **Changed in 1.0.0:** files in `/enterprise/usr/` used to be trusted, were applied without
 > the admin password and could replace it. A staging job that updates the configuration there
 > now has to add `"adminPassword": "<current password>"` under `global`.
 

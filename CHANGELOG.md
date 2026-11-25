@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [1.0.0] – 2026-11-25
+
+Version 1.0.0: the findings of the security review are fixed. Three of the fixes change behaviour for existing
+configurations – allow list entries with a scheme or a port, downloads with an allow list, and configuration files
+in `/enterprise/usr/`. Each is marked **Behaviour change** below.
+
 ### Security
 
 - **Configuration files in `/enterprise/usr/` are no longer trusted** ([#28](https://github.com/ict-baden/industrialkioskbrowser/issues/28)):
