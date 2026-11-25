@@ -16,10 +16,10 @@ on:
     - cron: '7 3 * * *' # Minute je Repo anders, damit nicht alle gleichzeitig starten
   workflow_dispatch:
 
+# Nur lesen. Schreibrechte bekommt allein der Job „release“ weiter unten; Bauen und Testen (auch in Pull Requests)
+# laufen mit einem Token, das nichts verändern kann.
 permissions:
-  contents: write # für die Releases
-  id-token: write # Herkunftsnachweis (attest-build-provenance), nur bei öffentlichem Repo genutzt
-  attestations: write
+  contents: read
 
 # Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen.
 # In PRs bricht ein neuer Push den alten Lauf ab.
@@ -102,15 +102,18 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       signed: ${{ env.SIGN }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      # Actions sind auf Commits festgelegt, nicht auf Tags: Ein Tag lässt sich umhängen, ein Commit nicht.
+      # Dependabot hebt Commit und Versionskommentar gemeinsam an.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
       - name: Version bestimmen
         id: version
@@ -159,7 +162,7 @@ jobs:
         if: always()
         # Nur zur Diagnose: ein volles Artefakt-Kontingent darf den Build nicht abbrechen
         continue-on-error: true
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Testergebnisse
           retention-days: 7
@@ -215,24 +218,63 @@ jobs:
         working-directory: dist
         run: sha256sum $(ls | grep -v '^SHA256SUMS.txt$') | tee SHA256SUMS.txt
 
-      - name: Herkunftsnachweis (nur bei öffentlichem Repo)
-        # GitHub-Attestierungen gibt es für private Repos nur mit Enterprise; ab dem Umschalten auf öffentlich läuft der Schritt
-        if: env.SIGN == 'true' && github.event.repository.visibility == 'public'
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: |
-            dist/*.apk
-            dist/*.aab
-
-      - uses: actions/upload-artifact@v7
-        if: env.SIGN == 'true'
-        # Die APK liegt ohnehin im Release; ein volles Kontingent darf das Release nicht verhindern
-        continue-on-error: true
+      - name: Dateien an den Job „release“ übergeben
+        if: env.FULL == 'true' && github.event_name != 'pull_request'
+        # Auch ohne Schlüssel: Bei einem Tag entsteht das Release dann nur mit SBOM und Prüfsummen
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.APP }}-${{ steps.version.outputs.version }}
           retention-days: 7
           path: dist/*
           if-no-files-found: error
+
+      - name: Release-Text an den Job „release“ übergeben (nur bei Tag v*)
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Release-Text
+          retention-days: 7
+          path: ${{ runner.temp }}/changes.md
+          if-no-files-found: error
+
+  # Alles, was Schreibrechte braucht: Herkunftsnachweis, Google Play und die Releases. Nur im vollen Build und nie bei
+  # Pull Requests. Der Job baut nichts selbst, er nimmt die Dateien aus „build“.
+  release:
+    needs: [gate, build]
+    if: needs.gate.outputs.full == 'true' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # für die Releases
+      id-token: write # Herkunftsnachweis (attest-build-provenance), nur bei öffentlichem Repo genutzt
+      attestations: write
+    env:
+      SIGN: ${{ needs.build.outputs.signed }}
+    steps:
+      # Für play/whatsnew und .github/scripts
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Dateien aus „build“ holen
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ env.APP }}-${{ needs.build.outputs.version }}
+          path: dist
+
+      - name: Release-Text aus „build“ holen (nur bei Tag v*)
+        if: github.ref_type == 'tag'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: Release-Text
+          path: ${{ runner.temp }}
+
+      - name: Herkunftsnachweis (nur bei öffentlichem Repo)
+        # GitHub-Attestierungen gibt es für private Repos nur mit Enterprise; ab dem Umschalten auf öffentlich läuft der Schritt
+        if: env.SIGN == 'true' && github.event.repository.visibility == 'public'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.apk
+            dist/*.aab
 
       - name: Play-Versionshinweise prüfen
         if: env.SIGN == 'true' && env.PLAY == 'true' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
@@ -250,7 +292,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.ictbaden.industrialkioskbrowser
           releaseFiles: dist/*.aab
-          releaseName: ${{ steps.version.outputs.version }}
+          releaseName: ${{ needs.build.outputs.version }}
           track: ${{ (github.ref_type == 'tag' && !contains(github.ref_name, '-')) && 'production' || 'internal' }}
           status: completed
           whatsNewDirectory: play/whatsnew
@@ -302,12 +344,12 @@ jobs:
           # Rollierendes Release: immer der neueste main-Stand, unter festen Links (Einzelheiten im Skript)
           $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/latest"
           $built = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')
-          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ steps.version.outputs.version }}, gebaut $built UTC, signiert.`n`n" +
+          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ needs.build.outputs.version }}, gebaut $built UTC, signiert.`n`n" +
                    "Die Links bleiben gleich und zeigen immer auf den neuesten Build:`n`n" +
                    "- **[$env:APP.apk]($base/$env:APP.apk)**: zum Verteilen per MDM (SOTI, Intune, StageNow) oder zum Installieren per adb`n" +
                    "- [$env:APP.cdx.json]($base/$env:APP.cdx.json): Stückliste (SBOM, CycloneDX)`n" +
                    "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen"
-          ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ steps.version.outputs.version }}"
+          ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ needs.build.outputs.version }}"
 
   # Der erste signierte Lauf eines Tags (Secrets nachträglich gesetzt) stößt einen Build von main an, damit auch das
   # rollierende „latest“ entsteht – sonst käme es erst mit dem nächsten Push auf main.
