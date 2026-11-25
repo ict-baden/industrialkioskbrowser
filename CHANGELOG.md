@@ -38,7 +38,7 @@ in `/enterprise/usr/`. Each is marked **Behaviour change** below.
   reads it.
 - JavaScript API: a start URL on a non-standard port (`http://192.168.1.20:8080/app`) gets an origin rule with its
   port. According to the WebView documentation a rule without a port only covers ports 80 and 443, so the API
-  was missing for such profiles (not yet confirmed on a device).
+  was missing for such profiles (confirmed on a Zebra device with Android 15: the API is there on port 8767).
 - **No configuration text in the error message, second case** ([#26](https://github.com/ict-baden/industrialkioskbrowser/issues/26)):
   0.8.0 cut the input out of JSON syntax errors. A configuration that is valid JSON but not an object – wrapped in
   `[…]`, quoted once too often by a staging tool, or not JSON at all (`adminPassword=…`) – still put its whole text,
