@@ -7,6 +7,12 @@
   var channel = IndustrialKioskBrowserNative;
   var nextId = 0;
   var pending = {};
+  var busy = 0; // number of the last busy() call while busy, 0 after ready()
+  var busyCalls = 0;
+
+  // Read by the scan delivery (ScanScripts.deliver): busy() inside a scan handler holds the next scan
+  // back even before the native side has the message.
+  Object.defineProperty(window, '__industrialKioskBrowserBusy', { get: function () { return busy; } });
 
   channel.onmessage = function (event) {
     var message;
@@ -39,7 +45,16 @@
         if (start && typeof start === 'object') return call('scanner.trigger', { start: null, mode: String(start.mode || '') });
         return call('scanner.trigger', { start: start === undefined ? null : !!start });
       },
-      status: function () { return call('scanner.status'); }
+      status: function () { return call('scanner.status'); },
+      // busy(): hold further scans back (saving, loading data) until ready(); timeoutMs is a safety limit.
+      busy: function (timeoutMs) {
+        busy = ++busyCalls;
+        return call('scanner.busy', { timeoutMs: typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : null });
+      },
+      ready: function () {
+        busy = 0;
+        return call('scanner.ready');
+      }
     }),
     // handler(scan, event); call event.preventDefault() to stop insertion into the focused field.
     onScan: function (handler) {

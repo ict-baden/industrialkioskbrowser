@@ -158,6 +158,10 @@ class ScanSettingsJsonTest {
             """{"data":{"rules":[{"pattern":"[a-"}]}}""" to "profiles[0].scanner.data.rules[0].pattern",
             """{"data":{"rules":[{"action":"keep"}]}}""" to "profiles[0].scanner.data.rules[0].action",
             """{"data":{"unmatched":"skip"}}""" to "profiles[0].scanner.data.unmatched",
+            """{"queue":{"maxPending":0}}""" to "profiles[0].scanner.queue.maxPending",
+            """{"queue":{"timeoutMs":500}}""" to "profiles[0].scanner.queue.timeoutMs",
+            """{"queue":{"navigationGraceMs":-1}}""" to "profiles[0].scanner.queue.navigationGraceMs",
+            """{"queue":{"settleMs":9000}}""" to "profiles[0].scanner.queue.settleMs",
         )
         for ((scanner, where) in cases) {
             try {
@@ -167,5 +171,25 @@ class ScanSettingsJsonTest {
                 assertTrue("${e.message} should name $where", e.message!!.contains(where))
             }
         }
+    }
+
+    @Test
+    fun `queue defaults, round trip and compact export`() {
+        // Older configurations have no scanner.queue: the queue is on with the defaults.
+        assertEquals(ScanQueueSettings(), parse("{}").queue)
+        assertEquals(true, parse("{}").queue.enabled)
+        assertEquals(true, parse("{}").queue.waitForFieldClear)
+        assertEquals(ScanQueueSettings(enabled = false, maxPending = 20, timeoutMs = 15_000), parse("""{"queue":{"enabled":false}}""").queue)
+
+        val queue = ScanQueueSettings(enabled = false, maxPending = 5, timeoutMs = 30_000, navigationGraceMs = 800, settleMs = 0, waitForFieldClear = false)
+        val config = AppConfig(profiles = listOf(Profile(id = "p", name = "P", startUrl = "https://example.com", scanner = ScannerSettings(queue = queue))))
+        assertEquals(queue, ConfigJson.parse(ConfigJson.write(config)).profiles.single().scanner.queue)
+        assertEquals(queue, ConfigJson.parse(ConfigJson.writeCompact(config)).profiles.single().scanner.queue)
+
+        val defaults = AppConfig(profiles = listOf(Profile(id = "p", name = "P", startUrl = "https://example.com")))
+        assertTrue(ConfigJson.write(defaults).contains("\"navigationGraceMs\""))
+        assertTrue(!ConfigJson.writeCompact(defaults).contains("queue"))
+        val onlyTimeout = defaults.copy(profiles = listOf(defaults.profiles.single().copy(scanner = ScannerSettings(queue = ScanQueueSettings(timeoutMs = 20_000)))))
+        assertTrue(ConfigJson.writeCompact(onlyTimeout).contains("\"queue\":{\"timeoutMs\":20000}"))
     }
 }

@@ -361,4 +361,28 @@
         <item quantity="one">%d certificado importado</item>
         <item quantity="other">%d certificados importados</item>
     </plurals>
+    <!-- Scan queue (scanner.queue) -->
+    <string name="scan_queue">Cola de escaneos</string>
+    <string name="scan_queue_summary">Los escaneos esperan hasta que la página se haya cargado o el formulario se haya enviado</string>
+    <string name="scan_queue_timeout">Espera máxima sin avance (ms)</string>
+    <string name="scan_queue_max_pending">Escaneos en espera como máximo</string>
+    <string name="scan_queue_navigation_grace">Espera al formulario tras Intro (ms)</string>
+    <string name="scan_queue_settle">Pausa tras cargar una página (ms)</string>
+    <string name="scan_queue_wait_field">Esperar a que el campo esté vacío</string>
+    <string name="scan_queue_wait_field_summary">El siguiente escaneo espera mientras el anterior siga en el campo</string>
+    <string name="scan_discarded_single">Escaneo «%1$s» descartado: %2$s</string>
+    <plurals name="scan_discarded_multiple">
+        <item quantity="one">%1$d escaneo descartado: %2$s</item>
+        <item quantity="many">%1$d escaneos descartados: %2$s</item>
+        <item quantity="other">%1$d escaneos descartados: %2$s</item>
+    </plurals>
+    <string name="scan_drop_full">hay demasiados escaneos en espera</string>
+    <string name="scan_drop_timeout">la página no estuvo lista a tiempo</string>
+    <string name="scan_drop_page_left">se ha salido de la página</string>
+    <string name="scan_drop_closed">la sesión se ha cerrado</string>
+    <plurals name="scan_pending">
+        <item quantity="one">%d escaneo en espera</item>
+        <item quantity="many">%d escaneos en espera</item>
+        <item quantity="other">%d escaneos en espera</item>
+    </plurals>
 </resources>
