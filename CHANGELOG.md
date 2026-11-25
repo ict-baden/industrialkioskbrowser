@@ -10,6 +10,45 @@
   looked at again on every start, in a crash loop. The file size is now checked before reading; the file is
   refused once with *Configuration is larger than 16 MB* (`IKB-0100`).
 
+## [0.9.0] – 2026-11-25
+
+### Added
+
+- **Scan queue** (`scanner.queue`): scans that arrive while the page cannot take them wait and are
+  delivered afterwards, one by one, in order, each with its own terminator key. The page counts as
+  not ready while a page is requested or loading (until its `DOMContentLoaded` handlers ran, plus
+  `settleMs`), after a terminator key until the navigation it starts has loaded or
+  `navigationGraceMs` passed without one, while the page reports itself busy, and while a scan is
+  being delivered. A scan that finds no focused text field waits for one instead of being dropped.
+  Covers every scan source and pages with `ScannerNavigate` or their own scan handler. On by default
+  with `maxPending` 20, `timeoutMs` 15000, `navigationGraceMs` 400, `settleMs` 200,
+  `waitForFieldClear` true; older configurations get these defaults. `timeoutMs` counts from the
+  last progress of the queue, not from when a scan was read: a long queue that moves on is not cut
+  short, a first scan that cannot be delivered for that long is discarded. `waitForFieldClear`:
+  after a scan with terminator key the next one waits while the focused field still holds that
+  scan (pages that save with JavaScript and empty the field afterwards). *Settings → profile → Scanner* has the switch and the timeout.
+  Scans that cannot be delivered are never dropped silently: error tone and a message with the
+  value, new error codes `IKB-0040` (queue full), `IKB-0041` (no progress in time), `IKB-0042` (page
+  left: error page or blocked navigation), `IKB-0043` (session closed). The scan button shows how
+  many scans wait. Test server and guide: `tools/scan-queue/`, docs/testing-scan-queue.md.
+- JavaScript API: `scanner.busy(timeoutMs)` and `scanner.ready()` hold scans back while the page
+  saves or loads data; `scanner.status()` also reports `pending` and `ready`.
+
+- All `scanner.queue` values can also be set on the device: *Settings → tap a profile*, section Scanner.
+
+### Changed
+
+- The scan tone (`sounds.scanOk`) plays as soon as a scan is read, also for pages with
+  `ScannerNavigate`, instead of after the scan was typed.
+- With the queue a scan is typed only after the previous scan's terminator keys and the wait after
+  them, so values no longer run together in the field at high scan rates
+  ([#19](https://github.com/ict-baden/industrialkioskbrowser/issues/19), not yet measured on a
+  device). On pages that stay put after Enter this limits delivery to about two scans per second;
+  faster bursts wait in the queue (`navigationGraceMs`).
+- Pages that handle the scan event without a focused field and without `preventDefault()` now see
+  the scan wait for a field and, after `timeoutMs`, `IKB-0041`. Call `preventDefault()` in such
+  handlers, or switch the queue off.
+
 ## [0.8.0] – 2026-11-24
 
 ### Changed

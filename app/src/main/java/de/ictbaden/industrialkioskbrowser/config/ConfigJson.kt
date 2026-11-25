@@ -259,6 +259,7 @@ object ConfigJson {
                 data = parseData(scanner.optJSONObject("data") ?: JSONObject(), "$where.scanner.data"),
                 ocr = parseOcr(scanner.optJSONObject("ocr") ?: JSONObject(), "$where.scanner.ocr"),
                 nfc = parseNfc(scanner.optJSONObject("nfc") ?: JSONObject(), "$where.scanner.nfc"),
+                queue = parseQueue(scanner.optJSONObject("queue") ?: JSONObject(), "$where.scanner.queue"),
             ),
         )
         checkResourceReferences(profile, resources, where)
@@ -393,6 +394,18 @@ object ConfigJson {
             ndefRecord = enumOf(json, "ndefRecord", where, d.ndefRecord),
             beep = json.optBoolean("beep", d.beep),
             vibrate = json.optBoolean("vibrate", d.vibrate),
+        )
+    }
+
+    private fun parseQueue(json: JSONObject, where: String): ScanQueueSettings {
+        val d = ScanQueueSettings()
+        return ScanQueueSettings(
+            enabled = json.optBoolean("enabled", d.enabled),
+            maxPending = intIn(json, "maxPending", where, d.maxPending, 1, 200),
+            timeoutMs = intIn(json, "timeoutMs", where, d.timeoutMs, 1_000, 120_000),
+            navigationGraceMs = intIn(json, "navigationGraceMs", where, d.navigationGraceMs, 0, 5_000),
+            settleMs = intIn(json, "settleMs", where, d.settleMs, 0, 5_000),
+            waitForFieldClear = json.optBoolean("waitForFieldClear", d.waitForFieldClear),
         )
     }
 
@@ -561,6 +574,7 @@ object ConfigJson {
             put("data", writeData(profile.scanner.data))
             put("ocr", writeOcr(profile.scanner.ocr))
             put("nfc", writeNfc(profile.scanner.nfc))
+            put("queue", writeQueue(profile.scanner.queue))
         })
     }
 
@@ -573,6 +587,15 @@ object ConfigJson {
         put("minLength", o.minLength)
         put("maxLength", o.maxLength)
         put("charset", o.charset.key)
+    }
+
+    private fun writeQueue(q: ScanQueueSettings) = JSONObject().apply {
+        put("enabled", q.enabled)
+        put("maxPending", q.maxPending)
+        put("timeoutMs", q.timeoutMs)
+        put("navigationGraceMs", q.navigationGraceMs)
+        put("settleMs", q.settleMs)
+        put("waitForFieldClear", q.waitForFieldClear)
     }
 
     private fun writeNfc(n: NfcSettings) = JSONObject().apply {
