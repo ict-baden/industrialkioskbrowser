@@ -11,6 +11,14 @@
 - [Repeating the test on a device](#repeating-the-test-on-a-device)
 - [Conclusion](#conclusion)
 
+> **Measured before the scan queue.** These numbers are from 0.7.0. Since the scan queue
+> ([`scanner.queue`](configuration.md#scannerqueue)) a scan is typed only after the previous scan's
+> Enter plus `navigationGraceMs` (400 ms) – on this page, which stays put after Enter, about two
+> scans per second, and bursts beyond `maxPending` (20) are discarded with `IKB-0040`. To repeat
+> the measurement below as it was made, set `"queue": { "enabled": false }` (or
+> `navigationGraceMs: 0` and a higher `maxPending`). For the queue itself see
+> [Testing the scan queue](testing-scan-queue.md).
+
 ## Why
 
 Zebra's Enterprise Browser 5.5 has been reported to drop to the home screen on a TC53e when
