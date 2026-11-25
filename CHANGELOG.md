@@ -36,6 +36,13 @@
   into memory first. A file of several hundred megabytes ended in `OutOfMemoryError` and, because the file is
   looked at again on every start, in a crash loop. The file size is now checked before reading; the file is
   refused once with *Configuration is larger than 16 MB* (`IKB-0100`).
+### Fixed
+
+- **A certificate error of an embedded resource no longer replaces the page** ([#27](https://github.com/ict-baden/industrialkioskbrowser/issues/27)):
+  one image, script or frame from a host with an invalid or expired certificate turned the whole page into the
+  error page `IKB-0007` – a single third-party resource, or a network attacker forging one certificate, made a web
+  app unusable. The resource is still refused, but the page stays. **Behaviour change:** the error page now
+  appears only when the certificate error concerns the page itself or a resource on the same host.
 
 ## [0.9.0] – 2026-11-25
 

@@ -143,6 +143,10 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private var loadedGeneration = -1
     private var scannerWanted = true
     private var failedUrl: String? = null
+
+    /** Address of the main-frame navigation the WebView last started; written from the WebView's IO thread too. */
+    @Volatile
+    private var navigationUrl: String? = null
     private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
     private var pendingPermission: PermissionRequest? = null
     private val clientCertAliases = ConcurrentHashMap<String, String>()
@@ -875,6 +879,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 view.post { blocked(request.url) }
                 return WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), null)
             }
+            if (request.isForMainFrame && web) navigationUrl = request.url.toString()
             // The earliest sign of a new page (a form sent with Enter, too): onPageStarted only follows
             // once the server has answered. Called on a background thread.
             if (request.isForMainFrame) view.post { scanQueue.navigationRequested() }
@@ -887,7 +892,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 failedUrl?.let(view::loadUrl) ?: view.reload()
                 return true
             }
-            if (!request.isForMainFrame || UrlPolicy.isAllowed(url, profile)) return false
+            if (!request.isForMainFrame) return false
+            if (UrlPolicy.isAllowed(url, profile)) {
+                navigationUrl = url // also redirects, which shouldInterceptRequest does not see
+                return false
+            }
             blocked(request.url)
             return true
         }
@@ -962,6 +971,11 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 return
             }
             handler.cancel()
+            if (!CertificateErrorScope.concernsPage(error.url, navigationUrl)) {
+                // An image, script or frame from another host: it is not loaded, the page stays.
+                Log.w(TAG, "Certificate error of an embedded resource (${UrlPolicy.hostOf(error.url)}), resource not loaded")
+                return
+            }
             val reason = when (error.primaryError) {
                 SslError.SSL_UNTRUSTED -> R.string.error_cert_untrusted
                 SslError.SSL_EXPIRED -> R.string.error_cert_expired
