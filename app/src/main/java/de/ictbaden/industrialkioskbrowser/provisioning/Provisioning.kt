@@ -126,6 +126,9 @@ object Provisioning {
         }
         var delete = false
         runSource(context, file.path) {
+            // Before reading: a huge file would end in OutOfMemoryError, which is no rejected configuration but a
+            // crash – on every start, because the fingerprint is only stored below.
+            if (file.length() > ConfigJson.MAX_LENGTH) throw ConfigJson.tooLarge()
             val text = file.readText()
             val imported = ConfigJson.parse(text)
             val store = ConfigStore.get(context)
