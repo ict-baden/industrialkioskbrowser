@@ -91,6 +91,11 @@ card still manages roughly 15,000 tries per second:
 | 8 digits | 100 million | about 2 hours |
 | 10 characters, letters and digits | about 8 × 10¹⁷ | far longer than any password lifetime |
 
+Put plainly: QR login does not make a password stronger, it makes it more convenient. A strong password behind a
+6-digit PIN is, for whoever has the code, only as strong as the PIN. It is still far better than what often happens
+otherwise – passwords on a note, or printed as an ordinary, unencrypted QR code. And obscurity is not security: the
+format is open on purpose, so the protection rests on the PIN alone, not on nobody knowing how the code is built.
+
 So:
 
 - Use the QR login for accounts whose password you would also write on a card: personal accounts with only the rights
@@ -99,6 +104,9 @@ So:
   estimate). On the handheld the user types it once per sign-in.
 - Set an expiry date, and create new codes when passwords change – an old code then simply stops working.
 - When a code is lost, change the password of that account.
+- Do not put the central company password (the one for email, computer and VPN) into a QR code; give the handheld
+  application its own account instead. Not for administrator accounts or sign-in pages reachable from the internet
+  without a second factor.
 
 A stronger variant would bind the codes to your devices (a key only the managed devices hold, given by the MDM), so a
 copied code is worthless without such a device. That needs decryption inside the app and is not part of this example.
