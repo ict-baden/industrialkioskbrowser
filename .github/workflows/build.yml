@@ -151,6 +151,20 @@ jobs:
           fi
           grep -q '[^[:space:]]' "$RUNNER_TEMP/changes.md" || { echo "::error::CHANGELOG.md hat keinen Abschnitt [$version]"; exit 1; }
 
+      # Robolectric lädt seine Android-Bibliothek (rund 150 MB) bei jedem Testlauf selbst von Maven Central nach ~/.m2,
+      # am Gradle-Cache vorbei. Antwortet Maven Central gerade nicht, scheitern alle Robolectric-Tests und damit auch
+      # ein Release-Build. Mit dem Zwischenspeicher braucht nur der erste Lauf nach einem Robolectric-Update das Netz.
+      - name: Robolectric-Version (Schlüssel für den Zwischenspeicher)
+        id: robolectric
+        run: echo "key=$(grep -h 'org.robolectric' app/build.gradle.kts | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Robolectric-Bibliotheken zwischenspeichern
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ steps.robolectric.outputs.key }}
+          restore-keys: robolectric-
+
       - name: Tests, Lint und Debug-Build
         # Debug-APK nur als Probe, dass sich die App bauen lässt (wird nicht veröffentlicht, Release-Build nur im vollen Build)
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --console=plain
