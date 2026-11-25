@@ -11,7 +11,7 @@
 
 ## Summary
 
-Industrial Kiosk Browser **sends no data to ICT-Baden**. There is no telemetry, no crash reporting,
+Industrial Kiosk Browser **sends no data to ICT Baden**. There is no telemetry, no crash reporting,
 no update check and no account. The text recognition library of Google (ML Kit) may send anonymous
 usage statistics to Google – see [Text recognition](#text-recognition-ml-kit). The browser connects to the web apps you configure (the start
 URLs) and to the pages they lead to. With an `allowList` only those hosts can be opened;
@@ -21,7 +21,7 @@ The Android System WebView, which renders the pages, checks addresses against Go
 Browsing (see [Connections](#connections)).
 
 The operator of the devices (your company) is responsible for the data in those web apps;
-ICT-Baden processes none of it.
+ICT Baden processes none of it.
 
 ## What is stored on the device
 

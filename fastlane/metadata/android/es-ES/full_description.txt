@@ -28,7 +28,7 @@ SU DISEÑO
 • Su título, su logotipo y el color de su marca, por configuración o directamente en la aplicación
 
 PRIVACIDAD
-• Sin cuenta, sin publicidad, sin seguimiento. Industrial Kiosk Browser no envía datos a ICT-Baden.
+• Sin cuenta, sin publicidad, sin seguimiento. Industrial Kiosk Browser no envía datos a ICT Baden.
 • La propia aplicación solo se conecta a las aplicaciones web que usted configure y a las páginas a las que llevan.
 
-Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT-Baden. Hay contratos de soporte disponibles.
+Interfaz en inglés, alemán, español, francés y chino. Gratuito y de código abierto (licencia MIT), de ICT Baden. Hay contratos de soporte disponibles.

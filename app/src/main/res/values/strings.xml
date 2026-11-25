@@ -171,9 +171,9 @@
 
     <!-- About (richtlinien/07) -->
     <string name="about_privacy">Data and privacy</string>
-    <string name="about_privacy_summary">This software sends no data to ICT-Baden.</string>
+    <string name="about_privacy_summary">This software sends no data to ICT Baden.</string>
     <string name="about_licence">Licence</string>
-    <string name="about_licence_summary" translatable="false">MIT · © 2026 ICT-Baden</string>
+    <string name="about_licence_summary" translatable="false">MIT · © 2026 ICT Baden GmbH</string>
     <string name="about_third_party">Third-party licences</string>
     <string name="about_source">Source code</string>
     <string name="about_support">Help and support</string>

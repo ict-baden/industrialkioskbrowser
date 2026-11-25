@@ -157,7 +157,7 @@
     <string name="delete_profile_message">„%1$s“ wird von diesem Gerät entfernt.</string>
 
     <string name="about_privacy">Daten und Datenschutz</string>
-    <string name="about_privacy_summary">Diese Software sendet keine Daten an ICT-Baden.</string>
+    <string name="about_privacy_summary">Diese Software sendet keine Daten an ICT Baden.</string>
     <string name="about_licence">Lizenz</string>
     <string name="about_third_party">Drittanbieter-Lizenzen</string>
     <string name="about_source">Quellcode</string>

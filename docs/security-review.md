@@ -2,7 +2,7 @@
 
 # Security review
 
-Independent reviews before each 0.x version (ICT-Baden guideline 09): reviewers who did not
+Independent reviews before each 0.x version (ICT Baden guideline 09): reviewers who did not
 write the code check it, and the findings are cross-checked. This page lists the findings for
 0.6.x and 0.7.0 and how each was handled.
 

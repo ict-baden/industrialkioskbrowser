@@ -156,7 +156,7 @@
     <string name="delete_profile_message">“%1$s”将从此设备中移除。</string>
 
     <string name="about_privacy">数据与隐私</string>
-    <string name="about_privacy_summary">本软件不会向 ICT-Baden 发送任何数据。</string>
+    <string name="about_privacy_summary">本软件不会向 ICT Baden 发送任何数据。</string>
     <string name="about_licence">许可证</string>
     <string name="about_third_party">第三方许可证</string>
     <string name="about_source">源代码</string>

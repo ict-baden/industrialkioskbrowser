@@ -178,6 +178,9 @@ Honest list in [docs/limitations.md](docs/limitations.md). In short:
   user-installed CAs are accepted – both on purpose for intranets, see the limitations page.
 - The user interface is English and German; **Spanish, French and Chinese are machine translations** that
   still need review by native speakers.
+- **Text recognition (OCR) uses Google ML Kit, which is not open source** (ML Kit Terms of Service) and may
+  send anonymous usage statistics to Google; it can be switched off per profile – see
+  [Data and privacy](docs/data-and-privacy.md#text-recognition-ml-kit).
 - Version 0.x: settings and the JSON format may still change.
 
 ## 🛠️ Building
@@ -221,7 +224,7 @@ docs/            documentation and images
 ---
 
 <sub>
-Industrial Kiosk Browser is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
+Industrial Kiosk Browser is free and open source software by <b>ICT Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
