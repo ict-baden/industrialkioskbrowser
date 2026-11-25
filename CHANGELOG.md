@@ -43,6 +43,12 @@
   error page `IKB-0007` – a single third-party resource, or a network attacker forging one certificate, made a web
   app unusable. The resource is still refused, but the page stays. **Behaviour change:** the error page now
   appears only when the certificate error concerns the page itself or a resource on the same host.
+- **No sign-in dialog for hosts outside the allow list** ([#31](https://github.com/ict-baden/industrialkioskbrowser/issues/31)):
+  the dialog for HTTP authentication appeared for every resource, also for an image or a frame from a host the
+  profile could never open – a way to ask the person at the device for the credentials of another system. With an
+  `allowList` the dialog now only appears for allowed hosts and the host of the start URL; other requests are
+  cancelled. **Behaviour change:** a resource on another host that needs HTTP authentication (for example an SSO
+  or file server) needs that host in the `allowList`. Profiles without an `allowList` behave as before.
 
 ## [0.9.0] – 2026-11-25
 

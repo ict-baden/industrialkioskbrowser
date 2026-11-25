@@ -37,6 +37,10 @@ These are deliberate, because many warehouse and production web apps run in an i
   scanner – no files, no configuration, no navigation outside the allow list.
 - **An empty `allowList` allows every host.** Then the JavaScript API is limited to the host of
   the start URL. Set an allow list on kiosk devices.
+- **The allow list applies to the page, not to what the page embeds.** Images, scripts and frames
+  from other hosts are loaded. They cannot open the sign-in dialog for HTTP authentication, though:
+  with an allow list only allowed hosts may ask for a user name and password. Without one every
+  embedded host can – check the host name the dialog shows.
 - **Scan broadcasts can be sent by any app.** DataWedge is a separate app, so the scan receiver
   has to be open to other apps; the same applies to the generic `<package>.action.BARCODE`
   broadcast, which is therefore off on Zebra and Honeywell devices by default
