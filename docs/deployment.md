@@ -102,27 +102,38 @@ The app reads `industrialkioskbrowser.json` from
 
 1. `Android/data/de.ictbaden.industrialkioskbrowser/files/` (app folder; exists after
    the app has been started once)
-2. `/enterprise/usr/` (Zebra, persistent; writable only by MX/StageNow, the EMM agent or adb)
+2. `/enterprise/usr/` (Zebra, persistent; survives an enterprise reset)
 
 A file is applied as soon as its timestamp or size changes – when the app starts, when you
 return to the profile list or to an open profile, and within about five seconds while a profile
 is open. An open profile whose settings changed starts again with the new configuration.
 
-The app folder is checked like a broadcast, because before Android 11 any app with storage
-permission can write into it:
+Both folders are checked like a broadcast, because other apps can write into them: the app
+folder before Android 11 (any app with storage permission), `/enterprise/usr/` on every Android
+version – Zebra leaves it writable for all apps (`drwxrwxrwx`, checked on Android 15).
 
 - Once an admin password is set, the file must contain it in plain text as
   `global.adminPassword`. It proves the file comes from the administrator; it never replaces
   the password that is set. Exported configurations contain only the hash – add the plain
   password before pushing them. After the import the app **deletes** such a file, because
-  before Android 11 other apps could read the password there.
-- Without an admin password the file is accepted on EMM-managed devices and from Android 11 on
-  (there only adb, i.e. someone with the unlocked device on USB, can write into the folder).
-  On unmanaged Android 8–10 devices set a password first or use `/enterprise/usr/`.
+  other apps could read the password there.
+- Without an admin password a file in the app folder is accepted on EMM-managed devices and from
+  Android 11 on (there only adb, i.e. someone with the unlocked device on USB, can write into the
+  folder). On unmanaged Android 8–10 devices set a password first or use `/enterprise/usr/`.
+- Without an admin password a file in `/enterprise/usr/` is always accepted: that is the first
+  provisioning with StageNow. **Let this first file set the admin password** – from then on no
+  other app can replace the configuration.
+- A file in `/enterprise/usr/` that should stay on the device (to configure the app again after
+  an enterprise reset) carries `global.adminPasswordHash` instead of the plain password. It is
+  applied while no password is set, which is the state after the reset, and is not deleted.
 
 A refused file is shown under **Settings → Configuration** and is only read again when it
 changes (a file that arrives while wrong passwords have locked the check is read once the
-lock has expired). Files in `/enterprise/usr/` are trusted and may also set a new admin password.
+lock has expired).
+
+> **Changed after 0.9.0:** files in `/enterprise/usr/` used to be trusted, were applied without
+> the admin password and could replace it. A staging job that updates the configuration there
+> now has to add `"adminPassword": "<current password>"` under `global`.
 
 ```bash
 adb push examples/sap-its-mobile.json \

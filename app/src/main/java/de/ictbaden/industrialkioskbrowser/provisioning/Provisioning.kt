@@ -21,10 +21,11 @@ import java.io.File
  * (`res/xml/app_restrictions.xml`) and config files dropped into the app's external files
  * directory or Zebra's persistent `/enterprise/usr`. Each source is applied once per change.
  *
- * Managed configuration and `/enterprise/usr` can only be written by the EMM, MX/StageNow or adb
- * and are trusted. The app folder (`Android/data/<package>/files/`) is writable by adb and, up to
- * Android 10, by any app with storage permission – a file there is checked like a broadcast
- * ([appFolderRefusal]).
+ * The managed configuration can only be written by the EMM and is trusted. Both folders are not:
+ * the app folder (`Android/data/<package>/files/`) is writable by adb and, up to Android 10, by any
+ * app with storage permission; `/enterprise/usr` is world-writable on Zebra devices (`drwxrwxrwx`,
+ * checked on Android 15), so every app can put a file there. A file from either folder is checked
+ * like a broadcast ([fileRefusal]).
  */
 object Provisioning {
     const val CONFIG_FILE_NAME = "industrialkioskbrowser.json"
@@ -40,13 +41,14 @@ object Provisioning {
 
     /** Only the configuration files; an unchanged file costs a `stat`, so an open session checks them regularly. */
     fun applyFiles(context: Context) {
-        appFolderFile(context)?.let { applyConfigFile(context, it, trusted = false) }
-        applyConfigFile(context, enterpriseFile, trusted = true)
+        appFolderFile(context)?.let { applyConfigFile(context, it, enterprise = false) }
+        applyConfigFile(context, enterpriseFile, enterprise = true)
     }
 
     fun appFolderFile(context: Context): File? = context.getExternalFilesDir(null)?.let { File(it, CONFIG_FILE_NAME) }
 
-    private val enterpriseFile = File("/enterprise/usr", CONFIG_FILE_NAME)
+    @VisibleForTesting
+    internal var enterpriseFile = File("/enterprise/usr", CONFIG_FILE_NAME)
 
     /**
      * Why a file from the app folder is refused, or `null` when it may be applied: once an admin
@@ -55,9 +57,19 @@ object Provisioning {
      * physical access) can write into the app folder.
      */
     @VisibleForTesting
-    internal fun appFolderRefusal(context: Context, text: String, sdk: Int = Build.VERSION.SDK_INT): String? {
+    internal fun appFolderRefusal(context: Context, text: String, sdk: Int = Build.VERSION.SDK_INT): String? =
+        fileRefusal(context, text, enterprise = false, sdk = sdk)
+
+    /**
+     * The same check for both folders. `/enterprise/usr` differs in one point: without an admin
+     * password its file is always accepted. That is the first provisioning with StageNow, where
+     * nothing is protected yet; the file should set the admin password, and from then on every
+     * file has to prove that it knows it.
+     */
+    @VisibleForTesting
+    internal fun fileRefusal(context: Context, text: String, enterprise: Boolean, sdk: Int = Build.VERSION.SDK_INT): String? {
         val adminHash = ConfigStore.get(context).config.global.adminPasswordHash
-            ?: return if (sdk >= Build.VERSION_CODES.R || isManaged(context)) null
+            ?: return if (enterprise || sdk >= Build.VERSION_CODES.R || isManaged(context)) null
             else "Refused: no admin password set, and before Android 11 other apps can write this file. Set an admin password and add it to the file as global.adminPassword, or use /enterprise/usr or the managed configuration."
         return AdminGate.message(AdminGate.check(context, AdminGate.Source.FILE, ConfigJson.plainAdminPassword(text), adminHash))
     }
@@ -114,13 +126,13 @@ object Provisioning {
     }
 
     /** A refused file is only tried again when it changes, so it cannot use up the password attempts. */
-    private fun applyConfigFile(context: Context, file: File, trusted: Boolean) {
+    private fun applyConfigFile(context: Context, file: File, enterprise: Boolean) {
         if (!file.canRead()) return
         val fingerprint = "${file.lastModified()}:${file.length()}"
         val key = "file:${file.path}"
         if (fingerprint == prefs(context).getString(key, null)) return
         // While the gate is locked the file is not even checked; it is read again once the lock has expired.
-        if (!trusted && AdminGate.isLocked(context, AdminGate.Source.FILE)) {
+        if (AdminGate.isLocked(context, AdminGate.Source.FILE)) {
             reportError(context, file.path, AdminGate.message(AdminGate.Result.LOCKED))
             return
         }
@@ -132,16 +144,12 @@ object Provisioning {
             val text = file.readText()
             val imported = ConfigJson.parse(text)
             val store = ConfigStore.get(context)
-            if (trusted) {
-                store.import(imported)
-            } else {
-                appFolderRefusal(context, text)?.let { throw ConfigException(it) }
-                // A file from the app folder never replaces an admin password that is already set.
-                val adminHash = store.config.global.adminPasswordHash ?: imported.global.adminPasswordHash
-                store.import(imported.copy(global = imported.global.copy(adminPasswordHash = adminHash)))
-                // Up to Android 10 other apps can read the app folder: don't leave a plain password there.
-                delete = ConfigJson.plainAdminPassword(text) != null
-            }
+            fileRefusal(context, text, enterprise)?.let { throw ConfigException(it) }
+            // A file never replaces an admin password that is already set.
+            val adminHash = store.config.global.adminPasswordHash ?: imported.global.adminPasswordHash
+            store.import(imported.copy(global = imported.global.copy(adminPasswordHash = adminHash)))
+            // Other apps can read /enterprise/usr and, up to Android 10, the app folder: don't leave a plain password there.
+            delete = ConfigJson.plainAdminPassword(text) != null
         }
         if (delete && file.delete()) {
             Log.i(TAG, "Deleted ${file.path}, it contained the admin password in plain text")

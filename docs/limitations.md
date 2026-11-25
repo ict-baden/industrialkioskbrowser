@@ -50,11 +50,29 @@ These are deliberate, because many warehouse and production web apps run in an i
   send a configuration – always set one ([Deployment](deployment.md)).
 - **Google Safe Browsing** of the Android System WebView stays on ([Data and privacy](data-and-privacy.md)).
 
+## Scanner
+
+- **Scans are also typed into password fields**, followed by the terminator – like a hardware
+  scanner in keyboard mode. That is intended: signing in with a badge barcode needs it. A page that
+  does not want it calls `preventDefault()` on the scan event while a password field has the focus
+  ([What happens on a scan](web-integration.md#what-happens-on-a-scan)).
+
 ## Navigation and kiosk
 
 - Lock task (real kiosk) needs a device owner, i.e. an EMM in *dedicated device* mode. Without it
   `hideExit` only hides the exit; the Android home and recents buttons still work.
 - Pages that open new windows (`target="_blank"`, `window.open`) stay in the same view.
+- **Android 12 and later show "Viewing full screen" once** when a profile with `kiosk.immersive`
+  goes full screen for the first time on a device. The hint is Android's, lies above the page and
+  stays until someone taps *Got it*; the back key does not close it. On a newly provisioned device
+  either confirm it once, or let the EMM or the staging script switch it off before the first start
+  (`adb shell settings put secure immersive_mode_confirmations confirmed`). According to the
+  Android source it is not shown in lock task mode; not yet confirmed on a device.
+- **A connection error reloads by itself when the network comes back** (Wi-Fi reconnects, the
+  device leaves a dead spot) and when the app returns to the front. This only watches the network
+  of the device: when the Wi-Fi is fine and only the server is down, the error page stays until
+  someone taps *Try again* or a hotkey reloads. Certificate and HTTP errors never reload by
+  themselves.
 - An embedded resource (image, script, frame) from another host with an invalid certificate is not
   loaded; the page itself stays. Only a certificate error of the page, or of a resource on the same
   host, shows the error page `IKB-0007`.

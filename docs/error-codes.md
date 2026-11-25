@@ -7,7 +7,7 @@ any of the five languages. Source: [`ErrorCodes.kt`](../app/src/main/java/de/ict
 
 | Code | Message (English) | Typical cause |
 |---|---|---|
-| `IKB-0001` | Server not found | DNS name unknown, no Wi-Fi, wrong start URL |
+| `IKB-0001` | Server not found | DNS name unknown, no Wi-Fi, wrong start URL. `IKB-0001` to `IKB-0003` and `IKB-0005` load the page again by themselves when the device gets its network back |
 | `IKB-0002` | No connection | Server down, firewall, wrong port |
 | `IKB-0003` | Timeout | Server or network too slow |
 | `IKB-0004` | Insecure connection (handshake) | TLS version or cipher not supported |

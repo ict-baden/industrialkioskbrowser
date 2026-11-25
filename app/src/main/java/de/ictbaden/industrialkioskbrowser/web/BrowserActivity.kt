@@ -13,6 +13,8 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import android.net.http.SslCertificate
 import android.net.http.SslError
@@ -86,6 +88,7 @@ import de.ictbaden.industrialkioskbrowser.scanner.ScanResult
 import de.ictbaden.industrialkioskbrowser.scanner.ScannerManager
 import de.ictbaden.industrialkioskbrowser.scanner.Symbologies
 import de.ictbaden.industrialkioskbrowser.ui.ActionSheet
+import de.ictbaden.industrialkioskbrowser.ui.AppLanguage
 import de.ictbaden.industrialkioskbrowser.ui.Brand
 import de.ictbaden.industrialkioskbrowser.ui.Dialogs
 import java.util.Locale
@@ -143,6 +146,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private var loadedGeneration = -1
     private var scannerWanted = true
     private var failedUrl: String? = null
+
+    /** The error page on screen says "no connection" (not a certificate or HTTP error): worth another try when the network returns. */
+    private var failedByNetwork = false
 
     /** Address of the main-frame navigation the WebView last started; written from the WebView's IO thread too. */
     @Volatile
@@ -204,6 +210,29 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * Loads the page again when the network comes back while a "no connection" error page is shown –
+     * a device that is only used with the scanner has nobody to tap "Try again". Registered while
+     * the browser is in front. Android also reports the network that is already there when the
+     * callback is registered, so returning to the app tries once as well.
+     */
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            mainHandler.removeCallbacks(networkRetry)
+            // A moment for DHCP and DNS; the callback runs on a background thread.
+            mainHandler.postDelayed(networkRetry, NETWORK_RETRY_DELAY_MS)
+        }
+    }
+    private val networkRetry = Runnable {
+        val url = failedUrl
+        if (url != null && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
+            NetworkRetry.shouldRetry(failedByNetwork, url, webView.url)
+        ) {
+            Log.i(TAG, "Network is available again, loading the page once more")
+            webView.loadUrl(url)
+        }
+    }
     // Only while in front: a paused session checks in onResume, a restart from the background would push it to the front.
     private val configCheck = Runnable { if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) restartIfConfigChanged() }
 
@@ -239,6 +268,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             return false
         }
         Log.i(TAG, "Configuration of profile ${profile.id} changed, restarting the session")
+        // The new session is created with the new language; without this it only changed on the profile list.
+        if (current.global.language != config.global.language) AppLanguage.apply(current.global.language)
         scanQueue.close()
         if (updated != null) startActivity(intent)
         finish()
@@ -344,6 +375,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
         ConfigStore.get(this).addListener(configListener)
+        runCatching { getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(networkCallback) }
+            .onFailure { Log.w(TAG, "No network callback, the error page will not reload by itself", it) }
         Provisioning.applyAll(this)
         if (restartIfConfigChanged()) return
         mainHandler.postDelayed(fileCheck, FILE_CHECK_INTERVAL_MS)
@@ -358,6 +391,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         ConfigStore.get(this).removeListener(configListener)
         mainHandler.removeCallbacks(configCheck)
         mainHandler.removeCallbacks(fileCheck)
+        runCatching { getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(networkCallback) }
+        mainHandler.removeCallbacks(networkRetry)
         scanner.stop()
         nfc.stop()
         webView.onPause()
@@ -790,8 +825,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     // endregion
 
-    private fun showStatus(title: String, message: String, url: String?, code: String) {
+    private fun showStatus(title: String, message: String, url: String?, code: String, network: Boolean = false) {
         failedUrl = url
+        failedByNetwork = network
         sounds.play(profile.sounds.error)
         val html = StatusPage.render(
             this, config.content(profile.errorPages.template), title, message, url, "#%06X".format(0xFFFFFF and brandColor), code,
@@ -949,7 +985,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             // The WebView's technical reason (net::ERR_…) stays untranslated, in brackets.
             val detail = error.description?.toString()?.takeIf { it.isNotBlank() }
             val text = detail?.let { getString(R.string.message_with_code, getString(message), it) } ?: getString(message)
-            showStatus(getString(title), text, request.url.toString(), code)
+            // Everything but a failed TLS handshake can be gone once the network is back.
+            showStatus(getString(title), text, request.url.toString(), code, network = error.errorCode != ERROR_FAILED_SSL_HANDSHAKE)
         }
 
         override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
@@ -1066,6 +1103,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         const val EXTRA_PROFILE_ID = "profile_id"
         private const val TAG = "BrowserActivity"
         private const val FILE_CHECK_INTERVAL_MS = 5_000L
+        private const val NETWORK_RETRY_DELAY_MS = 1_500L
         private const val KEY_DELAY_MS = 50L
         private const val DOCUMENT_POLL_MS = 100L
         private const val MAX_SHOWN_SCAN = 40

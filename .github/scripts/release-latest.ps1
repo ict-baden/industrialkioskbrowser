@@ -108,7 +108,12 @@ if ($onBranch.status -eq 'ahead' -and ($onBranch.capped -or @($onBranch.workflow
 $current = Invoke-Retry { Find-Gh api "repos/$repo/git/ref/tags/$Tag" --jq '.object.sha' }
 if ($current -and $current -ne $sha) {
     # base...head: „ahead“ heißt, der Tag ist dem Commit dieses Laufs voraus
-    $status = Invoke-Retry { Invoke-Gh api "repos/$repo/compare/$sha...$current" --jq '.status' }
+    #  Ohne gemeinsamen Vorfahren (frische Historie per Force-Push, alter Tag blieb stehen) antwortet GitHub mit 404:
+    #  Find-Gh liefert dann nichts, der Tag ist nicht voraus und wird unten auf diesen Commit gesetzt.
+    $status = Invoke-Retry { Find-Gh api "repos/$repo/compare/$sha...$current" --jq '.status' }
+    if (-not $status) {
+        Write-Host "'$Tag' ($current) hat keinen gemeinsamen Vorfahren mit $sha – der Tag wird verschoben."
+    }
     if ($status -eq 'ahead') {
         Skip "'$Tag' steht schon auf einem neueren Commit ($current) – dieser Lauf ($sha) veröffentlicht nichts."
         return

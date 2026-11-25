@@ -4,6 +4,13 @@
 
 ### Security
 
+- **Configuration files in `/enterprise/usr/` are no longer trusted** ([#28](https://github.com/ict-baden/industrialkioskbrowser/issues/28)):
+  Zebra leaves the folder writable for every app (`drwxrwxrwx`, checked on Android 15), so any app could put a
+  configuration there – with its own start URL and its own admin password. The file is now checked like the one in
+  the app folder: once an admin password is set, it must contain it as `global.adminPassword`, it never replaces
+  the password, and a file with a plain password is deleted after the import. **Behaviour change:** a staging job
+  that updates the configuration through `/enterprise/usr/` has to add the current admin password to the file. The
+  first provisioning (no password set yet) works as before. See [Deployment](docs/deployment.md).
 - **Downloads respect the allow list** ([#32](https://github.com/ict-baden/industrialkioskbrowser/issues/32)):
   a page on an allowed host could start a download from any other host (`<a download>` and downloads started by
   script skip the navigation check). With an `allowList` the app now only downloads files from allowed hosts and
@@ -58,6 +65,25 @@
   few hours. After five wrong entries in a row both dialogs now stay closed for 15 minutes – the same lock
   `INSTALL_CONFIG` and configuration files already have, with a counter of its own, kept across restarts. New
   error code `IKB-0106`. **Behaviour change:** someone at the device can lock the dialogs for 15 minutes at a time.
+- **The error page for a lost connection reloads by itself** ([#41](https://github.com/ict-baden/industrialkioskbrowser/issues/41)):
+  when the device gets its network back (and when the app returns to the front), the page that failed is loaded
+  again. Until now the error page stayed until someone tapped *Try again* – a problem on devices that are only
+  used with the scanner. Certificate and HTTP errors do not reload. Only the network of the device is watched: a
+  server that is down while the Wi-Fi is fine still needs *Try again*.
+- **A new `global.language` reaches an open profile right away** ([#39](https://github.com/ict-baden/industrialkioskbrowser/issues/39)):
+  after `INSTALL_CONFIG`, a configuration file or the MDM changed the language, menu, toolbar and error pages of
+  an open profile kept the old language until the user went back to the profile list.
+- The CI script for the rolling `latest` release no longer fails when the old `latest` tag has no common ancestor
+  with `main` (fresh history after a force push): the tag is moved ([#18](https://github.com/ict-baden/industrialkioskbrowser/issues/18)).
+
+### Docs
+
+- [Limitations](docs/limitations.md): Android's one-time hint "Viewing full screen" on Android 12 and later and
+  how to switch it off during staging ([#40](https://github.com/ict-baden/industrialkioskbrowser/issues/40));
+  scans are also typed into password fields, with the way for a page to refuse them
+  ([#38](https://github.com/ict-baden/industrialkioskbrowser/issues/38), also in
+  [Web integration](docs/web-integration.md#what-happens-on-a-scan)).
+- The changelog no longer names a single test device ([#16](https://github.com/ict-baden/industrialkioskbrowser/issues/16)).
 
 ## [0.9.0] – 2026-11-25
 
@@ -157,7 +183,7 @@
 
 ### Fixed
 
-- **Text recognition in R8 release builds:** R8 removed the no-arg constructors ML Kit uses to create its components by reflection, so OCR did not start in a release build (`NoSuchMethodException …Registrar.<init>`, seen on a Zebra HC20). Keep rule in `app/proguard-rules.pro`.
+- **Text recognition in R8 release builds:** R8 removed the no-arg constructors ML Kit uses to create its components by reflection, so OCR did not start in a release build (`NoSuchMethodException …Registrar.<init>`, seen on a Zebra device). Keep rule in `app/proguard-rules.pro`.
 
 ### Docs
 
@@ -271,7 +297,7 @@ Released under the former name *EnterpriseBrowser*.
 - Release APKs are signed by the CI with the ICT-Baden key and published under fixed links (release `latest`) with checksums.
 - Licence: MIT, © ICT-Baden.
 
-Fixed – all found and verified on a Zebra HC20 (Android 15, DataWedge):
+Fixed – all found and verified on a Zebra device (Android 15, DataWedge):
 
 - **Every error page crashed the app** (no Wi-Fi, server down, certificate error, blocked
   page): the placeholder pattern of the error page is invalid for Android's regex engine.

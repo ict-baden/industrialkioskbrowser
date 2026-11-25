@@ -27,6 +27,7 @@ class ProvisioningTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     private val store get() = ConfigStore.get(context)
     private val file get() = Provisioning.appFolderFile(context)!!
+    private val enterpriseFile get() = File(context.cacheDir, "enterprise-usr/${Provisioning.CONFIG_FILE_NAME}")
 
     @Before
     fun setUp() {
@@ -35,6 +36,51 @@ class ProvisioningTest {
         context.getSharedPreferences("provisioning", Context.MODE_PRIVATE).edit().clear().commit()
         context.getSharedPreferences("admin_gate", Context.MODE_PRIVATE).edit().clear().commit()
         file.delete()
+        enterpriseFile.delete()
+        Provisioning.enterpriseFile = enterpriseFile
+    }
+
+    @Test
+    fun `enterprise folder file sets the first admin password and is checked from then on`() {
+        // First provisioning (StageNow): nothing is protected yet, the file is accepted and sets the password.
+        write("""{"global":{"adminPassword":"first"},"profiles":[{"startUrl":"$URL"}]}""", enterpriseFile)
+        Provisioning.applyAll(context)
+        assertEquals(URL, store.config.profiles.single().startUrl)
+        val hash = store.config.global.adminPasswordHash
+        assertTrue(PasswordHasher.verify("first", hash!!))
+        assertEquals("file with plain password is deleted", false, enterpriseFile.exists())
+
+        // /enterprise/usr is world-writable on Zebra devices: another app drops its own configuration and password.
+        write("""{"global":{"adminPassword":"attacker"},"profiles":[{"startUrl":"https://evil.example"}]}""", enterpriseFile)
+        Provisioning.applyAll(context)
+        assertEquals(URL, store.config.profiles.single().startUrl)
+        assertEquals(hash, store.config.global.adminPasswordHash)
+        assertTrue(Provisioning.lastError(context)!!.contains("admin_password"))
+
+        // The same without any password, and with a hash of its own.
+        val foreignHash = PasswordHasher.hash("attacker")
+        write("""{"global":{"adminPasswordHash":"$foreignHash"},"profiles":[{"startUrl":"https://evil.example"}]}""", enterpriseFile)
+        Provisioning.applyAll(context)
+        assertEquals(URL, store.config.profiles.single().startUrl)
+        assertEquals(hash, store.config.global.adminPasswordHash)
+
+        // The administrator's file names the current password: applied, the password stays.
+        write("""{"global":{"adminPassword":"first"},"profiles":[{"startUrl":"$URL/new"}]}""", enterpriseFile)
+        Provisioning.applyAll(context)
+        assertEquals("$URL/new", store.config.profiles.single().startUrl)
+        assertEquals(hash, store.config.global.adminPasswordHash)
+        assertNull(Provisioning.lastError(context))
+    }
+
+    @Test
+    fun `enterprise folder file with only a hash stays on the device`() {
+        // For a file that should survive an enterprise reset: no plain password in it, so nothing to delete.
+        val hash = PasswordHasher.hash("first")
+        write("""{"global":{"adminPasswordHash":"$hash"},"profiles":[{"startUrl":"$URL"}]}""", enterpriseFile)
+        Provisioning.applyAll(context)
+        assertEquals(URL, store.config.profiles.single().startUrl)
+        assertEquals(hash, store.config.global.adminPasswordHash)
+        assertTrue(enterpriseFile.exists())
     }
 
     @Test
@@ -156,7 +202,7 @@ class ProvisioningTest {
         }
     }
 
-    private fun write(json: String) {
+    private fun write(json: String, file: File = this.file) {
         file.parentFile!!.mkdirs()
         file.writeText(json)
         // Each write must look new to the change detection (modification time and size).

@@ -35,6 +35,15 @@ While the page is loading, is sending a form or reports itself busy, the scan fi
 4. Then the terminator keys follow (`scanner.terminator`, default: Enter) as real key
    presses – so forms are submitted just like with a keyboard wedge.
 
+The focused field can be of any type, **including `type="password"`** (sign-in with a badge
+barcode). To keep scans out of password fields, cancel the event there:
+
+```js
+window.addEventListener('industrialkioskbrowser:scan', (event) => {
+  if (document.activeElement?.type === 'password') event.preventDefault();
+});
+```
+
 ## Scan event
 
 ```js
