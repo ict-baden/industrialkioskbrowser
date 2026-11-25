@@ -181,7 +181,8 @@ Honest list in [docs/limitations.md](docs/limitations.md). In short:
 - **Text recognition (OCR) uses Google ML Kit, which is not open source** (ML Kit Terms of Service) and may
   send anonymous usage statistics to Google; it can be switched off per profile – see
   [Data and privacy](docs/data-and-privacy.md#text-recognition-ml-kit).
-- Version 0.x: settings and the JSON format may still change.
+- Changes that alter how an existing configuration behaves are marked **Behaviour change** in the
+  [changelog](CHANGELOG.md).
 
 ## 🛠️ Building
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Docs
+
+- [Web integration](docs/web-integration.md): the note on non-default ports described the state before 1.0.0. The
+  JavaScript API is available there for the start URL and for allow list entries that name the port.
+- [Limitations](docs/limitations.md) and README no longer call the app a 0.x version.
+
 ## [1.0.0] – 2026-11-25
 
 Version 1.0.0: the findings of the security review are fixed. Three of the fixes change behaviour for existing

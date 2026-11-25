@@ -118,9 +118,10 @@ if (window.IndustrialKioskBrowser) {
 }
 ```
 
-> **Note:** on servers with a non-default port (e.g. `:8443`)
-> `window.IndustrialKioskBrowser` is currently not available. Scans, the scan event and the
-> meta tags still work there.
+> **Note:** on a non-default port (e.g. `:8443`) `window.IndustrialKioskBrowser` is available for
+> the start URL of the profile and for `allowList` entries that name the port (`example.com:8443`).
+> An entry without a port only covers ports 80 and 443 for the API. Scans, the scan event and the
+> meta tags work on every allowed address.
 
 ## Scan queue
 
@@ -152,7 +153,7 @@ form.addEventListener('submit', async (event) => {
   very next scan already – the app checks this when the handler returns.
 - A scan handled with `preventDefault()` starts no wait of its own; call `busy()` when the handling
   takes time.
-- Without the JavaScript API (other hosts, non-default port) the queue still waits for page loads
+- Without the JavaScript API (other hosts, a port the allow list does not name) the queue still waits for page loads
   and sent forms; only `busy()` is missing.
 - A scan that finds no focused field waits until one has the focus. Pages that handle the scan
   event without a field should call `preventDefault()`, otherwise the scan waits for a field and is

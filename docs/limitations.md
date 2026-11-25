@@ -97,7 +97,8 @@ still pending. The documentation is in English.
 
 ## Releases and updates
 
-- Version 0.x: settings, JSON format and JavaScript API may still change.
+- Changes that alter how an existing configuration behaves are marked **Behaviour change** in the
+  [changelog](../CHANGELOG.md); read it before rolling out a new version.
 - **Renamed in 0.7.0:** Industrial Kiosk Browser was called *Pforte* (0.6.x) and *EnterpriseBrowser* (up to 0.5.0)
   before. The package name changed from `de.ictbaden.pforte` and `de.ictbaden.enterprisebrowser` to
   `de.ictbaden.industrialkioskbrowser`, so Android treats it as a new app:
