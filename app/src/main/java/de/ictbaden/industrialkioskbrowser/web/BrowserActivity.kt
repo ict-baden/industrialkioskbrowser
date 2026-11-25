@@ -792,6 +792,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         val actions = buildList {
             add(ActionSheet.Action(getString(R.string.action_home), R.drawable.ic_home) { loadStart() })
             add(ActionSheet.Action(getString(R.string.action_reload), R.drawable.ic_refresh) { webView.reload() })
+            add(ActionSheet.Action(getString(R.string.action_clear_cache), R.drawable.ic_delete) { clearCacheAndReload() })
             add(ActionSheet.Action(getString(R.string.action_forward), R.drawable.ic_forward, enabled = webView.canGoForward()) { webView.goForward() })
             add(ActionSheet.Action(getString(R.string.action_scanner), R.drawable.ic_scan, active = scannerWanted) { setScannerEnabledByPage(!scannerWanted) })
             if (ocrAvailable && scannerWanted) {
@@ -813,6 +814,12 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             }
         }
         ActionSheet(this).show(profile.name, subtitleView.text.toString(), brandColor, actions)
+    }
+
+    /** Empties the WebView cache and reloads; cookies and web storage stay, so logins survive. */
+    private fun clearCacheAndReload() {
+        webView.clearCache(true)
+        webView.reload()
     }
 
     private fun exitApp() {
