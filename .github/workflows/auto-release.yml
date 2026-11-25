@@ -1,0 +1,102 @@
+# Jeder gemergte Pull Request wird ein Versions-Release (Entscheidung vom 2026-11-26).
+#
+# Ablauf: Version = versionName in app/build.gradle.kts -> der CHANGELOG-Abschnitt „Unreleased“ bekommt Version und
+# Datum -> annotierter Tag vX.Y.Z -> build.yml läuft für den Tag (voller Build: signieren, GitHub-Release, Google Play
+# Produktion) -> versionName auf main steigt auf die nächste Patch-Version.
+#
+# Kein Release gibt es für direkte Pushs auf main, für reine Doku (paths-ignore wie in build.yml) und für Pull Requests
+# mit „[kein Release]“ im Titel oder dem Label „kein-release“.
+# Von Hand: Actions -> Auto-Release -> Run workflow. Das veröffentlicht den aktuellen Stand von main.
+# Größerer Versionssprung: versionName vor dem Merge von Hand anheben; der Automatismus zählt nur die letzte Stelle hoch.
+name: Auto-Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE', '.github/ISSUE_TEMPLATE/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Zwei Merges kurz hintereinander laufen nacheinander, damit jede Version ihren eigenen Tag bekommt.
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write      # Commits und Tag auf main
+      actions: write       # build.yml für den Tag starten
+      pull-requests: read  # gehört der Push zu einem gemergten Pull Request?
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          HEADER: '## Unreleased'
+        run: |
+          set -euo pipefail
+
+          # Titel und Nummer des Pull Requests, zu dem dieser Push gehört. Beides sind fremde Texte: nur als Daten verwenden.
+          title="manuell gestartet"; number=""
+          if [ "$EVENT" = push ]; then
+            pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+              | jq -c --arg sha "$GITHUB_SHA" '[.[] | select(.merged_at != null and .merge_commit_sha == $sha)][0] // empty')
+            if [ -z "$pr" ]; then echo "Kein gemergter Pull Request (direkter Push): kein Release."; exit 0; fi
+            title=$(jq -r .title <<<"$pr"); number=$(jq -r .number <<<"$pr")
+            if jq -e '[.labels[].name] | index("kein-release")' <<<"$pr" > /dev/null || [[ "$title" == *"[kein Release]"* ]]; then
+              echo "Pull Request #$number ist als „kein Release“ markiert."; exit 0
+            fi
+          fi
+
+          v=$(grep -oP 'versionName = .*?"\K[0-9]+\.[0-9]+\.[0-9]+(?=")' app/build.gradle.kts)
+          tag="v$v"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "::error::Der Tag $tag existiert schon. versionName in app/build.gradle.kts anheben."; exit 1
+          fi
+
+          # CHANGELOG: der offene Abschnitt wird zur Version, darüber entsteht ein neuer, leerer. Ist er leer, steht dort der
+          # Titel des Pull Requests, weil build.yml ein Release ohne Text abweist.
+          V="$v" TITLE="$title" NUMBER="$number" NOTES="$RUNNER_TEMP/notes.md" python3 - <<'PY'
+          import datetime, os, zoneinfo
+          header, v = os.environ['HEADER'], os.environ['V']
+          lines = open('CHANGELOG.md', encoding='utf-8').read().split('\n')
+          at = [i for i, l in enumerate(lines) if l.strip() == header]
+          if len(at) != 1:
+              raise SystemExit(f'::error::CHANGELOG.md: Abschnitt „{header}“ nicht genau einmal gefunden')
+          start = at[0]
+          end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith('## ')), len(lines))
+          body = lines[start + 1:end]
+          if not any(l.strip() for l in body):
+              ref = f" (#{os.environ['NUMBER']})" if os.environ['NUMBER'] else ''
+              body = ['', f"- {os.environ['TITLE']}{ref}", '']
+          today = datetime.datetime.now(zoneinfo.ZoneInfo('Europe/Berlin')).date().isoformat()
+          lines[start:end] = [header, '', f'## [{v}] – {today}'] + body
+          open('CHANGELOG.md', 'w', encoding='utf-8').write('\n'.join(lines))
+          open(os.environ['NOTES'], 'w', encoding='utf-8').write('\n'.join(body).strip('\n') + '\n')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -am "Release $v"
+          # Annotierter Tag mit dem CHANGELOG-Abschnitt als Nachricht (build.yml nimmt ihn als Release-Text)
+          git tag -a "$tag" -F "$RUNNER_TEMP/notes.md" --cleanup=verbatim
+
+          next="${v%.*}.$(( ${v##*.} + 1 ))"
+          sed -i -E "s/(versionName = .*\")${v//./\\.}(\")/\1$next\2/" app/build.gradle.kts
+          grep -q "\"$next\"" app/build.gradle.kts || { echo "::error::versionName ließ sich nicht auf $next setzen"; exit 1; }
+          git commit -q -am "Version auf main: $next nach $tag"
+
+          git push --atomic origin HEAD:main "$tag"
+          # Ein Push mit dem Token dieses Laufs startet keine Workflows, deshalb den vollen Build für den Tag ausdrücklich starten.
+          gh workflow run build.yml --ref "$tag"
+          echo "### Release $tag gestartet" >> "$GITHUB_STEP_SUMMARY"
+          echo "Der volle Build läuft unter Actions → Build (Ref $tag). main steht jetzt auf $next." >> "$GITHUB_STEP_SUMMARY"

@@ -1,1 +1,1 @@
-Version 1.0: security and stability. Downloads and sign-in dialogs only for allowed addresses, allow list entries can require HTTPS and a port, password dialogs lock after five wrong entries. The error page reloads by itself as soon as the device has its network back. Important for Zebra staging: configuration files in /enterprise/usr now need the admin password.
+New in the menu: “Clear cache”. It empties the browser cache and reloads the page; logins stay. This helps when devices still show old scripts after a web app update.
