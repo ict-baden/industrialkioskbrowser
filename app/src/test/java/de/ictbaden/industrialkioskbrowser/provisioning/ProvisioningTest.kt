@@ -110,6 +110,22 @@ class ProvisioningTest {
     }
 
     @Test
+    fun `a file that is valid JSON but no object does not leak its text either`() {
+        // org.json then reports "Value <the whole value> of type … cannot be converted to JSONObject".
+        for (text in listOf(
+            """[{"global":{"adminPassword":"S3cretPW"},"profiles":[]}]""", // wrapped in an array
+            """"{\"global\":{\"adminPassword\":\"S3cretPW\"}}"""", // escaped once too often: a JSON string
+            """adminPassword=S3cretPW""", // not JSON at all
+        )) {
+            write(text)
+            Provisioning.applyAll(context)
+            val error = Provisioning.lastError(context)!!
+            assertTrue(error, error.contains("Invalid JSON"))
+            assertEquals(error, false, error.contains("S3cretPW"))
+        }
+    }
+
+    @Test
     fun `a deeply nested or huge file is refused instead of crashing`() {
         write("[".repeat(50_000))
         Provisioning.applyAll(context)
