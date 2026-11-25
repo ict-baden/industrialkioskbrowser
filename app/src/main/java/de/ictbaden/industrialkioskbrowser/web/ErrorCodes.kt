@@ -33,4 +33,5 @@ object ErrorCodes {
     const val EXPORT_FAILED = "IKB-0103"
     const val CONFIG_TOO_LARGE = "IKB-0104"
     const val CERTIFICATE_IMPORT = "IKB-0105"
+    const val PASSWORD_LOCKED = "IKB-0106"
 }

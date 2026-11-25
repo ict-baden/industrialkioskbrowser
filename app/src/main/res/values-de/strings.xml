@@ -43,6 +43,10 @@
     <string name="admin_password">Admin-Passwort</string>
     <string name="exit_password">Passwort zum Beenden</string>
     <string name="wrong_password">Falsches Passwort</string>
+    <plurals name="password_locked">
+        <item quantity="one">Zu viele falsche Passwörter. Neuer Versuch in %d Minute.</item>
+        <item quantity="other">Zu viele falsche Passwörter. Neuer Versuch in %d Minuten.</item>
+    </plurals>
     <string name="sign_in">Anmelden</string>
     <string name="user_name">Benutzername</string>
 
