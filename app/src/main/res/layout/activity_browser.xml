@@ -56,11 +56,33 @@
             android:contentDescription="@string/action_keyboard"
             android:src="@drawable/ic_keyboard" />
 
-        <ImageButton
-            android:id="@+id/scan"
-            style="@style/ToolbarScanButton"
-            android:contentDescription="@string/action_scan"
-            android:src="@drawable/ic_scan" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageButton
+                android:id="@+id/scan"
+                style="@style/ToolbarScanButton"
+                android:contentDescription="@string/action_scan"
+                android:src="@drawable/ic_scan" />
+
+            <!-- Scans waiting in scanner.queue; only shown while there are some. -->
+            <TextView
+                android:id="@+id/scanPending"
+                android:layout_width="wrap_content"
+                android:layout_height="18dp"
+                android:layout_gravity="top|end"
+                android:background="@drawable/bg_badge"
+                android:backgroundTint="@color/md_error"
+                android:gravity="center"
+                android:importantForAccessibility="no"
+                android:minWidth="18dp"
+                android:paddingHorizontal="4dp"
+                android:textColor="@color/md_on_error"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/menu"

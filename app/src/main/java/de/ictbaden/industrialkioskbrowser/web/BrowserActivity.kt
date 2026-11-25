@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.security.KeyChain
 import android.util.Log
 import android.view.KeyEvent
@@ -87,6 +88,7 @@ import de.ictbaden.industrialkioskbrowser.scanner.Symbologies
 import de.ictbaden.industrialkioskbrowser.ui.ActionSheet
 import de.ictbaden.industrialkioskbrowser.ui.Brand
 import de.ictbaden.industrialkioskbrowser.ui.Dialogs
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
@@ -102,6 +104,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     private lateinit var backButton: ImageButton
     private lateinit var scanButton: ImageButton
     private lateinit var keyboardButton: ImageButton
+    private lateinit var scanPendingView: TextView
     private lateinit var scanner: ScannerManager
     private lateinit var nfc: NfcReader
     private lateinit var config: AppConfig
@@ -129,6 +132,15 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     private var pagePolicy = PagePolicy.NONE
+
+    /** Scans waiting for the page to be ready (`scanner.queue`); see [ScanQueue]. */
+    @VisibleForTesting
+    internal lateinit var scanQueue: ScanQueue<ScanResult>
+    private val queuePump = Runnable { scanQueue.pump() }
+
+    /** Counts page loads, so callbacks of an older page are recognised and ignored. */
+    private var pageGeneration = 0
+    private var loadedGeneration = -1
     private var scannerWanted = true
     private var failedUrl: String? = null
     private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
@@ -167,6 +179,12 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     override val ocrAvailable get() = profile.scanner.ocr.enabled && ScanEngineDetector.hasCamera(this)
     override val nfcAvailable get() = nfc.available
     override val nfcOn get() = nfc.switchedOn
+    override val scansPending get() = scanQueue.pending
+    override val scanReady get() = scanQueue.isReady
+
+    override fun pageBusy(timeoutMs: Long?) = scanQueue.busy(timeoutMs)
+
+    override fun pageReady() = scanQueue.ready()
 
     /** Text recognition with the camera (`scanner.ocr`), whatever scanner the profile reads barcodes with. */
     override fun startOcr() {
@@ -217,6 +235,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             return false
         }
         Log.i(TAG, "Configuration of profile ${profile.id} changed, restarting the session")
+        scanQueue.close()
         if (updated != null) startActivity(intent)
         finish()
         return true
@@ -258,8 +277,12 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         backButton = findViewById(R.id.back)
         scanButton = findViewById(R.id.scan)
         keyboardButton = findViewById(R.id.keyboard)
+        scanPendingView = findViewById(R.id.scanPending)
         applyBranding()
         applyInsets()
+        scanQueue = ScanQueue(profile.scanner.queue, SystemClock::uptimeMillis, QueueHost())
+        // The first page is requested below; onPageStarted only comes once the server answered.
+        scanQueue.navigationRequested()
 
         scanner = ScannerManager(
             this,
@@ -339,6 +362,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
     }
 
     override fun onDestroy() {
+        if (::scanQueue.isInitialized) scanQueue.close()
+        mainHandler.removeCallbacks(queuePump)
         CameraScanBus.clear(continuousScan)
         if (::nfc.isInitialized) nfc.release()
         bridge?.release()
@@ -472,6 +497,8 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         webView.webViewClient = Client()
         webView.webChromeClient = Chrome()
         webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            // A link or form answered with a file: no page follows.
+            scanQueue.navigationAbandoned()
             download(url, userAgent, contentDisposition, mimeType)
         }
         installBridge()
@@ -556,7 +583,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
 
     // region scanning
 
-    private fun onScan(raw: ScanResult) {
+    /** Every scan source ends here: format, confirm with the scan tone, then deliver now or queue. */
+    @VisibleForTesting
+    internal fun onScan(raw: ScanResult) {
         // scanner.data: prefix, suffix, rules … – for every scanner, not only the camera.
         val formatted = ScanFormatter.format(raw.data, Symbologies.of(raw.symbology), profile.scanner.data)
         if (formatted == null) {
@@ -564,25 +593,58 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
             return
         }
         val scan = raw.copy(data = formatted)
+        // The worker hears right away that the code was read, even when it has to wait in the queue.
+        sounds.play(profile.sounds.scanOk)
+        if (profile.scanner.queue.enabled) scanQueue.offer(scan) else deliverScan(scan, retry = false)
+    }
+
+    /**
+     * Hands one scan to the current page and answers the queue through [ScanQueue.delivered] (which
+     * ignores it when the queue is off). Page policy and terminator are those of the page that gets it.
+     */
+    private fun deliverScan(scan: ScanResult, retry: Boolean) {
         val template = pagePolicy.navigateTemplate
         if (template != null) {
             when (val target = ScanScripts.navigationTarget(template, scan.data, webView.url)) {
-                is ScanScripts.Target.Script -> webView.evaluateJavascript(target.js, null)
-                is ScanScripts.Target.Address ->
-                    if (UrlPolicy.isAllowed(target.url, profile)) webView.loadUrl(target.url)
-                    else toast(withCode(getString(R.string.scan_target_not_allowed, target.url), ErrorCodes.SCAN_TARGET_NOT_ALLOWED))
+                // Usually looks something up or navigates itself: treated like a form that was sent.
+                is ScanScripts.Target.Script -> webView.evaluateJavascript(target.js) { scanQueue.delivered(ScanQueue.Outcome.SUBMITTED) }
+                is ScanScripts.Target.Address -> {
+                    if (UrlPolicy.isAllowed(target.url, profile)) {
+                        scanQueue.navigationRequested()
+                        webView.loadUrl(target.url)
+                    } else {
+                        toast(withCode(getString(R.string.scan_target_not_allowed, target.url), ErrorCodes.SCAN_TARGET_NOT_ALLOWED))
+                    }
+                    scanQueue.delivered(ScanQueue.Outcome.DONE)
+                }
             }
             return
         }
         val terminator = pagePolicy.terminator ?: profile.scanner.terminator
+        val queue = profile.scanner.queue
+        // waitForFieldClear: the next scan must not be appended while the page still has this one in the field.
+        val mark = queue.enabled && queue.waitForFieldClear && terminator != ScanTerminator.NONE
         webView.requestFocus()
-        webView.evaluateJavascript(ScanScripts.deliver(scan, profile.scanner.injectIntoFocusedField)) { result ->
-            sounds.play(profile.sounds.scanOk)
-            if (ScanScripts.decodeStringResult(result) == "inserted") sendTerminator(terminator)
+        webView.evaluateJavascript(ScanScripts.deliver(scan, profile.scanner.injectIntoFocusedField, dispatch = !retry, markInsert = mark)) { value ->
+            val delivery = ScanScripts.parseDelivery(value)
+            when (delivery.result) {
+                "inserted" -> {
+                    val keysDone = sendTerminator(terminator)
+                    if (keysDone == 0L) {
+                        scanQueue.delivered(ScanQueue.Outcome.DONE, delivery.busy)
+                    } else {
+                        webView.postDelayed({ scanQueue.delivered(ScanQueue.Outcome.SUBMITTED, delivery.busy) }, keysDone)
+                    }
+                }
+                "nofield" -> scanQueue.delivered(ScanQueue.Outcome.NO_FIELD, delivery.busy)
+                "pending" -> scanQueue.delivered(ScanQueue.Outcome.FIELD_NOT_CLEARED, delivery.busy)
+                else -> scanQueue.delivered(ScanQueue.Outcome.DONE, delivery.busy)
+            }
         }
     }
 
-    private fun sendTerminator(terminator: ScanTerminator) {
+    /** Presses the terminator keys one after another; returns when the last one is pressed (ms from now). */
+    private fun sendTerminator(terminator: ScanTerminator): Long {
         val keys = when (terminator) {
             ScanTerminator.NONE -> emptyList()
             ScanTerminator.TAB -> listOf(KeyEvent.KEYCODE_TAB)
@@ -593,6 +655,92 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         keys.forEachIndexed { index, code ->
             webView.postDelayed({ keyboard.pressKey(code) }, KEY_DELAY_MS * (index + 1))
         }
+        return KEY_DELAY_MS * keys.size
+    }
+
+    /** Scans the queue could not deliver: error tone and a message with the value, never silently. */
+    private fun scansDropped(scans: List<ScanResult>, reason: ScanQueue.DropReason) {
+        if (scans.isEmpty()) return
+        Log.w(TAG, "${scans.size} scan(s) discarded: $reason")
+        sounds.play(profile.sounds.error)
+        val (why, code) = when (reason) {
+            ScanQueue.DropReason.FULL -> R.string.scan_drop_full to ErrorCodes.SCAN_QUEUE_FULL
+            ScanQueue.DropReason.TIMEOUT -> R.string.scan_drop_timeout to ErrorCodes.SCAN_QUEUE_TIMEOUT
+            ScanQueue.DropReason.PAGE_LEFT -> R.string.scan_drop_page_left to ErrorCodes.SCAN_QUEUE_PAGE_LEFT
+            ScanQueue.DropReason.CLOSED -> R.string.scan_drop_closed to ErrorCodes.SCAN_QUEUE_CLOSED
+        }
+        val text = if (scans.size == 1) {
+            val value = scans.first().data.let { if (it.length > MAX_SHOWN_SCAN) it.take(MAX_SHOWN_SCAN - 1) + "…" else it }
+            getString(R.string.scan_discarded_single, value, getString(why))
+        } else {
+            resources.getQuantityString(R.plurals.scan_discarded_multiple, scans.size, scans.size, getString(why))
+        }
+        // Application context: the message also has to show when the session is closing.
+        Toast.makeText(applicationContext, withCode(text, code), Toast.LENGTH_LONG).show()
+    }
+
+    /** Small number on the scan button while scans wait (toolbar only; pages ask `scanner.status()`). */
+    private fun showPending(pending: Int) {
+        scanPendingView.text = String.format(Locale.getDefault(), "%d", pending)
+        scanPendingView.isVisible = pending > 0 && scanButton.isVisible
+        scanButton.contentDescription = if (pending > 0) {
+            getString(R.string.message_with_code, getString(R.string.action_scan), resources.getQuantityString(R.plurals.scan_pending, pending, pending))
+        } else {
+            getString(R.string.action_scan)
+        }
+    }
+
+    /** Whether scans may go to the page at [url]: not to error pages or addresses outside the allow list. */
+    private fun acceptsScans(url: String) = !url.startsWith(StatusPage.BASE_URL) && UrlPolicy.isAllowed(url, profile)
+
+    /**
+     * Meta tags of the page; the first time per page load the queue also learns that the page is
+     * there. Runs at `DOMContentLoaded` ([watchDocument]) and again at `onPageFinished`.
+     */
+    private fun collectPagePolicy(generation: Int, url: String) {
+        webView.evaluateJavascript(ScanScripts.COLLECT_META_TAGS) { result ->
+            if (generation != pageGeneration) return@evaluateJavascript
+            pagePolicy = PagePolicy.fromMetaTags(ScanScripts.parseMetaTags(result))
+            pagePolicy.scannerEnabled?.let { scannerWanted = it }
+            updateScannerState()
+            if (loadedGeneration != generation) {
+                loadedGeneration = generation
+                scanQueue.pageLoaded(acceptsScans(url))
+            }
+        }
+    }
+
+    /**
+     * `onPageFinished` waits for every image and slow sub-resource; scans can go to the page once its
+     * `DOMContentLoaded` handlers ran. Only when no injection or bridge script is still added at
+     * `onPageFinished` – otherwise that is the moment the page is complete.
+     */
+    private fun watchDocument(generation: Int, url: String) {
+        val scriptsAtPageFinished = pageLoadedScript != null ||
+            (!injectionsAtDocumentStart && documentStartScript != null) ||
+            (bridge != null && !bridgeAtDocumentStart)
+        if (scriptsAtPageFinished || generation != pageGeneration) return
+        webView.evaluateJavascript(ScanScripts.DOCUMENT_READY) { result ->
+            if (generation != pageGeneration || loadedGeneration == generation) return@evaluateJavascript
+            if (result == "true") {
+                collectPagePolicy(generation, url)
+            } else {
+                webView.postDelayed({ watchDocument(generation, url) }, DOCUMENT_POLL_MS)
+            }
+        }
+    }
+
+    private inner class QueueHost : ScanQueue.Host<ScanResult> {
+        override fun deliver(scan: ScanResult, retry: Boolean) = deliverScan(scan, retry)
+
+        override fun dropped(scans: List<ScanResult>, reason: ScanQueue.DropReason) = scansDropped(scans, reason)
+
+        override fun wakeUpIn(delayMs: Long) {
+            mainHandler.removeCallbacks(queuePump)
+            if (delayMs >= 0) mainHandler.postDelayed(queuePump, delayMs)
+        }
+
+        override fun pendingChanged(pending: Int) = showPending(pending)
     }
 
     // endregion
@@ -718,6 +866,9 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 view.post { blocked(request.url) }
                 return WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), null)
             }
+            // The earliest sign of a new page (a form sent with Enter, too): onPageStarted only follows
+            // once the server has answered. Called on a background thread.
+            if (request.isForMainFrame) view.post { scanQueue.navigationRequested() }
             return assetLoader.shouldInterceptRequest(request.url)
         }
 
@@ -735,12 +886,16 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         private fun blocked(url: Uri) {
             toast(withCode(getString(R.string.page_not_allowed, UrlPolicy.describeBlocked(url.toString(), profile)), ErrorCodes.PAGE_NOT_ALLOWED))
             sounds.play(profile.sounds.error)
+            scanQueue.navigationBlocked()
         }
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
             pagePolicy = PagePolicy.NONE
             scannerWanted = profile.scanner.enabled
             updateScannerState()
+            pageGeneration++
+            scanQueue.pageStarted()
+            watchDocument(pageGeneration, url)
             keyboard.onPageStarted()
             progress.isVisible = true
             if (!url.startsWith(StatusPage.BASE_URL)) showAddress(url)
@@ -759,11 +914,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
                 pageLoadedScript?.let { view.evaluateJavascript(it, null) }
             }
             keyboard.onPageFinished()
-            view.evaluateJavascript(ScanScripts.COLLECT_META_TAGS) { result ->
-                pagePolicy = PagePolicy.fromMetaTags(ScanScripts.parseMetaTags(result))
-                pagePolicy.scannerEnabled?.let { scannerWanted = it }
-                updateScannerState()
-            }
+            collectPagePolicy(pageGeneration, url)
         }
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -887,5 +1038,7 @@ class BrowserActivity : AppCompatActivity(), BridgeHandler.Host {
         private const val TAG = "BrowserActivity"
         private const val FILE_CHECK_INTERVAL_MS = 5_000L
         private const val KEY_DELAY_MS = 50L
+        private const val DOCUMENT_POLL_MS = 100L
+        private const val MAX_SHOWN_SCAN = 40
     }
 }

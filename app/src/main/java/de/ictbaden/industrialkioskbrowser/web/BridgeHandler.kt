@@ -39,6 +39,14 @@ class BridgeHandler(private val context: Context, private val host: Host) : WebV
         val nfcAvailable: Boolean
         val nfcOn: Boolean
         fun startOcr()
+
+        /** Scans waiting in the queue (`scanner.queue`) and whether a new scan would be delivered right away. */
+        val scansPending: Int
+        val scanReady: Boolean
+
+        /** `scanner.busy()` / `scanner.ready()`: the page holds further scans back while it works. */
+        fun pageBusy(timeoutMs: Long?)
+        fun pageReady()
     }
 
     private val tones = runCatching { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80) }.getOrNull()
@@ -103,6 +111,10 @@ class BridgeHandler(private val context: Context, private val host: Host) : WebV
             .put("ocr", host.ocrAvailable)
             .put("nfc", host.nfcAvailable)
             .put("nfcOn", host.nfcOn)
+            .put("pending", host.scansPending)
+            .put("ready", host.scanReady)
+        "scanner.busy" -> host.pageBusy(if (args.isNull("timeoutMs")) null else args.optLong("timeoutMs")).let { null }
+        "scanner.ready" -> host.pageReady().let { null }
         else -> throw IllegalArgumentException("Unknown command: $cmd")
     }
 
