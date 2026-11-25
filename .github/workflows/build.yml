@@ -165,6 +165,9 @@ jobs:
           key: robolectric-${{ steps.robolectric.outputs.key }}
           restore-keys: robolectric-
 
+      - name: QR-Login-Beispiel prüfen (Format, Beispielkonfiguration)
+        run: node tools/qr-login/test.mjs
+
       - name: Tests, Lint und Debug-Build
         # Debug-APK nur als Probe, dass sich die App bauen lässt (wird nicht veröffentlicht, Release-Build nur im vollen Build)
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --console=plain

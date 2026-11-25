@@ -30,6 +30,7 @@
   <a href="docs/configuration.md">Configuration</a> ·
   <a href="docs/deployment.md">Deployment (SOTI, Intune, StageNow)</a> ·
   <a href="docs/web-integration.md">Web integration</a> ·
+  <a href="docs/qr-login.md">QR login</a> ·
   <a href="#%EF%B8%8F-limitations">Limitations</a> ·
   <a href="https://ict-baden.de/en/products/industrial-kiosk-browser/">Product page</a>
 </p>

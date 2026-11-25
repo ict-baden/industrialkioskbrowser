@@ -4,6 +4,10 @@
 
 ### Docs
 
+- **QR login** ([QR login](docs/qr-login.md)): sign in to a web app by scanning an encrypted QR code and entering a PIN.
+  A JavaScript injection (`examples/qr-login/qr-login.js`, ready to use in `examples/qr-login.json`) takes the code out
+  of the page, asks for the PIN, fills user name and password and signs in; the codes come from the generator on
+  ict-baden.de. Needs an https login page. The document says plainly what a PIN alone protects and what not.
 - [Web integration](docs/web-integration.md): the note on non-default ports described the state before 1.0.0. The
   JavaScript API is available there for the start URL and for allow list entries that name the port.
 - [Limitations](docs/limitations.md) and README no longer call the app a 0.x version.
