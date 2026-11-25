@@ -16,6 +16,7 @@ object ErrorCodes {
     const val SCAN_TARGET_NOT_ALLOWED = "IKB-0011"
     const val DOWNLOADS_DISABLED = "IKB-0012"
     const val DOWNLOAD_UNSUPPORTED = "IKB-0013"
+    const val DOWNLOAD_NOT_ALLOWED = "IKB-0014"
     const val PROFILE_NOT_FOUND = "IKB-0020"
     const val CAMERA_PERMISSION_DENIED = "IKB-0030"
     const val CAMERA_UNAVAILABLE = "IKB-0031"

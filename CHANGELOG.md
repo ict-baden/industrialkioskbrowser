@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Security
+
+- **Downloads respect the allow list** ([#32](https://github.com/ict-baden/industrialkioskbrowser/issues/32)):
+  a page on an allowed host could start a download from any other host (`<a download>` and downloads started by
+  script skip the navigation check). With an `allowList` the app now only downloads files from allowed hosts and
+  the host of the start URL; anything else is refused with the new error code `IKB-0014` before a request or a
+  cookie is sent. **Behaviour change:** profiles with an `allowList` whose pages offer files from another host
+  (a file server, a CDN) need that host in the list. Profiles without an `allowList` behave as before.
+
 ## [0.9.0] – 2026-11-25
 
 ### Added

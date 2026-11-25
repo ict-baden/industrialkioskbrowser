@@ -50,6 +50,12 @@ These are deliberate, because many warehouse and production web apps run in an i
   `hideExit` only hides the exit; the Android home and recents buttons still work.
 - Pages that open new windows (`target="_blank"`, `window.open`) stay in the same view.
 - Downloads go to the app folder and need `allowDownloads`; `blob:` downloads are not supported.
+  With an `allowList` only files from allowed hosts are downloaded (`IKB-0014`). The check looks at
+  the address the page offers: a redirect answered by an allowed host is followed by Android's
+  DownloadManager without a second check.
+- `allowDownloads` is on by default. The notification of a finished download can open the file in
+  another app when the device is not in lock task mode – switch downloads off on kiosk devices
+  that do not need them.
 - Some features (document-start injections, JavaScript API) need a recent Android System WebView;
   on old WebViews injections run after the page has loaded, and the API is missing.
 
